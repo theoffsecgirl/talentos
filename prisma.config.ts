@@ -1,15 +1,13 @@
-import { defineConfig } from "prisma/config";
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
-
   migrations: {
     path: "prisma/migrations",
   },
-
-  // Prisma 7: aquí NO va provider, solo url (y opcionalmente shadowDatabaseUrl)
   datasource: {
-    url: process.env.DATABASE_URL,
-    // shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL, // opcional
+    // Para CLI/migrations usa DIRECT (sin pooler)
+    url: env("DIRECT_URL"),
   },
 });

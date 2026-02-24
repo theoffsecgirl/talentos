@@ -17,6 +17,10 @@
 
   --border: #e2e8f0; /* slate-200 */
   --ring: rgba(59, 130, 246, 0.45); /* blue-500/45 */
+
+  /* Brand */
+  --accent: #0ea5e9; /* sky-500 */
+  --danger: #ef4444; /* red-500 */
 }
 
 @theme inline {
@@ -44,6 +48,9 @@
 
     --border: #334155; /* slate-700 */
     --ring: rgba(147, 197, 253, 0.55); /* blue-300/55 */
+
+    --accent: #38bdf8; /* sky-400 */
+    --danger: #f87171; /* red-400 */
   }
 }
 
@@ -56,6 +63,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Fondo sutil (mejora visual sin “cutrez”) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(900px 500px at 10% 10%, rgba(14, 165, 233, 0.12), transparent 55%),
+    radial-gradient(700px 450px at 90% 15%, rgba(239, 68, 68, 0.08), transparent 55%),
+    radial-gradient(900px 600px at 30% 90%, rgba(99, 102, 241, 0.08), transparent 60%);
 }
 
 /* Links legibles en dark */

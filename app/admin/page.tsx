@@ -1,26 +1,50 @@
 import { prisma } from "@/lib/prisma";
 import AdminClient from "./AdminClient";
 import { TALENTS } from "@/lib/talents";
+import type { ReadonlyURLSearchParams } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-function toStr(v: unknown) {
-  return typeof v === "string" ? v : "";
+async function unwrapSearchParams(
+  searchParams: unknown
+): Promise<ReadonlyURLSearchParams | Record<string, string | string[] | undefined>> {
+  // Next 16 puede pasarlo como Promise
+  if (searchParams && typeof (searchParams as any).then === "function") {
+    return await (searchParams as Promise<any>);
+  }
+  return searchParams as any;
+}
+
+function getParam(
+  sp: ReadonlyURLSearchParams | Record<string, string | string[] | undefined>,
+  key: string
+) {
+  // URLSearchParams-like
+  if (sp && typeof (sp as any).get === "function") {
+    return ((sp as any).get(key) ?? "").toString();
+  }
+  // Record fallback
+  const v = (sp as any)?.[key];
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v[0] ?? "";
+  return "";
 }
 
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>;
+  // ✅ Next 16: puede venir como Promise o como URLSearchParams
+  searchParams: unknown;
 }) {
-  const q = toStr(searchParams.q).trim();
-  const genero = toStr(searchParams.genero).trim();
-  const centro = toStr(searchParams.centro).trim();
-  const curso = toStr(searchParams.curso).trim();
-  const modalidad = toStr(searchParams.modalidad).trim();
-  const idea = toStr(searchParams.idea).trim();
+  const sp = await unwrapSearchParams(searchParams);
 
-  // where dinámico
+  const q = getParam(sp, "q").trim();
+  const genero = getParam(sp, "genero").trim();
+  const centro = getParam(sp, "centro").trim();
+  const curso = getParam(sp, "curso").trim();
+  const modalidad = getParam(sp, "modalidad").trim();
+  const idea = getParam(sp, "idea").trim();
+
   const where: any = {};
 
   if (genero) where.genero = genero;
@@ -28,7 +52,6 @@ export default async function AdminPage({
   if (curso) where.curso = { contains: curso, mode: "insensitive" };
   if (modalidad) where.modalidad = { contains: modalidad, mode: "insensitive" };
 
-  // filtro extra por idea
   if (idea) {
     where.OR = [
       { ideaCarrera: { contains: idea, mode: "insensitive" } },
@@ -37,7 +60,6 @@ export default async function AdminPage({
     ];
   }
 
-  // búsqueda general q (nombre/email/idea)
   if (q) {
     where.AND = [
       ...(where.AND ?? []),
@@ -64,7 +86,6 @@ export default async function AdminPage({
     },
   });
 
-  // export link con mismos filtros
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (genero) params.set("genero", genero);

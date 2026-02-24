@@ -1,14 +1,19 @@
 import { prisma } from "@/lib/prisma";
+import ExcelJS from "exceljs";
 
 function toStr(v: unknown) {
   return typeof v === "string" ? v : "";
 }
 
-function esc(s: string) {
-  return s.replaceAll('"', '""');
+function isoDate(d?: Date | null) {
+  if (!d) return "";
+  try {
+    return d.toISOString().slice(0, 10);
+  } catch {
+    return "";
+  }
 }
 
-// Export CSV (compatible con Excel). Si quieres .xlsx real, lo hacemos luego.
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
@@ -20,6 +25,7 @@ export async function GET(req: Request) {
   const idea = toStr(searchParams.get("idea")).trim();
 
   const where: any = {};
+
   if (genero) where.genero = genero;
   if (centro) where.centroEducativo = { contains: centro, mode: "insensitive" };
   if (curso) where.curso = { contains: curso, mode: "insensitive" };
@@ -59,54 +65,66 @@ export async function GET(req: Request) {
     },
   });
 
-  const header = [
-    "createdAt",
-    "nombre",
-    "apellido",
-    "email",
-    "fechaNacimiento",
-    "genero",
-    "curso",
-    "modalidad",
-    "centroEducativo",
-    "tienesIdeaCarrera",
-    "ideaCarrera",
-    "ideaCarreraFinal",
-    "ideaCarreraTextoFinal",
-    "identificaCampos",
-    "campoIdentificado",
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "talentos";
+  wb.created = new Date();
+
+  const ws = wb.addWorksheet("Export");
+
+  ws.columns = [
+    { header: "createdAt", key: "createdAt", width: 20 },
+    { header: "nombre", key: "nombre", width: 18 },
+    { header: "apellido", key: "apellido", width: 18 },
+    { header: "email", key: "email", width: 28 },
+    { header: "fechaNacimiento", key: "fechaNacimiento", width: 14 },
+    { header: "genero", key: "genero", width: 12 },
+    { header: "curso", key: "curso", width: 14 },
+    { header: "modalidad", key: "modalidad", width: 14 },
+    { header: "centroEducativo", key: "centroEducativo", width: 24 },
+    { header: "tienesIdeaCarrera", key: "tienesIdeaCarrera", width: 16 },
+    { header: "ideaCarrera", key: "ideaCarrera", width: 26 },
+    { header: "ideaCarreraFinal", key: "ideaCarreraFinal", width: 18 },
+    { header: "ideaCarreraTextoFinal", key: "ideaCarreraTextoFinal", width: 30 },
+    { header: "identificaCampos", key: "identificaCampos", width: 18 },
+    { header: "campoIdentificado", key: "campoIdentificado", width: 20 },
   ];
 
-  const lines = [header.join(",")];
+  // Cabecera en negrita y con autofiltro
+  ws.getRow(1).font = { bold: true };
+  ws.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: ws.columns.length },
+  };
 
   for (const r of rows as any[]) {
-    const line = [
-      r.createdAt?.toISOString?.() ?? "",
-      r.nombre ?? "",
-      r.apellido ?? "",
-      r.user?.email ?? "",
-      r.fechaNacimiento?.toISOString?.().slice(0, 10) ?? "",
-      r.genero ?? "",
-      r.curso ?? "",
-      r.modalidad ?? "",
-      r.centroEducativo ?? "",
-      r.tienesIdeaCarrera ?? "",
-      r.ideaCarrera ?? "",
-      r.ideaCarreraFinal ?? "",
-      r.ideaCarreraTextoFinal ?? "",
-      r.identificaCampos ?? "",
-      r.campoIdentificado ?? "",
-    ].map((x) => `"${esc(String(x))}"`);
-
-    lines.push(line.join(","));
+    ws.addRow({
+      createdAt: r.createdAt?.toISOString?.() ?? "",
+      nombre: r.nombre ?? "",
+      apellido: r.apellido ?? "",
+      email: r.user?.email ?? "",
+      fechaNacimiento: isoDate(r.fechaNacimiento),
+      genero: r.genero ?? "",
+      curso: r.curso ?? "",
+      modalidad: r.modalidad ?? "",
+      centroEducativo: r.centroEducativo ?? "",
+      tienesIdeaCarrera: r.tienesIdeaCarrera ?? "",
+      ideaCarrera: r.ideaCarrera ?? "",
+      ideaCarreraFinal: r.ideaCarreraFinal ?? "",
+      ideaCarreraTextoFinal: r.ideaCarreraTextoFinal ?? "",
+      identificaCampos: r.identificaCampos ?? "",
+      campoIdentificado: r.campoIdentificado ?? "",
+    });
   }
 
-  const csv = lines.join("\n");
-  const filename = `export_${new Date().toISOString().slice(0, 10)}.csv`;
+  // Congela la primera fila (cabecera)
+  ws.views = [{ state: "frozen", ySplit: 1 }];
 
-  return new Response(csv, {
+  const buffer = await wb.xlsx.writeBuffer();
+  const filename = `export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  return new Response(buffer as any, {
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Cache-Control": "no-store",
     },

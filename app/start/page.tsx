@@ -55,8 +55,8 @@ const initialPost: PostData = {
   campoIdentificado: "",
 };
 
-// Encaja con ítems tipo “Me gusta… / Me atraen… / Puedo…”
-const STEM = "¿Hasta qué punto estás de acuerdo con esta afirmación?";
+// Enunciado fijo: las frases de cada ítem continúan este inicio.
+const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
 function normalizeItemText(s: string) {
   const t = (s ?? "").trim();
@@ -102,6 +102,22 @@ function ProgressRing({ value }: { value: number }) {
   );
 }
 
+function DonutMeter({ score, max }: { score: number; max: number }) {
+  const pct = max > 0 ? clamp(Math.round((score / max) * 100), 0, 100) : 0;
+  const color = pct >= 65 ? "var(--danger)" : "var(--foreground)";
+  const style = {
+    background: `conic-gradient(${color} ${pct}%, rgba(148,163,184,0.35) ${pct}% 100%)`,
+  } as React.CSSProperties;
+
+  return (
+    <div className="w-11 h-11 rounded-full p-[3px]" style={style} aria-label={`${pct}%`}>
+      <div className="w-full h-full rounded-full bg-[var(--card)] flex items-center justify-center border border-[var(--border)]">
+        <span className="text-[11px] font-semibold" style={{ color }}>{pct}%</span>
+      </div>
+    </div>
+  );
+}
+
 function Label({ children }: { children: React.ReactNode }) {
   return <label className="text-sm text-[var(--muted-foreground)]">{children}</label>;
 }
@@ -140,7 +156,7 @@ function ButtonPrimary(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
       {...props}
       className={cx(
         "px-4 py-2.5 rounded-2xl text-sm font-semibold",
-        "bg-[var(--foreground)] text-[var(--background)]",
+        "bg-[var(--accent)] text-[var(--accent-foreground)]",
         "shadow-[0_10px_25px_-15px_rgba(0,0,0,0.35)]",
         "hover:opacity-95 hover:-translate-y-[1px] active:translate-y-0 transition",
         "disabled:opacity-50 disabled:hover:translate-y-0",
@@ -555,7 +571,7 @@ export default function StartPage() {
                         <div className="text-xs text-[var(--muted-foreground)]">{t.code}</div>
                       </div>
                     </div>
-                    <div className="text-sm font-semibold text-[var(--foreground)]">{t.score}</div>
+                    <DonutMeter score={t.score} max={t.max} />
                   </div>
                 ))}
               </div>
