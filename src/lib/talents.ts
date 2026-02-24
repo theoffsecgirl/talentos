@@ -21,6 +21,7 @@ export type Talent = {
   reportTitle?: string;
   reportSummary?: string;
   axis?: string; // Eje neurocognitivo: PRAGMÁTICO / GENERADOR / VÍNCULO
+  group?: string; // Agrupación secundaria: ACCIÓN Y RESULTADOS, CREATIVIDAD Y VÍNCULO, PROFUNDIDAD Y SENSIBILIDAD
   fields?: string[]; // Campos profesionales
   competencies?: string[]; // Competencias personales
   exampleRoles?: string[]; // Profesiones
@@ -43,9 +44,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "GENERADOR",
-    reportTitle: "Perfil de estrategia y comunicación",
+    group: "CREATIVIDAD Y VÍNCULO",
+    reportTitle: "Estrategia y comunicación",
     reportSummary:
-      "Es habitual mostrar facilidad para la estrategia y el arte de la palabra, así como su divulgación. También, capacidad para vender, convencer y negociar. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil con facilidad para la estrategia y el arte de la palabra, así como su divulgación. Capacidad para vender, convencer y negociar. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
     fields: [
       "Estrategia y venta",
       "Divulgación y comunicación",
@@ -81,9 +83,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "PRAGMÁTICO",
-    reportTitle: "Perfil analítico y riguroso",
+    group: "ACCIÓN Y RESULTADOS",
+    reportTitle: "Analítico y riguroso",
     reportSummary:
-      "Muestran interés por la investigación y pasión por el descubrimiento. Es habitual que generen ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental.",
+      "Perfil que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que genere ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental.",
     fields: [
       "Investigación científica",
       "Sanitaria",
@@ -119,9 +122,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "GENERADOR",
-    reportTitle: "Perfil de acompañamiento",
+    group: "CREATIVIDAD Y VÍNCULO",
+    reportTitle: "Acompañamiento y docencia",
     reportSummary:
-      "Es frecuente la pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica. Este perfil se ubica en el eje generador, relacionado con la conexión humana, el equilibrio entre emoción y razón, y las capacidades creativas aplicadas.",
+      "Perfil con pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica. Este perfil se ubica en el eje generador, relacionado con la conexión humana, el equilibrio entre emoción y razón, y las capacidades creativas aplicadas.",
     fields: [
       "Humanidades",
       "Docencia, coaching",
@@ -156,9 +160,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "PRAGMÁTICO",
-    reportTitle: "Perfil de gestión y organización",
+    group: "ACCIÓN Y RESULTADOS",
+    reportTitle: "Gestión y organización",
     reportSummary:
-      "Suelen mostrar capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental en la forma de funcionar.",
+      "Perfil que muestra capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental en la forma de funcionar.",
     fields: [
       "Empresarial",
       "Administrativo",
@@ -195,9 +200,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "VÍNCULO",
-    reportTitle: "Perfil empático y compasivo",
+    group: "PROFUNDIDAD Y SENSIBILIDAD",
+    reportTitle: "Empático y compasivo",
     reportSummary:
-      "Suelen priorizar el bienestar de las personas, acompañarlas es una prioridad. Se caracterizan por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Este perfil pertenece al eje de vínculo, relacionado con la intuición, la capacidad de relación con los demás y con uno mismo.",
+      "Perfil que prioriza el bienestar de las personas, acompañarlas es una prioridad. Se caracteriza por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Este perfil pertenece al eje de vínculo, relacionado con la intuición, la capacidad de relación con los demás y con uno mismo.",
     fields: [
       "Relacionados con las personas y la entrega personal y profesional",
     ],
@@ -230,9 +236,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "GENERADOR",
-    reportTitle: "Perfil de imaginación y creatividad",
+    group: "CREATIVIDAD Y VÍNCULO",
+    reportTitle: "Imaginación y creatividad",
     reportSummary:
-      "Se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil que se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
     fields: [
       "Capacidades artísticas",
       "Creatividad aplicada a todos los ámbitos profesionales y personales",
@@ -266,9 +273,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "VÍNCULO",
-    reportTitle: "Perfil profundo e introspectivo",
+    group: "PROFUNDIDAD Y SENSIBILIDAD",
+    reportTitle: "Profundo e introspectivo",
     reportSummary:
-      "Muestran mucha sensibilidad y profundidad en la forma de percibir el mundo. También destacan por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
+      "Perfil que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
     fields: [
       "Sanitario",
       "Jurídico-social",
@@ -303,9 +311,10 @@ export const TALENTS: Talent[] = [
     ],
 
     axis: "PRAGMÁTICO",
-    reportTitle: "Perfil aplicado y cooperador",
+    group: "ACCIÓN Y RESULTADOS",
+    reportTitle: "Aplicado y cooperador",
     reportSummary:
-      "Suelen demostrar facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y la ejecución práctica.",
+      "Perfil que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y la ejecución práctica.",
     fields: [
       "Educación",
       "Administración",
@@ -335,20 +344,30 @@ export const TALENTS: Talent[] = [
 export const AXES = {
   PRAGMATICO: {
     name: "Circuito Pragmático",
+    shortName: "Acción y resultados",
     description:
       "El eje del talento de las capacidades pragmáticas se relaciona con la razón y el control. Predomina el enfoque mental en la forma de funcionar. Destaca la capacidad de las personas de gestionar y organizar los recursos, de dirigir o ser dirigidas. Capacidad analítica y práctica de enfrentarse a los problemas. Importante la adquisición de conocimiento intelectual, el rigor científico, las evidencias, la responsabilidad y el compromiso en la realización de la tarea.",
     talents: [2, 4, 8],
   },
   GENERADOR: {
     name: "Circuito Generador",
+    shortName: "Creatividad y vínculo",
     description:
       "El eje del talento de las capacidades generadoras se ubica entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad individual. La forma en que se conectan tiene que ver con la relación de las personas y las capacidades creativas aplicadas.",
     talents: [1, 3, 6],
   },
   VINCULO: {
     name: "Circuito de Vínculo",
+    shortName: "Profundidad y sensibilidad",
     description:
       "El eje del talento de las capacidades de vínculo está relacionado con la capacidad de la persona para la intuición, la capacidad de relación con los demás y con uno mismo. Les interesa la trascendencia, el mundo de lo que no es tan evidente, y sobre todo utilizan la intuición, la prospección, y la percepción frente al análisis y la razón.",
     talents: [5, 7],
   },
 };
+
+// Función helper para generar indicador visual de puntuación
+export function scoreIndicator(score: number, max: number): string {
+  if (max === 0) return "0 de 0";
+  const normalized = Math.round((score / max) * 5); // Escala a /5 para visual
+  return `${normalized} de 5`;
+}
