@@ -332,11 +332,9 @@ function TalentWheelSVG({
         ))}
       </defs>
 
-      {/* Líneas cruz */}
       <line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
       <line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
 
-      {/* Diagonales */}
       {[1, 3, 5, 7].map((index) => {
         const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
         const outer = polarToCartesian(angle, radius);
@@ -354,7 +352,6 @@ function TalentWheelSVG({
         );
       })}
 
-      {/* Secciones */}
       {sections.map(({ talent, startAngle, endAngle }) => {
         const midAngle = (startAngle + endAngle) / 2;
         const labelPos = polarToCartesian(midAngle, radius + 30);
@@ -406,7 +403,6 @@ function TalentWheelSVG({
         );
       })}
 
-      {/* Centro */}
       <circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
     </svg>
   );
@@ -593,6 +589,48 @@ function ReportHtml({
     </div>
   </section>`;
 
+  const detailPages = ordered.map((t) => {
+    const s = byId.get(t.id);
+    const config = TALENT_CONFIG[t.id];
+    const fields = (t.fields ?? []).map((x: string) => `<li>${x}</li>`).join("");
+    const comps = (t.competencies ?? []).map((x: string) => `<li>${x}</li>`).join("");
+    const roles = (t.exampleRoles ?? []).map((x: string) => `<li>${x}</li>`).join("");
+
+    return `
+    <section class="page">
+      <div class="pill">${t.code} · ${config?.symbol || ""} · ${t.titleGenotype || ""}</div>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:14px">
+        <div>
+          <h2 class="h2">${t.reportTitle || t.quizTitle}</h2>
+          <div class="muted" style="font-size:13px">${t.group || t.quizTitle}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="muted" style="font-size:12px;font-weight:700">Puntuación</div>
+          <div style="font-size:28px;font-weight:900;color:${config?.color || "#000"}">${s?.score ?? 0}</div>
+          <div class="muted" style="font-size:12px">/ ${s?.max ?? 15}</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div style="font-weight:900;margin-bottom:6px">Resumen neurocognitivo</div>
+        <div style="font-size:13px" class="muted">${t.reportSummary || ""}</div>
+      </div>
+      <div class="grid grid2" style="margin-top:12px">
+        <div class="card">
+          <div style="font-weight:900;margin-bottom:8px">Ámbitos profesionales</div>
+          <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${fields}</ul>
+        </div>
+        <div class="card">
+          <div style="font-weight:900;margin-bottom:8px">Competencias personales</div>
+          <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${comps}</ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div style="font-weight:900;margin-bottom:8px">Roles y profesiones de ejemplo</div>
+        <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${roles}</ul>
+      </div>
+    </section>`;
+  }).join("\n");
+
   const answerRows = Object.entries(answers)
     .sort(([a], [b]) => a.localeCompare(b, "es"))
     .map(([qid, v]) => {
@@ -636,7 +674,7 @@ function ReportHtml({
     </div>
   </section>`;
 
-  return cover + resumenPage + profesionesPage + cierre;
+  return cover + resumenPage + profesionesPage + detailPages + cierre;
 }
 
 export default function AdminClient({ rows, exportHref, talents, filters }: any) {
@@ -1071,6 +1109,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                       <li>Top 3 talentos con símbolos y descripciones completas</li>
                       <li>Tabla completa con todos los talentos</li>
                       <li>Profesiones y roles sugeridos</li>
+                      <li><b>Página individual por cada talento</b> (ámbitos, competencias, roles)</li>
                       <li>Detalle de respuestas (0–3)</li>
                     </ul>
                   </div>
