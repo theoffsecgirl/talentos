@@ -30,7 +30,6 @@ function scoreByTalent(answers: Answers) {
   return scores;
 }
 
-// Función para mezclar array (Fisher-Yates shuffle)
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -40,7 +39,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Generar preguntas aleatorias
 function generateRandomizedQuestions(): Question[] {
   const allQuestions: Question[] = [];
   
@@ -57,20 +55,8 @@ function generateRandomizedQuestions(): Question[] {
   return shuffleArray(allQuestions);
 }
 
-// Sugerencias de carreras por talento
-const CAREER_SUGGESTIONS: Record<number, string[]> = {
-  1: ["Marketing Digital", "Ventas", "Relaciones Públicas", "Gestión Comercial", "Consultoría Estratégica"],
-  2: ["Investigación Científica", "Ingeniería", "Data Science", "Análisis de Datos", "Desarrollo Tecnológico"],
-  3: ["Docencia", "Psicología", "Coaching", "Recursos Humanos", "Orientación Educativa"],
-  4: ["Administración de Empresas", "Finanzas", "Project Management", "Operaciones", "Gestión Pública"],
-  5: ["Trabajo Social", "Enfermería", "ONG", "Mediación", "Intervención Socioeducativa"],
-  6: ["Diseño Gráfico", "UX/UI Design", "Arquitectura", "Arte", "Producción Audiovisual"],
-  7: ["Criminología", "Psicología Forense", "Investigación Criminal", "Auditoría", "Análisis de Fraude"],
-  8: ["Logística", "Administración", "Gestión de Operaciones", "Hostelería", "Servicios"],
-};
-
 export default function TestPage() {
-  const [step, setStep] = useState(0); // 0 = intro, 1..40 = preguntas, 41 = resultados
+  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
@@ -78,7 +64,6 @@ export default function TestPage() {
   const [done, setDone] = useState<null | { top: ReturnType<typeof scoreByTalent> }>(null);
   const [selectedCareers, setSelectedCareers] = useState<string[]>([]);
 
-  // Generar preguntas aleatorias una sola vez
   const questions = useMemo(() => generateRandomizedQuestions(), []);
   const totalQuestions = questions.length;
 
@@ -96,7 +81,7 @@ export default function TestPage() {
 
   function validateStep(): string {
     if (step === 0) {
-      if (!email.trim()) return "Escribe tu correo (el mismo que has usado en el registro).";
+      if (!email.trim()) return "Escribe tu correo para continuar.";
       return "";
     }
 
@@ -168,21 +153,22 @@ export default function TestPage() {
     );
   }
 
-  // Vista de resultados
   if (done) {
     const top3 = done.top.slice(0, 3);
-    const suggestedCareers = top3.flatMap((t) => 
-      CAREER_SUGGESTIONS[t.talentId] || []
-    );
+    
+    // Obtener carreras sugeridas basadas en los datos de neurociencia
+    const suggestedCareers = top3.flatMap((t) => {
+      const talent = TALENTS.find((tal) => tal.id === t.talentId);
+      return talent?.exampleRoles || [];
+    });
 
     return (
       <main className="max-w-4xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold text-center">Tus Resultados</h1>
         <p className="mt-2 text-center text-zinc-600">
-          Mapa visual de tus talentos y carreras sugeridas
+          Mapa visual de tus talentos basado en neurociencia aplicada
         </p>
 
-        {/* Visualización circular */}
         <div className="mt-12">
           <TalentWheel
             scores={done.top.map((t) => ({
@@ -193,45 +179,59 @@ export default function TestPage() {
           />
         </div>
 
-        {/* Top 3 talentos */}
         <div className="mt-12 border border-zinc-200 rounded-2xl bg-white p-6">
           <h2 className="text-xl font-semibold">Tus 3 talentos más destacados</h2>
           <ol className="mt-4 space-y-3">
-            {top3.map((t, idx) => (
-              <li key={t.talentId} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-zinc-50">
-                <div>
-                  <div className="text-sm text-zinc-500">#{idx + 1}</div>
-                  <div className="font-semibold">{t.title}</div>
-                </div>
-                <div className="text-sm text-zinc-700 font-bold">
-                  {t.score}/{t.max}
-                </div>
-              </li>
-            ))}
+            {top3.map((t, idx) => {
+              const talent = TALENTS.find((tal) => tal.id === t.talentId);
+              return (
+                <li key={t.talentId} className="p-4 rounded-lg bg-zinc-50 border border-zinc-200">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-zinc-500">#{idx + 1}</span>
+                        <span className="font-bold text-lg">{talent?.reportTitle || t.title}</span>
+                      </div>
+                      <p className="mt-2 text-sm text-zinc-600">{talent?.reportSummary}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {talent?.fields.slice(0, 3).map((field, i) => (
+                          <span key={i} className="px-2 py-1 bg-zinc-200 rounded-md text-xs font-medium">
+                            {field}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold">{t.score}</div>
+                      <div className="text-xs text-zinc-500">/ {t.max}</div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </div>
 
-        {/* Panel de carreras interactivo */}
         <div className="mt-8 border border-zinc-200 rounded-2xl bg-white p-6">
-          <h2 className="text-xl font-semibold">Carreras sugeridas para tu perfil</h2>
+          <h2 className="text-xl font-semibold">Profesiones y roles sugeridos</h2>
           <p className="mt-2 text-sm text-zinc-600">
-            Marca las carreras con las que te sientes identificado/a:
+            Basado en tus talentos principales. Marca las opciones con las que te identificas:
           </p>
 
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="mt-4 space-y-2">
             {suggestedCareers.map((career, idx) => (
               <button
                 key={`${career}-${idx}`}
                 onClick={() => toggleCareer(career)}
-                className={`p-3 rounded-lg border-2 text-left transition-all ${
+                className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
                   selectedCareers.includes(career)
                     ? "border-zinc-900 bg-zinc-900 text-white"
                     : "border-zinc-200 bg-white hover:border-zinc-300"
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div
-                    className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                       selectedCareers.includes(career)
                         ? "border-white bg-white"
                         : "border-zinc-300"
@@ -243,7 +243,7 @@ export default function TestPage() {
                       </svg>
                     )}
                   </div>
-                  <span className="text-sm font-medium">{career}</span>
+                  <span className="text-sm">{career}</span>
                 </div>
               </button>
             ))}
@@ -252,7 +252,7 @@ export default function TestPage() {
           {selectedCareers.length > 0 && (
             <div className="mt-4 p-3 rounded-lg bg-green-50 border border-green-200">
               <p className="text-sm text-green-800">
-                ✓ Has seleccionado {selectedCareers.length} carrera(s)
+                ✓ Has seleccionado {selectedCareers.length} opción(es)
               </p>
             </div>
           )}
@@ -275,7 +275,6 @@ export default function TestPage() {
     );
   }
 
-  // Vista del cuestionario
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
       <header className="flex items-end justify-between gap-4">
