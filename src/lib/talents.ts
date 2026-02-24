@@ -6,23 +6,20 @@ export type TalentItem = {
 export type Talent = {
   id: number;
   code: string;
-
-  // 🔒 NO se usa en preguntas (para “otra cosa” después)
-  titleSymbolic: string;   // Ej: "Delta (Δ) — Estrategia"
-  titleGenotype: string;   // Ej: "Triángulo"
-
-  // ✅ Este es el que sí usa el cuestionario
+  titleSymbolic: string;
+  titleGenotype: string;
   quizTitle: string;
-
   intro: string;
   items: TalentItem[];
-
-  // ✅ Contenido para informe (no se usa en el cuestionario)
-  reportTitle?: string; // Título corto para el informe
-  reportSummary?: string; // 2-4 líneas
-  fields?: string[]; // “Campos profesionales”
-  competencies?: string[]; // “Competencias personales”
-  exampleRoles?: string[]; // “Profesiones / roles”
+  
+  // Datos para el informe (basados en neurociencia aplicada)
+  reportTitle: string;
+  reportSummary: string;
+  axis: string; // Eje: Pragmático, Generador, Vínculo
+  axisDescription: string;
+  fields: string[]; // Campos profesionales
+  competencies: string[]; // Competencias personales
+  exampleRoles: string[]; // Profesiones
 };
 
 export const TALENTS: Talent[] = [
@@ -40,18 +37,23 @@ export const TALENTS: Talent[] = [
       { id: "1.4", text: "Me motiva liderar equipos para lograr resultados y reconocimiento." },
       { id: "1.5", text: "Me veo trabajando en ámbitos como ventas, marketing, publicidad o gestión de marcas." },
     ],
-
-    reportTitle: "Estrategia y comunicación",
-    reportSummary:
-      "Perfil orientado a influir, persuadir y proyectar ideas. Suele destacar cuando hay que explicar, negociar o dar visibilidad a proyectos y personas.",
-    fields: ["Ventas y negociación", "Marketing y comunicación", "Relaciones institucionales", "Dirección y liderazgo"],
+    reportTitle: "Un talento de la estrategia y la comunicación",
+    reportSummary: "Es habitual mostrar facilidad para la estrategia y el arte de la palabra, así como su divulgación. También, capacidad para vender, convencer y negociar.",
+    axis: "Generador",
+    axisDescription: "El eje del talento de las capacidades generadoras se ubica entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad individual. La forma en que se conectan tiene que ver con la relación de las personas y las capacidades creativas aplicadas.",
+    fields: ["Estrategia y venta", "Divulgación y comunicación", "Conexión humana"],
     competencies: [
-      "Oratoria y presencia",
-      "Pensamiento estratégico",
-      "Negociación y persuasión",
-      "Capacidad de movilizar a otros",
+      "Crean utilizando todo tipo de estrategias para conseguir sus objetivos",
+      "Dominan la comunicación, la oratoria y el arte de la palabra",
+      "Son especialistas en Inteligencia emocional y dominan las claves",
+      "Lideran desde su habilidad comunicativa y generando conexión",
     ],
-    exampleRoles: ["Marketing", "Ventas", "Portavocía", "Gestión de cuentas", "Dirección comercial"],
+    exampleRoles: [
+      "Todas las del mundo de la venta y la negociación",
+      "Marketing. Comunicación Audiovisual. Técnicos en Imagen o Sonido. Director-realizador de medios audiovisuales",
+      "Relaciones laborales. Ciencias del trabajo",
+      "Política, Derecho, Diplomacia, Divulgación técnica, Periodismo",
+    ],
   },
   {
     id: 2,
@@ -67,13 +69,23 @@ export const TALENTS: Talent[] = [
       { id: "2.4", text: "Siento curiosidad por entender el porqué de las cosas que me interesan." },
       { id: "2.5", text: "Disfruto desarrollando y profundizando mis conocimientos intelectuales." },
     ],
-
-    reportTitle: "Investigación y rigor",
-    reportSummary:
-      "Preferencia por el análisis, la evidencia y la comprensión profunda. Funcionas bien en entornos donde se valora el método, la precisión y el aprendizaje continuo.",
-    fields: ["Investigación científica", "Tecnología", "Salud", "Ingenierías"],
-    competencies: ["Curiosidad científica", "Razonamiento lógico", "Rigor y validación", "Aprendizaje profundo"],
-    exampleRoles: ["I+D", "Data/Analytics", "Ingeniería", "Investigación clínica", "Laboratorio"],
+    reportTitle: "Un talento analítico y riguroso",
+    reportSummary: "Muestran interés por la investigación y pasión por el descubrimiento. Es habitual que genere ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos.",
+    axis: "Pragmático",
+    axisDescription: "El eje del talento de las capacidades pragmáticas se relaciona con la razón y el control. Predomina el enfoque mental en la forma de funcionar. Destaca la capacidad de las personas de gestionar y organizar los recursos, de dirigir o ser dirigidas. Capacidad analítica y práctica de enfrentarse a los problemas. Importante la adquisición de conocimiento intelectual, el rigor científico, las evidencias, la responsabilidad y el compromiso en la realización de la tarea.",
+    fields: ["Investigación Científica", "Sanitaria", "Tecnológica"],
+    competencies: [
+      "Crean desde una base de conocimiento, estudian y exploran lo imposible",
+      "Se comunican con un lenguaje culto y técnico",
+      "Conocen la inteligencia emocional, pero no les preocupa su aplicación",
+      "Lideran desde el saber, la autoridad científica",
+    ],
+    exampleRoles: [
+      "Todas las profesiones que requieran un buen nivel de conocimientos, curiosidad científica y deseo de saber",
+      "Geología. Biología. Astronomía. Química. Ciencias ambientales. Ciencias del Deporte, Física",
+      "Medicina. Fisioterapia. Odontología. Dietética. Oftalmología. Medicina especialista cardiología, pediatría, etc.",
+      "Ingenierías de Telecomunicación, Aeronáutica, en Electrónica, Ingeniería en informática. T.S. desarrollo aplicaciones informáticas. T.S. en administración de sistemas informáticos. Especialista en Telemática",
+    ],
   },
   {
     id: 3,
@@ -89,13 +101,23 @@ export const TALENTS: Talent[] = [
       { id: "3.4", text: "Destaco por escuchar, comprender y empatizar con los demás." },
       { id: "3.5", text: "Me interesa ayudar al desarrollo emocional de personas y equipos." },
     ],
-
-    reportTitle: "Acompañamiento y educación",
-    reportSummary:
-      "Talento para comprender a las personas, enseñar y guiar procesos de mejora. Sueles aportar escucha, estructura y visión crítica para ayudar a crecer.",
-    fields: ["Docencia", "Orientación", "Psicología/Coaching", "Área de personas"],
-    competencies: ["Escucha activa", "Empatía", "Comunicación pedagógica", "Desarrollo personal"],
-    exampleRoles: ["Docencia", "Tutoría", "Orientación", "RRHH", "Coaching"],
+    reportTitle: "Un talento del acompañamiento",
+    reportSummary: "Es frecuente la pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica.",
+    axis: "Generador",
+    axisDescription: "El eje del talento de las capacidades generadoras se ubica entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad individual. La forma en que se conectan tiene que ver con la relación de las personas y las capacidades creativas aplicadas.",
+    fields: ["Humanidades", "Docencia, coaching", "Salud de las personas"],
+    competencies: [
+      "Crean utilizando todo tipo de pensamiento, divergente o disruptivo",
+      "Dominan la comunicación y la oratoria para convencer y enseñar",
+      "Son especialistas en Inteligencia emocional, empáticos y asertivos",
+      "Lideran desde el comportamiento y son un ejemplo enriquecedor",
+    ],
+    exampleRoles: [
+      "Docencia, Pedagogía, Sociología, Educación social",
+      "Técnicos en educación de todas las etapas educativas, educación especial. Docencia vocacional",
+      "Psicología y técnicos especializados en el acompañamiento de personas para mejorar su bienestar, coach",
+      "Área de personas de las organizaciones. Selección, contratación, reclutamiento, planes de carrera, salud corporativa",
+    ],
   },
   {
     id: 4,
@@ -111,13 +133,23 @@ export const TALENTS: Talent[] = [
       { id: "4.4", text: "Me veo formando parte de cuerpos de seguridad o estructuras muy organizadas." },
       { id: "4.5", text: "Estoy dispuesto a asumir responsabilidades y liderar equipos o situaciones complejas." },
     ],
-
-    reportTitle: "Gestión y organización",
-    reportSummary:
-      "Orientación a objetivos, estructura y responsabilidad. Suele destacar en contextos donde hay que ordenar recursos, tomar decisiones y garantizar ejecución.",
-    fields: ["Empresa y administración", "Finanzas", "Operaciones", "Seguridad y protección"],
-    competencies: ["Organización", "Toma de decisiones", "Liderazgo operativo", "Responsabilidad"],
-    exampleRoles: ["Gestión", "Administración", "Operaciones", "Mando intermedio", "Planificación"],
+    reportTitle: "Un talento de la gestión",
+    reportSummary: "Suelen mostrar capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos.",
+    axis: "Pragmático",
+    axisDescription: "El eje del talento de las capacidades pragmáticas se relaciona con la razón y el control. Predomina el enfoque mental en la forma de funcionar. Destaca la capacidad de las personas de gestionar y organizar los recursos, de dirigir o ser dirigidas. Capacidad analítica y práctica de enfrentarse a los problemas. Importante la adquisición de conocimiento intelectual, el rigor científico, las evidencias, la responsabilidad y el compromiso en la realización de la tarea.",
+    fields: ["Empresarial", "Administrativo", "Financiero", "Seguridad y Protección"],
+    competencies: [
+      "Crean desde una base analítica y de conocimiento previo, no imaginan",
+      "Se comunican de forma directa, breve, van al grano",
+      "Conocen la inteligencia emocional, pero la razón va por delante de la emoción",
+      "Lideran desde la jerarquía, les cuesta delegar y pueden ser inflexibles",
+    ],
+    exampleRoles: [
+      "Economía. Ciencias Actuariales y Financieras. Abogacía. Administración de recursos y personas",
+      "Agentes de la propiedad inmobiliaria. Gestión administrativa",
+      "Emprendimiento, iniciativa empresarial. Saben conseguir que los objetivos se cumplan. Solucionan los problemas cuando se presentan",
+      "Cuerpos de seguridad del Estado, principalmente con responsabilidades y nivel de mando",
+    ],
   },
   {
     id: 5,
@@ -133,13 +165,23 @@ export const TALENTS: Talent[] = [
       { id: "5.4", text: "Actúo desde la intuición, el compromiso y el altruismo." },
       { id: "5.5", text: "Me motiva la idea de transformar el mundo y hacerlo más justo y digno." },
     ],
-
-    reportTitle: "Vocación social",
-    reportSummary:
-      "Motivación por ayudar, cuidar y mejorar el bienestar. Sueles priorizar impacto humano, conciliación y resolución de conflictos desde el compromiso.",
-    fields: ["Servicios sociales", "Salud centrada en la persona", "Educación social", "Entidades sin ánimo de lucro"],
-    competencies: ["Altruismo", "Inteligencia emocional", "Mediación", "Compromiso"],
-    exampleRoles: ["Intervención social", "Educación social", "Sanidad", "ONG", "Mediación"],
+    reportTitle: "Un talento empático y compasivo",
+    reportSummary: "Suelen priorizar el bienestar de las personas, acompañarlas es una prioridad. Se caracterizan por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos.",
+    axis: "Vínculo",
+    axisDescription: "El eje del talento de las capacidades de vínculo está relacionado con la capacidad de la persona para la intuición, la capacidad de relación con los demás y con uno mismo/a. Les interesa la trascendencia, el mundo de lo que no es tan evidente, y sobre todo utilizan la intuición, la prospección, y la percepción frente al análisis y la razón.",
+    fields: ["Relacionados con las personas y la entrega personal y profesional"],
+    competencies: [
+      "Crean visualizando un mundo mejor, más justo y equitativo",
+      "Comunican estableciendo enlaces potentes",
+      "Son especialistas en Inteligencia emocional, sobre todo intra personal",
+      "Lideran siendo un referente, sabiendo escuchar, con el ejemplo",
+    ],
+    exampleRoles: [
+      "Pedagogía. Psicología escolar. Educadores y trabajadores sociales y todo lo que signifique acompañar y ayudar a niños y niñas en su crecimiento y evolución madurativa",
+      "Medicina centrada en la persona y su recuperación, especialistas en pediatría, psiquiatría, etc.",
+      "Personas especializadas en servicios sociales y salud, entidades sin ánimo de lucro",
+      "Entrega personal y profesional de forma vocacional",
+    ],
   },
   {
     id: 6,
@@ -155,13 +197,22 @@ export const TALENTS: Talent[] = [
       { id: "6.4", text: "Me gusta formar parte de equipos creativos con retos estimulantes." },
       { id: "6.5", text: "Valoro que cada día sea diferente y poco predecible." },
     ],
-
-    reportTitle: "Creatividad aplicada",
-    reportSummary:
-      "Necesidad de crear, imaginar y proponer soluciones originales. Suele brillar cuando hay libertad para explorar, prototipar y mejorar lo existente.",
-    fields: ["Diseño", "Producto", "Arte y cultura", "Innovación"],
-    competencies: ["Imaginación", "Pensamiento divergente", "Prototipado", "Sensibilidad estética"],
-    exampleRoles: ["Diseño", "UX", "Contenido", "Producto", "Creatividad"],
+    reportTitle: "Un talento de la imaginación",
+    reportSummary: "Se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Capacidades artísticas.",
+    axis: "Generador",
+    axisDescription: "El eje del talento de las capacidades generadoras se ubica entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad individual. La forma en que se conectan tiene que ver con la relación de las personas y las capacidades creativas aplicadas.",
+    fields: ["Creatividad aplicada a todos los ámbitos profesionales y personales", "Arte"],
+    competencies: [
+      "Crean constantemente en todas las facetas de la vida",
+      "Comunican desde el entusiasmo cuando visualizan oportunidades",
+      "Viven la emoción pero no siempre son comprendidos en las ideas",
+      "Lideran desde el contagio para conseguir nuevos objetivos",
+    ],
+    exampleRoles: [
+      "Creatividad aplicada a la actividad profesional. Arquitectura, ingenierías, venta, política, RRHH, medicina, etc.",
+      "Ideas sin límite para innovar y solucionar todo tipo de problemas",
+      "Habilidades deportivas y artísticas en todas las expresiones",
+    ],
   },
   {
     id: 7,
@@ -177,13 +228,23 @@ export const TALENTS: Talent[] = [
       { id: "7.4", text: "Me atrae explorar lo oculto, el misterio, el crimen o lo no evidente." },
       { id: "7.5", text: "Expreso sensibilidad hacia aquello que no es visible a simple vista." },
     ],
-
-    reportTitle: "Profundidad e investigación",
-    reportSummary:
-      "Sensibilidad para detectar lo no evidente y analizar realidades complejas. Suele encajar en investigación, forense, fraude o temas con carga emocional/ética.",
-    fields: ["Forense", "Criminología", "Psicología/Salud mental", "Fraude e inspección"],
-    competencies: ["Pensamiento profundo", "Intuición analítica", "Atención al detalle", "Tolerancia a lo complejo"],
-    exampleRoles: ["Forense", "Compliance", "Investigación", "Análisis de fraude", "Psicología"],
+    reportTitle: "Un talento visionario e innovador",
+    reportSummary: "Muestran mucha sensibilidad y profundidad en la forma de percibir el mundo. También destacan por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual.",
+    axis: "Vínculo",
+    axisDescription: "El eje del talento de las capacidades de vínculo está relacionado con la capacidad de la persona para la intuición, la capacidad de relación con los demás y con uno mismo/a. Les interesa la trascendencia, el mundo de lo que no es tan evidente, y sobre todo utilizan la intuición, la prospección, y la percepción frente al análisis y la razón.",
+    fields: ["Sanitario", "Jurídico-Social", "Artístico, clima dark"],
+    competencies: [
+      "Crean en zonas ocultas, profundas, a veces de difícil comprensión",
+      "Su comunicación es especial, necesita un nivel de conocimiento diferente",
+      "Viven las emociones de una forma diferente y no son muy sociables",
+      "Lideran desde la generación de estilos que cautivan a seguidores",
+    ],
+    exampleRoles: [
+      "Todos los ámbitos profesionales donde sea necesaria una sensibilidad especial para detectar lo que no es evidente, requiere investigar, intuir, descubrir",
+      "Salud en Psiquiatría, Psicología, Oncología, Forense, y técnicos especializados en el mundo de la muerte o el trauma",
+      "Criminología, y técnicos especializados en la investigación y el descubrimiento de lo oculto",
+      "Investigación en el mundo de la empresa, Forensic, actuarial, fraudes, inspecciones, etc.",
+    ],
   },
   {
     id: 8,
@@ -199,13 +260,38 @@ export const TALENTS: Talent[] = [
       { id: "8.4", text: "Me gusta facilitar la vida de otras personas cumpliendo expectativas." },
       { id: "8.5", text: "Destaco por mi constancia, estabilidad y capacidad de servicio." },
     ],
-
-    reportTitle: "Ejecución y estabilidad",
-    reportSummary:
-      "Fortaleza para sostener rutinas, cumplir procesos y ejecutar con constancia. Aporta fiabilidad, servicio y orden cuando hay que asegurar resultados.",
-    fields: ["Administración", "Logística", "Mantenimiento", "Hostelería y turismo", "Transporte"],
-    competencies: ["Constancia", "Responsabilidad", "Trabajo metódico", "Orientación al servicio"],
-    exampleRoles: ["Operativa", "Backoffice", "Logística", "Mantenimiento", "Servicios"],
+    reportTitle: "Un talento aplicado y cooperador",
+    reportSummary: "Suelen demostrar facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional.",
+    axis: "Pragmático",
+    axisDescription: "El eje del talento de las capacidades pragmáticas se relaciona con la razón y el control. Predomina el enfoque mental en la forma de funcionar. Destaca la capacidad de las personas de gestionar y organizar los recursos, de dirigir o ser dirigidas. Capacidad analítica y práctica de enfrentarse a los problemas. Importante la adquisición de conocimiento intelectual, el rigor científico, las evidencias, la responsabilidad y el compromiso en la realización de la tarea.",
+    fields: ["Educación", "Administración", "Agraria", "Hostelería y Turismo", "Seguridad y Vigilancia", "Transporte y mecánica"],
+    competencies: [
+      "La creatividad no es su característica principal",
+      "Se comunican de forma clara y sin florituras",
+      "No son expertos en inteligencia emocional, pero no generan conflicto",
+      "Lideran desde el hacer, son un modelo y ejemplo de cumplimiento",
+    ],
+    exampleRoles: [
+      "Educación básica, funcionariado, trabajos que impliquen seguridad, repetición, compromiso y responsabilidad",
+      "Técnicos en gestión administrativa y comercial. Técnicos en trabajos forestales y conservación del medio ambiente. Mantenimiento de instalaciones y transporte",
+      "Técnicos en turismo y restauración. Tripulante de cabina o auxiliar de barco",
+      "Fuerzas de seguridad del estado y la vigilancia",
+    ],
   },
 ];
 
+// Información de los ejes
+export const AXES_INFO = {
+  Pragmático: {
+    title: "Eje Pragmático",
+    description: "El eje del talento de las capacidades pragmáticas se relaciona con la razón y el control. Predomina el enfoque mental en la forma de funcionar. Destaca la capacidad de las personas de gestionar y organizar los recursos, de dirigir o ser dirigidas. Capacidad analítica y práctica de enfrentarse a los problemas. Importante la adquisición de conocimiento intelectual, el rigor científico, las evidencias, la responsabilidad y el compromiso en la realización de la tarea.",
+  },
+  Generador: {
+    title: "Eje Generador",
+    description: "El eje del talento de las capacidades generadoras se ubica entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad individual. La forma en que se conectan tiene que ver con la relación de las personas y las capacidades creativas aplicadas.",
+  },
+  Vínculo: {
+    title: "Eje Vínculo",
+    description: "El eje del talento de las capacidades de vínculo está relacionado con la capacidad de la persona para la intuición, la capacidad de relación con los demás y con uno mismo/a. Les interesa la trascendencia, el mundo de lo que no es tan evidente, y sobre todo utilizan la intuición, la prospección, y la percepción frente al análisis y la razón.",
+  },
+};
