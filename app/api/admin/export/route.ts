@@ -14,6 +14,11 @@ function isoDate(d?: Date | null) {
   }
 }
 
+function pct(score: number, max: number) {
+  if (!max) return 0;
+  return Math.max(0, Math.min(100, Math.round((score / max) * 100)));
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
@@ -87,6 +92,18 @@ export async function GET(req: Request) {
     { header: "ideaCarreraTextoFinal", key: "ideaCarreraTextoFinal", width: 30 },
     { header: "identificaCampos", key: "identificaCampos", width: 18 },
     { header: "campoIdentificado", key: "campoIdentificado", width: 20 },
+    // Columnas de talentos (T1-T8 en porcentaje)
+    { header: "T1_Delta_%", key: "t1", width: 10 },
+    { header: "T2_Pi_%", key: "t2", width: 10 },
+    { header: "T3_Psi_%", key: "t3", width: 10 },
+    { header: "T4_Alfa_%", key: "t4", width: 10 },
+    { header: "T5_Omega_%", key: "t5", width: 10 },
+    { header: "T6_Fi_%", key: "t6", width: 10 },
+    { header: "T7_Theta_%", key: "t7", width: 10 },
+    { header: "T8_Meandro_%", key: "t8", width: 10 },
+    { header: "top1_talent", key: "top1", width: 16 },
+    { header: "top2_talent", key: "top2", width: 16 },
+    { header: "top3_talent", key: "top3", width: 16 },
   ];
 
   // Cabecera en negrita y con autofiltro
@@ -97,6 +114,31 @@ export async function GET(req: Request) {
   };
 
   for (const r of rows as any[]) {
+    const assessment = r.assessments?.[0];
+    const scoresJson = assessment?.scoresJson;
+    const scores = Array.isArray(scoresJson) ? scoresJson : [];
+
+    // Calcular porcentajes por talento
+    const talentMap: Record<number, number> = {};
+    for (const s of scores) {
+      const tid = Number(s?.talentId);
+      const score = Number(s?.score ?? 0);
+      const max = Number(s?.max ?? 0);
+      if (Number.isFinite(tid)) {
+        talentMap[tid] = pct(score, max);
+      }
+    }
+
+    // Top 3 talentos
+    const sortedTalents = scores
+      .slice()
+      .sort((a: any, b: any) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, 3);
+
+    const top1 = sortedTalents[0] ? `T${sortedTalents[0].talentId}` : "";
+    const top2 = sortedTalents[1] ? `T${sortedTalents[1].talentId}` : "";
+    const top3 = sortedTalents[2] ? `T${sortedTalents[2].talentId}` : "";
+
     ws.addRow({
       createdAt: r.createdAt?.toISOString?.() ?? "",
       nombre: r.nombre ?? "",
@@ -113,6 +155,17 @@ export async function GET(req: Request) {
       ideaCarreraTextoFinal: r.ideaCarreraTextoFinal ?? "",
       identificaCampos: r.identificaCampos ?? "",
       campoIdentificado: r.campoIdentificado ?? "",
+      t1: talentMap[1] ?? "",
+      t2: talentMap[2] ?? "",
+      t3: talentMap[3] ?? "",
+      t4: talentMap[4] ?? "",
+      t5: talentMap[5] ?? "",
+      t6: talentMap[6] ?? "",
+      t7: talentMap[7] ?? "",
+      t8: talentMap[8] ?? "",
+      top1,
+      top2,
+      top3,
     });
   }
 
