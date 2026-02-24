@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { TALENTS } from "@/lib/talents";
+import TalentWheel from "@/components/TalentWheel";
 
 type PreData = {
   nombre: string;
@@ -16,11 +17,11 @@ type PostData = {
   modalidad: string;
   centroEducativo: string;
 
-  // idea de carrera (antes de “te identificas con alguno”)
+  // idea de carrera (antes de "te identificas con alguno")
   ideaCarreraFinal: "Sí" | "No" | "";
   ideaCarreraTextoFinal: string;
 
-  // “te identificas con alguno”
+  // "te identificas con alguno"
   identificaCampos: "Sí" | "No" | "";
   campoIdentificado: string;
 };
@@ -188,18 +189,6 @@ const SCALE = [
   { n: 3, label: "Totalmente" },
 ] as const;
 
-// Campos profesionales por talento (ajústalo a tu gusto)
-const FIELDS_BY_TALENT: Record<number, string[]> = {
-  1: ["Marketing y comunicación", "Ventas y negociación", "Relaciones públicas", "Dirección comercial"],
-  2: ["Ciencia e investigación", "Ingeniería", "Datos y analítica", "Tecnología"],
-  3: ["Educación", "Psicología y orientación", "Coaching", "Recursos humanos"],
-  4: ["Dirección y gestión", "Administración", "Operaciones", "Seguridad y organización"],
-  5: ["Salud y atención social", "ONG / cooperación", "Derecho y mediación", "Servicios públicos"],
-  6: ["Diseño", "Arte y creatividad", "Producto e innovación", "Contenido"],
-  7: ["Investigación y análisis", "Forense", "Criminología", "Ciberseguridad (análisis)"],
-  8: ["Operaciones", "Calidad y procesos", "Logística", "Soporte y ejecución"],
-};
-
 export default function StartPage() {
   const questions = useMemo<Question[]>(() => {
     const shuffledTalents = shuffle(TALENTS).map((t) => ({
@@ -245,6 +234,7 @@ export default function StartPage() {
   const [error, setError] = useState<string>("");
   const [saving, setSaving] = useState<boolean>(false);
   const [savedOk, setSavedOk] = useState<boolean>(false);
+  const [selectedCareers, setSelectedCareers] = useState<string[]>([]);
 
   const submittingRef = useRef(false);
 
@@ -334,6 +324,9 @@ export default function StartPage() {
       quizTitle: t.quizTitle,
       titleSymbolic: t.titleSymbolic,
       titleGenotype: t.titleGenotype,
+      reportTitle: t.reportTitle,
+      reportSummary: t.reportSummary,
+      exampleRoles: t.exampleRoles || [],
       score: scores.get(t.id) ?? 0,
       max: t.items.length * 3,
     })).sort((a, b) => b.score - a.score);
@@ -341,9 +334,10 @@ export default function StartPage() {
 
   const winner = ranked[0];
 
-  function fieldsForWinner() {
-    if (!winner) return [];
-    return FIELDS_BY_TALENT[winner.id] ?? [];
+  function toggleCareer(career: string) {
+    setSelectedCareers((prev) =>
+      prev.includes(career) ? prev.filter((c) => c !== career) : [...prev, career]
+    );
   }
 
   async function saveAll() {
@@ -376,8 +370,8 @@ export default function StartPage() {
           modalidad: post.modalidad.trim(),
           centroEducativo: post.centroEducativo.trim() || null,
 
-          // “idea de carrera” original del modelo (para compatibilidad admin/filtros actuales)
-          // aquí la fijamos con la “final”
+          // "idea de carrera" original del modelo (para compatibilidad admin/filtros actuales)
+          // aquí la fijamos con la "final"
           tienesIdeaCarrera: post.ideaCarreraFinal || "No",
           ideaCarrera: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
 
@@ -409,6 +403,118 @@ export default function StartPage() {
     }
   }
 
+  // Pantalla de resultados después del cuestionario
+  if (step === STEP_RESULT) {
+    const top3 = ranked.slice(0, 3);
+    const suggestedCareers = top3.flatMap((t) => t.exampleRoles);
+
+    return (
+      <main className="min-h-screen bg-[var(--background)]">
+        <div className="max-w-4xl mx-auto px-4 py-12">
+          <header className="flex items-end justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-[var(--foreground)]">Tus Resultados</h1>
+              <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                Mapa visual de tus talentos basado en neurociencia aplicada
+              </p>
+            </div>
+            <ProgressRing value={progress} />
+          </header>
+
+          <div className="mb-12">
+            <TalentWheel
+              scores={ranked.map((t) => ({
+                talentId: t.id,
+                score: t.score,
+                max: t.max,
+              }))}
+            />
+          </div>
+
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
+            <h2 className="text-xl font-semibold text-[var(--foreground)]">Tus 3 talentos más destacados</h2>
+            <ol className="mt-4 space-y-3">
+              {top3.map((t, idx) => (
+                <li key={t.id} className="p-4 rounded-lg border border-[var(--border)]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-[var(--muted-foreground)]">#{idx + 1}</span>
+                        <span className="font-bold text-lg text-[var(--foreground)]">{t.reportTitle || t.quizTitle}</span>
+                      </div>
+                      <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t.reportSummary}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-[var(--foreground)]">{t.score}</div>
+                      <div className="text-xs text-[var(--muted-foreground)]">/ {t.max}</div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Basado en tus talentos principales. Marca las opciones con las que te identificas:
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {suggestedCareers.map((career, idx) => (
+                <button
+                  key={`${career}-${idx}`}
+                  onClick={() => toggleCareer(career)}
+                  className={cx(
+                    "w-full p-3 rounded-lg border-2 text-left transition-all",
+                    selectedCareers.includes(career)
+                      ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
+                      : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cx(
+                        "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
+                        selectedCareers.includes(career)
+                          ? "border-[var(--background)] bg-[var(--background)]"
+                          : "border-[var(--muted-foreground)]"
+                      )}
+                    >
+                      {selectedCareers.includes(career) && (
+                        <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-sm">{career}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {selectedCareers.length > 0 && (
+              <div className="mt-4 p-3 rounded-lg bg-green-50 border border-green-200">
+                <p className="text-sm text-green-800">
+                  ✓ Has seleccionado {selectedCareers.length} opción(es)
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-between gap-3">
+            <ButtonGhost type="button" onClick={back}>
+              Atrás
+            </ButtonGhost>
+            <ButtonPrimary type="button" onClick={next}>
+              Continuar con el registro
+            </ButtonPrimary>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <div className="max-w-2xl mx-auto px-4 py-12">
@@ -416,11 +522,11 @@ export default function StartPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-xs text-[var(--muted-foreground)] shadow-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-              Cuestionario
+              Cuestionario basado en neurociencia
             </div>
-            <h1 className="mt-3 text-3xl font-bold text-[var(--foreground)]">Encuentra tu talento</h1>
+            <h1 className="mt-3 text-3xl font-bold text-[var(--foreground)]">Descubre tu futuro profesional</h1>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Paso {step} de {totalSteps}
+              Paso {step} de {totalSteps} · Orientación personalizada
             </p>
           </div>
           <ProgressRing value={progress} />
@@ -437,8 +543,10 @@ export default function StartPage() {
           {step === STEP_PRE && (
             <div className="grid gap-5">
               <div>
-                <h2 className="text-lg font-semibold text-[var(--foreground)]">Datos de contacto</h2>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">Nombre y correo electrónico.</p>
+                <h2 className="text-lg font-semibold text-[var(--foreground)]">Bienvenido/a</h2>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                  Completa {questions.length} preguntas para obtener tu perfil de talentos y orientación profesional personalizada.
+                </p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -457,6 +565,16 @@ export default function StartPage() {
                   />
                 </div>
               </div>
+
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4">
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">Cómo funciona</h3>
+                <ul className="mt-2 space-y-1 text-sm text-[var(--muted-foreground)]">
+                  <li>• {questions.length} afirmaciones presentadas de forma aleatoria</li>
+                  <li>• Responde de 0 a 3 según tu forma habitual de ser</li>
+                  <li>• No hay respuestas correctas o incorrectas</li>
+                  <li>• Las preguntas no revelan a qué talento corresponden</li>
+                </ul>
+              </div>
             </div>
           )}
 
@@ -470,7 +588,7 @@ export default function StartPage() {
                 <div className="text-xs text-[var(--muted-foreground)]">0–3</div>
               </div>
 
-              <div className="mt-5 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+              <div className="mt-5 rounded-3xl border border-[var(--border)] bg-[var(--background)] p-6">
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[var(--muted-foreground)]">{STEM}</div>
                   <div className="text-xl font-semibold leading-snug text-[var(--foreground)]">
@@ -512,70 +630,6 @@ export default function StartPage() {
                 </p>
               </div>
             </>
-          )}
-
-          {/* RESULT */}
-          {step === STEP_RESULT && winner && (
-            <div className="grid gap-5">
-              <div>
-                <h2 className="text-lg font-semibold text-[var(--foreground)]">Resultado</h2>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  Tu resultado se obtiene sumando tus respuestas (0–3) en cada grupo.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6">
-                <div className="text-sm text-[var(--muted-foreground)]">{winner.code}</div>
-                <div className="mt-1 text-2xl font-semibold text-[var(--foreground)]">{winner.quizTitle}</div>
-                <div className="mt-2 text-sm text-[var(--muted-foreground)]">
-                  {winner.titleSymbolic}
-                  {winner.titleSymbolic && winner.titleGenotype ? " · " : ""}
-                  {winner.titleGenotype}
-                </div>
-                <div className="mt-3 text-sm text-[var(--muted-foreground)]">
-                  Puntuación: <span className="font-semibold text-[var(--foreground)]">{winner.score}</span> / {winner.max}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6">
-                <div className="text-sm font-semibold text-[var(--foreground)]">Campos profesionales relacionados</div>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  Estos campos suelen encajar con este perfil. ¿Te identificas con alguno?
-                </p>
-                <ul className="mt-3 grid gap-2">
-                  {fieldsForWinner().length ? (
-                    fieldsForWinner().map((x) => (
-                      <li key={x} className="text-sm text-[var(--foreground)]">
-                        • {x}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-sm text-[var(--muted-foreground)]">No hay campos configurados para este talento.</li>
-                  )}
-                </ul>
-              </div>
-
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">Top 3</h3>
-              <div className="grid gap-3">
-                {ranked.slice(0, 3).map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-xl border border-[var(--border)] flex items-center justify-center text-sm font-semibold text-[var(--foreground)]">
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-[var(--foreground)]">{t.quizTitle}</div>
-                        <div className="text-xs text-[var(--muted-foreground)]">{t.code}</div>
-                      </div>
-                    </div>
-                    <DonutMeter score={t.score} max={t.max} />
-                  </div>
-                ))}
-              </div>
-            </div>
           )}
 
           {/* POST 1 */}
@@ -721,6 +775,7 @@ export default function StartPage() {
                   setError("");
                   setSaving(false);
                   setSavedOk(false);
+                  setSelectedCareers([]);
                   submittingRef.current = false;
                 }}
               >
@@ -729,8 +784,8 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* NAV (cuando no estás en DONE) */}
-          {step !== STEP_DONE && (
+          {/* NAV (cuando no estás en DONE o RESULT) */}
+          {step !== STEP_DONE && step !== STEP_RESULT && (
             <div className="mt-6 flex items-center justify-between gap-3">
               <ButtonGhost type="button" onClick={back} disabled={step === STEP_PRE || saving}>
                 Atrás
@@ -743,10 +798,6 @@ export default function StartPage() {
               ) : step === STEP_Q_END ? (
                 <ButtonPrimary type="button" onClick={next}>
                   Ver resultado
-                </ButtonPrimary>
-              ) : step === STEP_RESULT ? (
-                <ButtonPrimary type="button" onClick={next}>
-                  Continuar
                 </ButtonPrimary>
               ) : step === STEP_POST_1 || step === STEP_POST_2 ? (
                 <ButtonPrimary type="button" onClick={next} disabled={saving}>
@@ -763,4 +814,3 @@ export default function StartPage() {
     </main>
   );
 }
-
