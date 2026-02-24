@@ -5,6 +5,19 @@ import { usePathname, useRouter } from "next/navigation";
 
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
+const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryColor: string; category: string; categoryLabel: string }> = {
+  2: { symbol: "Π", color: "#8B5CF6", secondaryColor: "#A78BFA", category: "Conocimiento", categoryLabel: "Ciencia aplicada" },
+  3: { symbol: "Ψ", color: "#7C3AED", secondaryColor: "#8B5CF6", category: "Conocimiento", categoryLabel: "Ciencia aplicada" },
+  5: { symbol: "Ω", color: "#F59E0B", secondaryColor: "#FBBF24", category: "Desempeño", categoryLabel: "Energía" },
+  7: { symbol: "Θ", color: "#10B981", secondaryColor: "#34D399", category: "Imaginación", categoryLabel: "Arte" },
+  4: { symbol: "Α", color: "#EF4444", secondaryColor: "#F87171", category: "Acción", categoryLabel: "Resultados" },
+  1: { symbol: "Δ", color: "#DC2626", secondaryColor: "#EF4444", category: "Acción", categoryLabel: "Resultados" },
+  6: { symbol: "Φ", color: "#06B6D4", secondaryColor: "#22D3EE", category: "Imaginación", categoryLabel: "Arte" },
+  8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", category: "Desempeño", categoryLabel: "Energía" },
+};
+
+const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
+
 function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
@@ -241,141 +254,160 @@ function topN(talents: any[], scoresJson: any, n: number) {
   });
 }
 
-function WheelMapSVG({
-  talents,
+function TalentWheelSVG({
   scores,
-  answers,
-  questionMap,
   svgRef,
 }: {
-  talents: any[];
   scores: ScoreRow[];
-  answers: Record<string, number>;
-  questionMap: Record<string, { text: string; talentQuizTitle: string; talentId: number; idxInTalent: number }>;
   svgRef?: React.RefObject<SVGSVGElement | null>;
 }) {
-  const ordered = talents.slice().sort((a, b) => a.id - b.id);
-  const W = 760;
-  const H = 760;
-  const cx0 = W / 2;
-  const cy0 = H / 2;
-  const outerR = 340;
-  const ringW = 62;
-  const innerR = outerR - ringW;
-  const gridR = innerR - 24;
+  const size = 600;
+  const center = size / 2;
+  const radius = 240;
+  const innerRadius = 60;
 
-  const palette = [
-    "#ef4444",
-    "#3b82f6",
-    "#10b981",
-    "#f59e0b",
-    "#a855f7",
-    "#06b6d4",
-    "#22c55e",
-    "#111827",
-  ];
+  const talents = TALENT_ORDER.map((talentId) => {
+    const scoreData = scores.find((s) => s.talentId === talentId);
+    const config = TALENT_CONFIG[talentId];
+    const score = scoreData?.score ?? 0;
+    const maxScore = scoreData?.max ?? 15;
+    const fillPercentage = maxScore > 0 ? score / maxScore : 0;
+    const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
 
-  function polar(r: number, a: number) {
-    return { x: cx0 + r * Math.cos(a), y: cy0 + r * Math.sin(a) };
-  }
+    return {
+      id: talentId,
+      code: `T${talentId}`,
+      symbol: config.symbol,
+      score,
+      maxScore,
+      color: config.color,
+      fillRadius,
+      fillPercentage,
+    };
+  });
 
-  function arcPath(rOut: number, rIn: number, a0: number, a1: number) {
-    const p0 = polar(rOut, a0);
-    const p1 = polar(rOut, a1);
-    const p2 = polar(rIn, a1);
-    const p3 = polar(rIn, a0);
-    const large = a1 - a0 > Math.PI ? 1 : 0;
+  const sections = talents.map((talent, index) => {
+    const anglePerSection = (Math.PI * 2) / 8;
+    const startAngle = index * anglePerSection - Math.PI / 2;
+    const endAngle = startAngle + anglePerSection;
+
+    return {
+      talent,
+      startAngle,
+      endAngle,
+    };
+  });
+
+  const polarToCartesian = (angle: number, r: number) => ({
+    x: center + r * Math.cos(angle),
+    y: center + r * Math.sin(angle),
+  });
+
+  const createArcPath = (startAngle: number, endAngle: number, outerR: number, innerR: number) => {
+    const start = polarToCartesian(startAngle, outerR);
+    const end = polarToCartesian(endAngle, outerR);
+    const innerStart = polarToCartesian(startAngle, innerR);
+    const innerEnd = polarToCartesian(endAngle, innerR);
+
+    const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+
     return [
-      `M ${p0.x} ${p0.y}`,
-      `A ${rOut} ${rOut} 0 ${large} 1 ${p1.x} ${p1.y}`,
-      `L ${p2.x} ${p2.y}`,
-      `A ${rIn} ${rIn} 0 ${large} 0 ${p3.x} ${p3.y}`,
-      "Z",
+      `M ${start.x} ${start.y}`,
+      `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+      `L ${innerEnd.x} ${innerEnd.y}`,
+      `A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
+      `Z`,
     ].join(" ");
-  }
-
-  const scoreById = new Map(scores.map((s) => [s.talentId, s]));
-
-  const points = Object.entries(answers)
-    .map(([qid, v]) => {
-      const m = questionMap[qid];
-      if (!m) return null;
-      const tid = m.talentId;
-      const secIdx = ordered.findIndex((t) => t.id === tid);
-      if (secIdx < 0) return null;
-      const val = Number(v);
-      const aStart = -Math.PI / 2 + (secIdx * (2 * Math.PI)) / ordered.length;
-      const aEnd = -Math.PI / 2 + ((secIdx + 1) * (2 * Math.PI)) / ordered.length;
-      const k = (m.idxInTalent + 1) / 6;
-      const ang = aStart + (aEnd - aStart) * k;
-      const rr = (val / 3) * (gridR - 40) + 40;
-      const p = polar(rr, ang);
-      return {
-        qid,
-        val,
-        x: p.x,
-        y: p.y,
-        tid,
-        label: `${m.talentQuizTitle} · ${qid} · ${val}`,
-      };
-    })
-    .filter(Boolean) as Array<{ qid: string; val: number; x: number; y: number; tid: number; label: string }>;
+  };
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" className="max-w-full">
-      <rect x="0" y="0" width={W} height={H} fill="#ffffff" />
+    <svg ref={svgRef} width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: "100%", height: "auto" }}>
+      <defs>
+        {sections.map(({ talent }) => (
+          <radialGradient key={`gradient-${talent.id}`} id={`gradient-${talent.id}`} cx="50%" cy="50%">
+            <stop offset="0%" stopColor={talent.color} stopOpacity={Math.min(talent.fillPercentage * 1.2, 1)} />
+            <stop offset={`${talent.fillPercentage * 100}%`} stopColor={talent.color} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={talent.color} stopOpacity="0.1" />
+          </radialGradient>
+        ))}
+      </defs>
 
-      {[0.25, 0.5, 0.75, 1].map((k) => (
-        <circle key={k} cx={cx0} cy={cy0} r={gridR * k} fill="none" stroke="#e5e7eb" strokeWidth="2" />
-      ))}
-      {ordered.map((t, i) => {
-        const a = -Math.PI / 2 + (i * (2 * Math.PI)) / ordered.length;
-        const p = polar(gridR, a);
-        return <line key={t.id} x1={cx0} y1={cy0} x2={p.x} y2={p.y} stroke="#e5e7eb" strokeWidth="2" />;
+      {/* Líneas cruz */}
+      <line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
+      <line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
+
+      {/* Diagonales */}
+      {[1, 3, 5, 7].map((index) => {
+        const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
+        const outer = polarToCartesian(angle, radius);
+        return (
+          <line
+            key={`divider-${index}`}
+            x1={center}
+            y1={center}
+            x2={outer.x}
+            y2={outer.y}
+            stroke="#666"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+        );
       })}
 
-      {ordered.map((t, i) => {
-        const a0 = -Math.PI / 2 + (i * (2 * Math.PI)) / ordered.length;
-        const a1 = -Math.PI / 2 + ((i + 1) * (2 * Math.PI)) / ordered.length;
-        const s = scoreById.get(t.id);
-        const p = pct(s?.score ?? 0, s?.max ?? 0);
-        const mid = (a0 + a1) / 2;
-        const labelPos = polar(outerR - ringW / 2, mid);
-        const color = palette[i % palette.length];
+      {/* Secciones */}
+      {sections.map(({ talent, startAngle, endAngle }) => {
+        const midAngle = (startAngle + endAngle) / 2;
+        const labelPos = polarToCartesian(midAngle, radius + 30);
+
         return (
-          <g key={t.id}>
-            <path d={arcPath(outerR, innerR, a0, a1)} fill={color} opacity="0.92" />
+          <g key={talent.id}>
+            <path
+              d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)}
+              fill={`url(#gradient-${talent.id})`}
+              stroke={talent.color}
+              strokeWidth="1"
+            />
+
+            <path
+              d={createArcPath(
+                startAngle,
+                endAngle,
+                radius,
+                talent.fillRadius > innerRadius ? talent.fillRadius : innerRadius
+              )}
+              fill="none"
+              stroke={talent.color}
+              strokeWidth="2"
+              opacity="0.3"
+            />
+
             <text
               x={labelPos.x}
-              y={labelPos.y - 6}
+              y={labelPos.y}
               textAnchor="middle"
+              dominantBaseline="middle"
               fontSize="18"
-              fontWeight="700"
-              fill="#ffffff"
+              fontWeight="bold"
+              fill={talent.color}
             >
-              {t.code}
+              {talent.symbol}
             </text>
-            <text x={labelPos.x} y={labelPos.y + 16} textAnchor="middle" fontSize="14" fill="#ffffff">
-              {p}%
+            <text
+              x={labelPos.x}
+              y={labelPos.y + 16}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize="12"
+              fill="#666"
+            >
+              {talent.code}
             </text>
           </g>
         );
       })}
 
-      {points.map((pt) => (
-        <g key={pt.qid}>
-          <title>{pt.label}</title>
-          <circle cx={pt.x} cy={pt.y} r={10} fill="#111827" opacity="0.92" />
-          <text x={pt.x} y={pt.y + 5} textAnchor="middle" fontSize="11" fill="#ffffff" fontWeight="700">
-            {pt.qid.split(".")[1]}
-          </text>
-        </g>
-      ))}
-
-      <circle cx={cx0} cy={cy0} r={18} fill="#111827" />
-      <text x={cx0} y={cy0 + 5} textAnchor="middle" fontSize="12" fill="#ffffff" fontWeight="700">
-        0–3
-      </text>
+      {/* Centro */}
+      <circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
     </svg>
   );
 }
@@ -441,117 +473,125 @@ function ReportHtml({
     <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
     <div style="display:flex;justify-content:space-between;gap:16px;margin-top:18px;align-items:flex-end">
       <div>
-        <h1 class="h1">DESCUBRE TU<br/>FUTURO PROFESIONAL</h1>
-        <div class="muted" style="font-size:14px;">Informe individual de talentos</div>
+        <h1 class="h1">TUS RESULTADOS</h1>
+        <div class="muted" style="font-size:14px;">Mapa visual de tus talentos basado en neurociencia aplicada</div>
         <div style="margin-top:18px;font-size:16px;font-weight:800">${selected.nombre} ${selected.apellido}</div>
         <div class="muted" style="margin-top:4px">${toISODate(new Date(selected.createdAt))}</div>
       </div>
-      <div class="card" style="width:360px">
-        <div class="muted" style="font-size:12px;font-weight:700">Top 3 talentos dominantes</div>
-        <div class="grid" style="margin-top:10px">
-          ${top3Rows
-            .map((t) => {
-              const p = pct(t.score, t.max);
-              const indicator = scoreIndicator(t.score, t.max);
-              const danger = p >= 65;
-              return `
-                <div>
-                  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
-                    <div style="font-weight:900">${t.code} · ${t.reportTitle || t.quizTitle}</div>
-                    <div style="display:flex;gap:6px;align-items:center">
-                      <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
-                      <div class="pill" style="font-size:10px">${indicator}</div>
-                    </div>
-                  </div>
-                  <div class="bar ${danger ? "danger" : ""}"><span style="width:${p}%"></span></div>
-                </div>`;
-            })
-            .join("\n")}
+    </div>
+
+    <div style="margin-top:32px;display:flex;justify-content:center">
+      ${mapSvg}
+    </div>
+
+    <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:16px;height:16px;border-radius:4px;background:#EF4444"></div>
+          <div style="font-weight:900;font-size:13px">Acción</div>
         </div>
+        <div class="muted" style="font-size:11px">Resultados</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:16px;height:16px;border-radius:4px;background:#8B5CF6"></div>
+          <div style="font-weight:900;font-size:13px">Conocimiento</div>
+        </div>
+        <div class="muted" style="font-size:11px">Ciencia aplicada</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:16px;height:16px;border-radius:4px;background:#06B6D4"></div>
+          <div style="font-weight:900;font-size:13px">Imaginación</div>
+        </div>
+        <div class="muted" style="font-size:11px">Arte</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:16px;height:16px;border-radius:4px;background:#F59E0B"></div>
+          <div style="font-weight:900;font-size:13px">Desempeño</div>
+        </div>
+        <div class="muted" style="font-size:11px">Energía</div>
       </div>
     </div>
   </section>`;
 
-  const resumen = `
+  const talentosTable = TALENT_ORDER.map((tid) => {
+    const s = byId.get(tid);
+    const config = TALENT_CONFIG[tid];
+    const t = talents.find((x: any) => x.id === tid);
+    return `
+      <tr>
+        <td style="text-align:center;font-size:20px;color:${config.color}">${config.symbol}</td>
+        <td style="font-weight:700">${t?.reportTitle || t?.quizTitle || `T${tid}`}</td>
+        <td style="text-align:center">T${tid}</td>
+        <td style="text-align:center;font-weight:700">${s?.score ?? 0} / ${s?.max ?? 15}</td>
+      </tr>`;
+  }).join("\n");
+
+  const resumenPage = `
   <section class="page">
-    <h2 class="h2">Resumen de resultados por talento</h2>
-    <div class="muted" style="font-size:13px">Porcentaje y escala (X de 5) para visualizar rápidamente tu nivel en cada talento. Agrupados por circuito neurocognitivo.</div>
-    <div class="grid grid2" style="margin-top:14px">
-      ${ordered
-        .map((t) => {
-          const s = byId.get(t.id);
-          const p = pct(s?.score ?? 0, s?.max ?? 0);
-          const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
-          const danger = p >= 65;
+    <h2 class="h2">Tus 3 talentos más destacados</h2>
+    <div class="grid" style="margin-top:14px">
+      ${top3Rows
+        .map((t, idx) => {
+          const config = TALENT_CONFIG[t.talentId];
           return `
             <div class="card">
-              <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-                <div>
-                  <div style="font-weight:900">${t.code} · ${t.reportTitle || t.quizTitle}</div>
-                  <div class="muted" style="font-size:12px;margin-top:4px">${t.group || t.titleGenotype || ""}</div>
-                </div>
-                <div style="text-align:right">
-                  <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
-                  <div class="pill" style="font-size:10px;margin-top:4px">${indicator}</div>
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <div style="font-size:32px;color:${config?.color || "#000"}">${config?.symbol || ""}</div>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="font-size:12px;font-weight:700;color:var(--muted)">#${idx + 1}</span>
+                    <span style="font-weight:900;font-size:16px">${t.reportTitle || t.quizTitle}</span>
+                  </div>
+                  <div class="muted" style="font-size:13px;line-height:1.5">${t.reportSummary}</div>
+                  <div style="margin-top:8px;text-align:right">
+                    <span style="font-size:20px;font-weight:900">${t.score}</span>
+                    <span class="muted" style="font-size:12px"> / ${t.max}</span>
+                  </div>
                 </div>
               </div>
-              <div class="bar ${danger ? "danger" : ""}" style="margin-top:10px"><span style="width:${p}%"></span></div>
             </div>`;
         })
         .join("\n")}
     </div>
+
     <div style="margin-top:16px" class="card">
-      <div style="font-weight:900;margin-bottom:8px">Mapa visual de talentos</div>
-      <div>${mapSvg}</div>
-      <div class="muted" style="font-size:12px;margin-top:8px">Los puntos (1–5) representan las preguntas de cada talento; cuanto más lejos del centro, mayor acuerdo (escala 0–3). Este mapa muestra tu perfil completo de forma visual.</div>
+      <div style="font-weight:900;margin-bottom:8px">Listado completo de talentos</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Símbolo</th>
+            <th>Talento</th>
+            <th>Código</th>
+            <th>Puntuación</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${talentosTable}
+        </tbody>
+      </table>
     </div>
   </section>`;
 
-  const pages = ordered
-    .map((t) => {
-      const s = byId.get(t.id);
-      const p = pct(s?.score ?? 0, s?.max ?? 0);
-      const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
-      const danger = p >= 65;
-      const fields = (t.fields ?? []).map((x: string) => `<li>${x}</li>`).join("");
-      const comps = (t.competencies ?? []).map((x: string) => `<li>${x}</li>`).join("");
-      const roles = (t.exampleRoles ?? []).map((x: string) => `<li>${x}</li>`).join("");
-
-      return `
-      <section class="page">
-        <div class="pill">${t.code} · ${t.titleSymbolic || ""} · ${t.titleGenotype || ""}</div>
-        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:14px">
-          <div>
-            <h2 class="h2">${t.reportTitle || t.quizTitle}</h2>
-            <div class="muted" style="font-size:13px">${t.group || t.quizTitle}</div>
-          </div>
-          <div style="text-align:right">
-            <div class="muted" style="font-size:12px;font-weight:700">Puntuación</div>
-            <div style="font-size:28px;font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
-            <div class="pill" style="margin-top:4px">${indicator}</div>
-          </div>
-        </div>
-        <div class="card" style="margin-top:14px">
-          <div style="font-weight:900;margin-bottom:6px">Resumen neurocognitivo</div>
-          <div style="font-size:13px" class="muted">${t.reportSummary || ""}</div>
-        </div>
-        <div class="grid grid2" style="margin-top:12px">
-          <div class="card">
-            <div style="font-weight:900;margin-bottom:8px">Ámbitos profesionales</div>
-            <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${fields}</ul>
-          </div>
-          <div class="card">
-            <div style="font-weight:900;margin-bottom:8px">Competencias personales</div>
-            <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${comps}</ul>
-          </div>
-        </div>
-        <div class="card" style="margin-top:12px">
-          <div style="font-weight:900;margin-bottom:8px">Roles y profesiones de ejemplo</div>
-          <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${roles}</ul>
-        </div>
-      </section>`;
-    })
-    .join("\n");
+  const profesionesPage = `
+  <section class="page">
+    <h2 class="h2">Profesiones y roles sugeridos</h2>
+    <div class="muted" style="font-size:13px;margin-bottom:12px">Basado en tus talentos principales. Marca las opciones con las que te identificas:</div>
+    <div class="card">
+      ${top3Rows
+        .flatMap((t) => t.exampleRoles)
+        .map(
+          (role: string) => `
+          <div style="padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+            <div style="width:18px;height:18px;border:2px solid var(--muted);border-radius:4px"></div>
+            <div style="font-size:13px">${role}</div>
+          </div>`
+        )
+        .join("\n")}
+    </div>
+  </section>`;
 
   const answerRows = Object.entries(answers)
     .sort(([a], [b]) => a.localeCompare(b, "es"))
@@ -596,7 +636,7 @@ function ReportHtml({
     </div>
   </section>`;
 
-  return cover + resumen + pages + cierre;
+  return cover + resumenPage + profesionesPage + cierre;
 }
 
 export default function AdminClient({ rows, exportHref, talents, filters }: any) {
@@ -715,38 +755,41 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <h1 class="h1" style="margin-top:12px">${selected.nombre} ${selected.apellido}</h1>
           <div class="muted">${toISODate(new Date(selected.createdAt))}</div>
           <div class="card" style="margin-top:14px">${mapSvg}</div>
-          <div class="muted" style="font-size:12px;margin-top:10px">Puntos 1–5 por talento. Cuanto más lejos del centro, mayor acuerdo (escala 0–3).</div>
         </section>`;
     } else if (which === "resultados") {
+      const talentosTable = TALENT_ORDER.map((tid) => {
+        const s = byId.get(tid);
+        const config = TALENT_CONFIG[tid];
+        const t = talents.find((x: any) => x.id === tid);
+        return `
+          <tr>
+            <td style="text-align:center;font-size:20px;color:${config.color}">${config.symbol}</td>
+            <td style="font-weight:700">${t?.reportTitle || t?.quizTitle || `T${tid}`}</td>
+            <td style="text-align:center">T${tid}</td>
+            <td style="text-align:center;font-weight:700">${s?.score ?? 0} / ${s?.max ?? 15}</td>
+          </tr>`;
+      }).join("\n");
+
       body = `
         <section class="page">
           <div class="pill">Resultados</div>
           <h1 class="h1" style="margin-top:12px">${selected.nombre} ${selected.apellido}</h1>
           <div class="muted">${toISODate(new Date(selected.createdAt))}</div>
 
-          <div class="grid grid2" style="margin-top:14px">
-            ${ordered
-              .map((t: any) => {
-                const s = byId.get(t.id);
-                const p = pct(s?.score ?? 0, s?.max ?? 0);
-                const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
-                const danger = p >= 65;
-                return `
-                  <div class="card">
-                    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-                      <div>
-                        <div style="font-weight:900">${t.code} · ${t.reportTitle || t.quizTitle}</div>
-                        <div class="muted" style="font-size:12px;margin-top:4px">${t.quizTitle}</div>
-                      </div>
-                      <div style="text-align:right">
-                        <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
-                        <div class="pill" style="font-size:10px;margin-top:4px">${indicator}</div>
-                      </div>
-                    </div>
-                    <div class="bar ${danger ? "danger" : ""}" style="margin-top:10px"><span style="width:${p}%"></span></div>
-                  </div>`;
-              })
-              .join("\n")}
+          <div class="card" style="margin-top:14px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Símbolo</th>
+                  <th>Talento</th>
+                  <th>Código</th>
+                  <th>Puntuación</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${talentosTable}
+              </tbody>
+            </table>
           </div>
         </section>`;
     } else {
@@ -1009,9 +1052,9 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               ) : tab === "mapa" ? (
                 <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                   <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Mapa</div>
-                  <WheelMapSVG talents={talents} scores={scores} answers={answers} questionMap={QUESTION_MAP} svgRef={svgRef} />
+                  <TalentWheelSVG scores={scores} svgRef={svgRef} />
                   <div className="mt-3 text-xs text-[var(--muted-foreground)]">
-                    Pasa el ratón por un punto para ver el detalle. Los números 1–5 son las preguntas dentro de cada talento.
+                    Mapa visual de tus talentos basado en neurociencia aplicada.
                   </div>
                 </div>
               ) : (
@@ -1024,10 +1067,11 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   <div className="mt-3 rounded-xl border border-[var(--border)] p-3 bg-[var(--background)]">
                     <div className="text-sm font-bold">Incluye:</div>
                     <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)] mt-2">
-                      <li>Portada con top 3 talentos</li>
-                      <li>Resumen completo + mapa visual</li>
-                      <li>Página por talento (ámbitos, competencias, roles ejemplo)</li>
-                      <li>Tabla final con X (0–3) por pregunta</li>
+                      <li>Portada con mapa circular y leyenda de categorías</li>
+                      <li>Top 3 talentos con símbolos y descripciones completas</li>
+                      <li>Tabla completa con todos los talentos</li>
+                      <li>Profesiones y roles sugeridos</li>
+                      <li>Detalle de respuestas (0–3)</li>
                     </ul>
                   </div>
                 </div>
