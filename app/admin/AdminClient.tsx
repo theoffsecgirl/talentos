@@ -33,10 +33,15 @@ function pct(score: number, max: number) {
   return clamp(Math.round((score / max) * 100), 0, 100);
 }
 
+function scoreIndicator(score: number, max: number): string {
+  if (max === 0) return "0 de 5";
+  const normalized = Math.round((score / max) * 5);
+  return `${normalized} de 5`;
+}
+
 function normalizeItemText(s: string) {
   const t = (s ?? "").trim().replace(/\s+/g, " ");
   if (!t) return "";
-  // ✅ Primera letra en mayúscula (sin tocar acrónimos)
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
@@ -79,7 +84,6 @@ function svgToPngDataUrl(svgText: string, width: number, height: number): Promis
       URL.revokeObjectURL(url);
       reject(e);
     };
-    // Evita CORS: SVG generado localmente
     img.src = url;
   });
 }
@@ -226,6 +230,8 @@ function topN(talents: any[], scoresJson: any, n: number) {
       titleGenotype: t?.titleGenotype ?? "",
       reportTitle: t?.reportTitle ?? "",
       reportSummary: t?.reportSummary ?? "",
+      axis: t?.axis ?? "",
+      group: t?.group ?? "",
       fields: Array.isArray(t?.fields) ? t.fields : [],
       competencies: Array.isArray(t?.competencies) ? t.competencies : [],
       exampleRoles: Array.isArray(t?.exampleRoles) ? t.exampleRoles : [],
@@ -248,7 +254,6 @@ function WheelMapSVG({
   questionMap: Record<string, { text: string; talentQuizTitle: string; talentId: number; idxInTalent: number }>;
   svgRef?: React.RefObject<SVGSVGElement | null>;
 }) {
-  // 8 sectores fijos (orden por id)
   const ordered = talents.slice().sort((a, b) => a.id - b.id);
   const W = 760;
   const H = 760;
@@ -291,7 +296,6 @@ function WheelMapSVG({
 
   const scoreById = new Map(scores.map((s) => [s.talentId, s]));
 
-  // puntos: cada pregunta en su sector, con distancia radial según respuesta 0-3
   const points = Object.entries(answers)
     .map(([qid, v]) => {
       const m = questionMap[qid];
@@ -302,7 +306,6 @@ function WheelMapSVG({
       const val = Number(v);
       const aStart = -Math.PI / 2 + (secIdx * (2 * Math.PI)) / ordered.length;
       const aEnd = -Math.PI / 2 + ((secIdx + 1) * (2 * Math.PI)) / ordered.length;
-      // ángulo dentro del sector según idx (1..5)
       const k = (m.idxInTalent + 1) / 6;
       const ang = aStart + (aEnd - aStart) * k;
       const rr = (val / 3) * (gridR - 40) + 40;
@@ -322,7 +325,6 @@ function WheelMapSVG({
     <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" className="max-w-full">
       <rect x="0" y="0" width={W} height={H} fill="#ffffff" />
 
-      {/* rejilla radial */}
       {[0.25, 0.5, 0.75, 1].map((k) => (
         <circle key={k} cx={cx0} cy={cy0} r={gridR * k} fill="none" stroke="#e5e7eb" strokeWidth="2" />
       ))}
@@ -332,7 +334,6 @@ function WheelMapSVG({
         return <line key={t.id} x1={cx0} y1={cy0} x2={p.x} y2={p.y} stroke="#e5e7eb" strokeWidth="2" />;
       })}
 
-      {/* anillo de talentos */}
       {ordered.map((t, i) => {
         const a0 = -Math.PI / 2 + (i * (2 * Math.PI)) / ordered.length;
         const a1 = -Math.PI / 2 + ((i + 1) * (2 * Math.PI)) / ordered.length;
@@ -361,7 +362,6 @@ function WheelMapSVG({
         );
       })}
 
-      {/* puntos */}
       {points.map((pt) => (
         <g key={pt.qid}>
           <title>{pt.label}</title>
@@ -372,7 +372,6 @@ function WheelMapSVG({
         </g>
       ))}
 
-      {/* centro */}
       <circle cx={cx0} cy={cy0} r={18} fill="#111827" />
       <text x={cx0} y={cy0 + 5} textAnchor="middle" fontSize="12" fill="#ffffff" fontWeight="700">
         0–3
@@ -437,29 +436,32 @@ function ReportHtml({
   const byId = new Map(scores.map((s) => [s.talentId, s]));
   const ordered = talents.slice().sort((a, b) => a.id - b.id);
 
-  // “Estilo Abel” = portada fuerte + resumen + páginas por talento + cierre
   const cover = `
   <section class="page">
-    <div class="pill">NEUROCIENCIA APLICADA · CONOCE TU TALENTO</div>
+    <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
     <div style="display:flex;justify-content:space-between;gap:16px;margin-top:18px;align-items:flex-end">
       <div>
-        <h1 class="h1">CONOCE TU<br/>TALENTO</h1>
-        <div class="muted" style="font-size:14px;">Informe individual</div>
+        <h1 class="h1">DESCUBRE TU<br/>FUTURO PROFESIONAL</h1>
+        <div class="muted" style="font-size:14px;">Informe individual de talentos</div>
         <div style="margin-top:18px;font-size:16px;font-weight:800">${selected.nombre} ${selected.apellido}</div>
         <div class="muted" style="margin-top:4px">${toISODate(new Date(selected.createdAt))}</div>
       </div>
       <div class="card" style="width:360px">
-        <div class="muted" style="font-size:12px;font-weight:700">Top 3 talentos</div>
+        <div class="muted" style="font-size:12px;font-weight:700">Top 3 talentos dominantes</div>
         <div class="grid" style="margin-top:10px">
           ${top3Rows
             .map((t) => {
               const p = pct(t.score, t.max);
+              const indicator = scoreIndicator(t.score, t.max);
               const danger = p >= 65;
               return `
                 <div>
                   <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
                     <div style="font-weight:900">${t.code} · ${t.reportTitle || t.quizTitle}</div>
-                    <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
+                    <div style="display:flex;gap:6px;align-items:center">
+                      <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
+                      <div class="pill" style="font-size:10px">${indicator}</div>
+                    </div>
                   </div>
                   <div class="bar ${danger ? "danger" : ""}"><span style="width:${p}%"></span></div>
                 </div>`;
@@ -472,22 +474,26 @@ function ReportHtml({
 
   const resumen = `
   <section class="page">
-    <h2 class="h2">Resumen de resultados</h2>
-    <div class="muted" style="font-size:13px">Porcentajes normalizados sobre el máximo posible de cada talento (0–3 por pregunta).</div>
+    <h2 class="h2">Resumen de resultados por talento</h2>
+    <div class="muted" style="font-size:13px">Porcentaje y escala (X de 5) para visualizar rápidamente tu nivel en cada talento. Agrupados por circuito neurocognitivo.</div>
     <div class="grid grid2" style="margin-top:14px">
       ${ordered
         .map((t) => {
           const s = byId.get(t.id);
           const p = pct(s?.score ?? 0, s?.max ?? 0);
+          const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
           const danger = p >= 65;
           return `
             <div class="card">
               <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
                 <div>
                   <div style="font-weight:900">${t.code} · ${t.reportTitle || t.quizTitle}</div>
-                  <div class="muted" style="font-size:12px;margin-top:4px">${t.titleGenotype || ""}</div>
+                  <div class="muted" style="font-size:12px;margin-top:4px">${t.group || t.titleGenotype || ""}</div>
                 </div>
-                <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
+                <div style="text-align:right">
+                  <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
+                  <div class="pill" style="font-size:10px;margin-top:4px">${indicator}</div>
+                </div>
               </div>
               <div class="bar ${danger ? "danger" : ""}" style="margin-top:10px"><span style="width:${p}%"></span></div>
             </div>`;
@@ -495,9 +501,9 @@ function ReportHtml({
         .join("\n")}
     </div>
     <div style="margin-top:16px" class="card">
-      <div style="font-weight:900;margin-bottom:8px">Mapa visual</div>
+      <div style="font-weight:900;margin-bottom:8px">Mapa visual de talentos</div>
       <div>${mapSvg}</div>
-      <div class="muted" style="font-size:12px;margin-top:8px">Los puntos (1–5) representan las preguntas de cada talento; cuanto más lejos del centro, mayor acuerdo (0–3).</div>
+      <div class="muted" style="font-size:12px;margin-top:8px">Los puntos (1–5) representan las preguntas de cada talento; cuanto más lejos del centro, mayor acuerdo (escala 0–3). Este mapa muestra tu perfil completo de forma visual.</div>
     </div>
   </section>`;
 
@@ -505,6 +511,7 @@ function ReportHtml({
     .map((t) => {
       const s = byId.get(t.id);
       const p = pct(s?.score ?? 0, s?.max ?? 0);
+      const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
       const danger = p >= 65;
       const fields = (t.fields ?? []).map((x: string) => `<li>${x}</li>`).join("");
       const comps = (t.competencies ?? []).map((x: string) => `<li>${x}</li>`).join("");
@@ -516,20 +523,21 @@ function ReportHtml({
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:14px">
           <div>
             <h2 class="h2">${t.reportTitle || t.quizTitle}</h2>
-            <div class="muted" style="font-size:13px">${t.quizTitle}</div>
+            <div class="muted" style="font-size:13px">${t.group || t.quizTitle}</div>
           </div>
           <div style="text-align:right">
             <div class="muted" style="font-size:12px;font-weight:700">Puntuación</div>
             <div style="font-size:28px;font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
+            <div class="pill" style="margin-top:4px">${indicator}</div>
           </div>
         </div>
         <div class="card" style="margin-top:14px">
-          <div style="font-weight:900;margin-bottom:6px">Lectura rápida</div>
+          <div style="font-weight:900;margin-bottom:6px">Resumen neurocognitivo</div>
           <div style="font-size:13px" class="muted">${t.reportSummary || ""}</div>
         </div>
         <div class="grid grid2" style="margin-top:12px">
           <div class="card">
-            <div style="font-weight:900;margin-bottom:8px">Campos profesionales</div>
+            <div style="font-weight:900;margin-bottom:8px">Ámbitos profesionales</div>
             <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${fields}</ul>
           </div>
           <div class="card">
@@ -538,14 +546,13 @@ function ReportHtml({
           </div>
         </div>
         <div class="card" style="margin-top:12px">
-          <div style="font-weight:900;margin-bottom:8px">Roles ejemplo</div>
+          <div style="font-weight:900;margin-bottom:8px">Roles y profesiones de ejemplo</div>
           <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${roles}</ul>
         </div>
       </section>`;
     })
     .join("\n");
 
-  // tabla final (X 0-3)
   const answerRows = Object.entries(answers)
     .sort(([a], [b]) => a.localeCompare(b, "es"))
     .map(([qid, v]) => {
@@ -568,7 +575,7 @@ function ReportHtml({
   const cierre = `
   <section class="page">
     <h2 class="h2">Detalle de respuestas</h2>
-    <div class="muted" style="font-size:13px">Escala 0–3. Marca “X” en la columna correspondiente.</div>
+    <div class="muted" style="font-size:13px">Escala 0–3. Marca "X" en la columna correspondiente.</div>
     <div class="card" style="margin-top:12px">
       <div style="font-size:12px;font-weight:800;margin-bottom:8px">${STEM}</div>
       <table>
@@ -599,7 +606,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
   const [openId, setOpenId] = useState<string | null>(null);
   const [tab, setTab] = useState<"resultados" | "mapa" | "informe">("resultados");
 
-  // filtros
   const [form, setForm] = useState<FilterState>({
     q: filters?.q ?? "",
     genero: filters?.genero ?? "",
@@ -637,7 +643,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     router.push(pathname);
   }
 
-  // pregunta -> (texto, quizTitle, talentId, idx)
   const QUESTION_MAP = useMemo(() => {
     const map: Record<string, { text: string; talentQuizTitle: string; talentId: number; idxInTalent: number }> = {};
     for (const t of talents) {
@@ -698,7 +703,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
       const node = svgRef.current;
       if (!node) return "";
       const svgText = new XMLSerializer().serializeToString(node);
-      // embebido directo
       return svgText;
     })();
 
@@ -711,7 +715,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <h1 class="h1" style="margin-top:12px">${selected.nombre} ${selected.apellido}</h1>
           <div class="muted">${toISODate(new Date(selected.createdAt))}</div>
           <div class="card" style="margin-top:14px">${mapSvg}</div>
-          <div class="muted" style="font-size:12px;margin-top:10px">Puntos 1–5 por talento. Cuanto más lejos del centro, mayor acuerdo (0–3).</div>
+          <div class="muted" style="font-size:12px;margin-top:10px">Puntos 1–5 por talento. Cuanto más lejos del centro, mayor acuerdo (escala 0–3).</div>
         </section>`;
     } else if (which === "resultados") {
       body = `
@@ -725,6 +729,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               .map((t: any) => {
                 const s = byId.get(t.id);
                 const p = pct(s?.score ?? 0, s?.max ?? 0);
+                const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
                 const danger = p >= 65;
                 return `
                   <div class="card">
@@ -733,7 +738,10 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                         <div style="font-weight:900">${t.code} · ${t.reportTitle || t.quizTitle}</div>
                         <div class="muted" style="font-size:12px;margin-top:4px">${t.quizTitle}</div>
                       </div>
-                      <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
+                      <div style="text-align:right">
+                        <div style="font-weight:900;color:${danger ? "var(--danger)" : "var(--fg)"}">${p}%</div>
+                        <div class="pill" style="font-size:10px;margin-top:4px">${indicator}</div>
+                      </div>
                     </div>
                     <div class="bar ${danger ? "danger" : ""}" style="margin-top:10px"><span style="width:${p}%"></span></div>
                   </div>`;
@@ -773,7 +781,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
         </a>
       </div>
 
-      {/* Filtros */}
       <form className="mt-6 grid gap-3 md:grid-cols-6" onSubmit={onSubmit}>
         <Input
           className="md:col-span-2"
@@ -814,7 +821,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
         </div>
       </form>
 
-      {/* LISTA */}
       <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
         <div className="grid grid-cols-12 gap-0 px-3 py-2 text-xs font-semibold text-[var(--muted-foreground)] border-b border-[var(--border)] bg-[var(--card)]">
           <div className="col-span-2">Fecha</div>
@@ -867,7 +873,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
         </div>
       </div>
 
-      {/* DRAWER */}
       {selected && (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/45" onClick={() => setOpenId(null)} />
@@ -900,7 +905,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               </div>
             </div>
 
-            {/* Tabs */}
             <div className="px-5 pt-4">
               <div className="inline-flex rounded-xl border border-[var(--border)] overflow-hidden">
                 {([
@@ -924,7 +928,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
             </div>
 
             <div className="p-5 space-y-6">
-              {/* Datos */}
               <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                 <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Datos</div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -956,6 +959,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   <div className="grid gap-3">
                     {top3Rows.map((t: any) => {
                       const p = pct(t.score, t.max);
+                      const indicator = scoreIndicator(t.score, t.max);
                       return (
                         <div key={String(t.talentId)} className="rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
                           <div className="flex items-center justify-between gap-3">
@@ -965,7 +969,10 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                               </div>
                               <div className="text-xs text-[var(--muted-foreground)]">{t.quizTitle}</div>
                             </div>
-                            <Donut value={p} />
+                            <div className="flex flex-col items-end gap-1">
+                              <Donut value={p} />
+                              <Pill>{indicator}</Pill>
+                            </div>
                           </div>
                         </div>
                       );
@@ -981,6 +988,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                         .map((t: any) => {
                           const s = scores.find((x) => x.talentId === t.id);
                           const p = pct(s?.score ?? 0, s?.max ?? 0);
+                          const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
                           const danger = p >= 65;
                           return (
                             <div key={t.id} className="flex items-center justify-between gap-3">
@@ -988,7 +996,10 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                                 <span className="font-semibold">{t.code}</span>
                                 <span className="text-[var(--muted-foreground)]"> · {t.reportTitle || t.quizTitle}</span>
                               </div>
-                              <div className={cx("text-sm font-bold", danger ? "text-[var(--danger)]" : "text-[var(--foreground)]")}>{p}%</div>
+                              <div className="flex items-center gap-2">
+                                <div className={cx("text-sm font-bold", danger ? "text-[var(--danger)]" : "text-[var(--foreground)]")}>{p}%</div>
+                                <Pill>{indicator}</Pill>
+                              </div>
                             </div>
                           );
                         })}
@@ -1007,15 +1018,15 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                 <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                   <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe (vista previa)</div>
                   <div className="text-sm text-[var(--muted-foreground)]">
-                    Para descargar el informe con el estilo “dossier”, usa <b>Descargar INFORME (HTML)</b> y ábrelo en el navegador.
+                    Para descargar el informe con el estilo "dossier", usa <b>Descargar INFORME (HTML)</b> y ábrelo en el navegador.
                     Desde ahí puedes imprimir/guardar como PDF.
                   </div>
                   <div className="mt-3 rounded-xl border border-[var(--border)] p-3 bg-[var(--background)]">
                     <div className="text-sm font-bold">Incluye:</div>
                     <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)] mt-2">
-                      <li>Portada</li>
-                      <li>Resumen + mapa</li>
-                      <li>Página por talento (campos, competencias, roles ejemplo)</li>
+                      <li>Portada con top 3 talentos</li>
+                      <li>Resumen completo + mapa visual</li>
+                      <li>Página por talento (ámbitos, competencias, roles ejemplo)</li>
                       <li>Tabla final con X (0–3) por pregunta</li>
                     </ul>
                   </div>
