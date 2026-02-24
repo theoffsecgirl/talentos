@@ -3,9 +3,9 @@ import Link from "next/link";
 export default function HomePage() {
   return (
     <main style={{ maxWidth: 720, margin: "60px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 34, fontWeight: 800 }}>Encuentra tu talento</h1>
+      <h1 style={{ fontSize: 34, fontWeight: 800 }}>Descubre tu futuro profesional</h1>
       <p style={{ marginTop: 12, opacity: 0.8, lineHeight: 1.6 }}>
-        Un flujo breve para empezar a entender tus fortalezas. Sin ruido. Sin postureo.
+        Cuestionario basado en neurociencia aplicada para conocer tus talentos, cómo aprendes mejor y obtener orientación personalizada sobre tu carrera.
       </p>
 
       <Link
@@ -20,7 +20,7 @@ export default function HomePage() {
           textDecoration: "none",
         }}
       >
-        Empezar
+        Comenzar
       </Link>
     </main>
   );
