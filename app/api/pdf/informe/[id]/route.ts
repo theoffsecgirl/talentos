@@ -289,8 +289,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
 
-    // Fetch data - FIX: StudentSubmission en PascalCase
-    const person = await prisma.StudentSubmission.findUnique({
+    // FIX: Usar 'submission' (el modelo correcto del schema)
+    const person = await prisma.submission.findUnique({
       where: { id },
       include: {
         user: true,
