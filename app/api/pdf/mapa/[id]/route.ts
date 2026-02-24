@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import puppeteer from "puppeteer";
-
-const prisma = new PrismaClient();
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string }> = {
   2: { symbol: "Π", color: "#8B5CF6" },
@@ -17,14 +15,7 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string }> = {
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
 
-function toISODate(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function generateWheelSVG(scores: Array<{ talentId: number; score: number; max: number }>) {
+function generateTalentWheelSVG(scores: Array<{ talentId: number; score: number; max: number }>): string {
   const size = 600;
   const center = size / 2;
   const radius = 240;
@@ -38,16 +29,7 @@ function generateWheelSVG(scores: Array<{ talentId: number; score: number; max: 
     const fillPercentage = maxScore > 0 ? score / maxScore : 0;
     const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
 
-    return {
-      id: talentId,
-      code: `T${talentId}`,
-      symbol: config.symbol,
-      score,
-      maxScore,
-      color: config.color,
-      fillRadius,
-      fillPercentage,
-    };
+    return { id: talentId, code: `T${talentId}`, symbol: config.symbol, score, maxScore, color: config.color, fillRadius, fillPercentage };
   });
 
   const sections = talents.map((talent, index) => {
@@ -78,77 +60,96 @@ function generateWheelSVG(scores: Array<{ talentId: number; score: number; max: 
     ].join(" ");
   };
 
-  const defs = sections
+  const gradients = sections
     .map(
       ({ talent }) => `
-      <radialGradient id="gradient-${talent.id}" cx="50%" cy="50%">
-        <stop offset="0%" stop-color="${talent.color}" stop-opacity="${Math.min(talent.fillPercentage * 1.2, 1)}" />
-        <stop offset="${talent.fillPercentage * 100}%" stop-color="${talent.color}" stop-opacity="0.6" />
-        <stop offset="100%" stop-color="${talent.color}" stop-opacity="0.1" />
-      </radialGradient>`
+    <radialGradient id="gradient-${talent.id}" cx="50%" cy="50%">
+      <stop offset="0%" stop-color="${talent.color}" stop-opacity="${Math.min(talent.fillPercentage * 1.2, 1)}" />
+      <stop offset="${talent.fillPercentage * 100}%" stop-color="${talent.color}" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="${talent.color}" stop-opacity="0.1" />
+    </radialGradient>`
     )
-    .join("");
+    .join("\n");
 
   const paths = sections
     .map(
-      ({ talent, startAngle, endAngle }) => {
-        const midAngle = (startAngle + endAngle) / 2;
-        const labelPos = polarToCartesian(midAngle, radius + 30);
-
-        return `
-        <g>
-          <path d="${createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)}" fill="url(#gradient-${talent.id})" stroke="${talent.color}" stroke-width="1" />
-          <path d="${createArcPath(startAngle, endAngle, radius, talent.fillRadius > innerRadius ? talent.fillRadius : innerRadius)}" fill="none" stroke="${talent.color}" stroke-width="2" opacity="0.3" />
-          <text x="${labelPos.x}" y="${labelPos.y}" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="bold" fill="${talent.color}">${talent.symbol}</text>
-          <text x="${labelPos.x}" y="${labelPos.y + 16}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#666">${talent.code}</text>
-        </g>`;
-      }
+      ({ talent, startAngle, endAngle }) => `
+    <path
+      d="${createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)}"
+      fill="url(#gradient-${talent.id})"
+      stroke="${talent.color}"
+      stroke-width="1"
+    />
+    <path
+      d="${createArcPath(startAngle, endAngle, radius, talent.fillRadius > innerRadius ? talent.fillRadius : innerRadius)}"
+      fill="none"
+      stroke="${talent.color}"
+      stroke-width="2"
+      opacity="0.3"
+    />`
     )
-    .join("");
+    .join("\n");
 
-  const dividers = [1, 3, 5, 7]
+  const labels = sections
+    .map(({ talent, startAngle, endAngle }) => {
+      const midAngle = (startAngle + endAngle) / 2;
+      const labelPos = polarToCartesian(midAngle, radius + 30);
+      return `
+      <text x="${labelPos.x}" y="${labelPos.y}" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="bold" fill="${talent.color}">
+        ${talent.symbol}
+      </text>
+      <text x="${labelPos.x}" y="${labelPos.y + 16}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#666">
+        ${talent.code}
+      </text>`;
+    })
+    .join("\n");
+
+  return `
+<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <defs>${gradients}</defs>
+  <line x1="${center}" y1="${center - radius}" x2="${center}" y2="${center + radius}" stroke="#000" stroke-width="2" />
+  <line x1="${center - radius}" y1="${center}" x2="${center + radius}" y2="${center}" stroke="#000" stroke-width="2" />
+  ${[1, 3, 5, 7]
     .map((index) => {
       const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
       const outer = polarToCartesian(angle, radius);
       return `<line x1="${center}" y1="${center}" x2="${outer.x}" y2="${outer.y}" stroke="#666" stroke-width="1" stroke-dasharray="4 4" />`;
     })
-    .join("");
-
-  return `
-    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <defs>${defs}</defs>
-      <line x1="${center}" y1="${center - radius}" x2="${center}" y2="${center + radius}" stroke="#000" stroke-width="2" />
-      <line x1="${center - radius}" y1="${center}" x2="${center + radius}" y2="${center}" stroke="#000" stroke-width="2" />
-      ${dividers}
-      ${paths}
-      <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2" />
-    </svg>`;
+    .join("\n")}
+  ${paths}
+  ${labels}
+  <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2" />
+</svg>`;
 }
 
-function buildMapHTML(person: any, scores: Array<{ talentId: number; score: number; max: number }>) {
-  const mapSVG = generateWheelSVG(scores);
+function buildMapHTML(nombre: string, apellido: string, fecha: string, mapSvg: string): string {
+  const css = `
+    :root{--bg:#ffffff;--fg:#0f172a;--muted:#64748b;--border:#e5e7eb;}
+    *{box-sizing:border-box} 
+    body{margin:0;padding:40px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; color:var(--fg); background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
+    .container{max-width:700px;width:100%;text-align:center}
+    .pill{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-size:13px;color:var(--muted);margin-bottom:16px}
+    h1{font-size:32px;margin:0 0 6px;font-weight:900;letter-spacing:-0.02em;color:var(--fg)}
+    .muted{color:var(--muted);font-size:14px;margin-bottom:32px}
+    .map-wrapper{display:flex;justify-content:center;margin-bottom:24px}
+  `;
 
   return `<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Mapa de Talentos - ${person.nombre} ${person.apellido}</title>
-  <style>
-    :root{--bg:#ffffff;--fg:#0b1220;--muted:#6b7280;--border:#e5e7eb}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--fg);background:var(--bg);padding:40px;text-align:center}
-    .pill{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted);margin-bottom:20px}
-    .h1{font-size:34px;line-height:1.05;margin:20px 0 10px;font-weight:900;letter-spacing:-0.02em}
-    .muted{color:var(--muted);font-size:14px;margin-bottom:30px}
-    .map-container{display:flex;justify-content:center;margin-top:30px}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${nombre} ${apellido} - Mapa de Talentos</title>
+  <style>${css}</style>
 </head>
 <body>
-  <div class="pill">NEUROCIENCIA APLICADA · MAPA DE TALENTOS</div>
-  <h1 class="h1">${person.nombre} ${person.apellido}</h1>
-  <div class="muted">${toISODate(new Date(person.createdAt))}</div>
-  <div class="map-container">
-    ${mapSVG}
+  <div class="container">
+    <div class="pill">MAPA DE TALENTOS</div>
+    <h1>${nombre} ${apellido}</h1>
+    <div class="muted">${fecha}</div>
+    <div class="map-wrapper">
+      ${mapSvg}
+    </div>
   </div>
 </body>
 </html>`;
@@ -158,26 +159,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
 
-    const person = await prisma.person.findUnique({
+    const person = await prisma.studentSubmission.findUnique({
       where: { id },
       include: {
-        assessments: true,
+        assessments: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
       },
     });
 
     if (!person || !person.assessments[0]) {
-      return NextResponse.json({ error: "Person or assessment not found" }, { status: 404 });
+      return NextResponse.json({ error: "No encontrado" }, { status: 404 });
     }
 
-    const scores = Array.isArray(person.assessments[0]?.scoresJson)
-      ? person.assessments[0].scoresJson.map((s: any) => ({
-          talentId: Number(s.talentId),
-          score: Number(s.score ?? 0),
-          max: Number(s.max ?? 0),
-        }))
+    const assessment = person.assessments[0];
+
+    const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
+      ? assessment.scoresJson
+          .map((x: any) => ({ talentId: Number(x?.talentId), score: Number(x?.score ?? 0), max: Number(x?.max ?? 0) }))
+          .filter((x: any) => Number.isFinite(x.talentId))
       : [];
 
-    const html = buildMapHTML(person, scores);
+    const mapSvg = generateTalentWheelSVG(scores);
+    const html = buildMapHTML(person.nombre, person.apellido, new Date(person.createdAt).toLocaleDateString("es-ES"), mapSvg);
 
     const browser = await puppeteer.launch({
       headless: true,
@@ -186,9 +191,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
-    await page.setViewport({ width: 800, height: 900 });
 
-    const pdfBuffer = await page.pdf({
+    const pdf = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "20mm", right: "20mm", bottom: "20mm", left: "20mm" },
@@ -196,14 +200,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     await browser.close();
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdf, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="Mapa-${person.nombre}-${person.apellido}.pdf"`,
+        "Content-Disposition": `attachment; filename="${person.nombre}-${person.apellido}-Mapa-Talentos.pdf"`,
       },
     });
   } catch (error) {
-    console.error("Error generating map PDF:", error);
-    return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
+    console.error("Error generando mapa PDF:", error);
+    return NextResponse.json({ error: "Error generando mapa PDF" }, { status: 500 });
   }
 }
