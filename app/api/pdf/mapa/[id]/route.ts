@@ -159,7 +159,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
 
-    const person = await prisma.studentSubmission.findUnique({
+    // FIX: StudentSubmission en PascalCase
+    const person = await prisma.StudentSubmission.findUnique({
       where: { id },
       include: {
         assessments: {
