@@ -847,6 +847,16 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     downloadTextFile(`${which}_${selected.id}.html`, html, "text/html;charset=utf-8");
   }
 
+  function downloadPdfReport() {
+    if (!selected) return;
+    window.open(`/api/pdf/informe/${selected.id}`, "_blank");
+  }
+
+  function downloadPdfMap() {
+    if (!selected) return;
+    window.open(`/api/pdf/mapa/${selected.id}`, "_blank");
+  }
+
   return (
     <main className="max-w-6xl mx-auto px-4 py-10 bg-[var(--background)] text-[var(--foreground)]">
       <div className="flex items-start justify-between gap-4">
@@ -968,16 +978,22 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                 <div className="text-sm text-[var(--muted-foreground)]">{selected.user.email}</div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <ButtonPrimary type="button" className="text-xs px-3 py-2" onClick={downloadPdfReport}>
+                  📄 PDF Informe Completo
+                </ButtonPrimary>
+                <ButtonPrimary type="button" className="text-xs px-3 py-2" onClick={downloadPdfMap}>
+                  🎓 PDF Mapa
+                </ButtonPrimary>
                 <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadJson}>
-                  Descargar JSON
+                  JSON
                 </ButtonGhost>
                 <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={() => downloadTabHtml(tab)}>
-                  Descargar {tab.toUpperCase()} (HTML)
+                  HTML
                 </ButtonGhost>
                 {tab === "mapa" ? (
                   <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadMapSvgPng}>
-                    Descargar SVG/PNG
+                    SVG/PNG
                   </ButtonGhost>
                 ) : null}
                 <ButtonGhost type="button" onClick={() => setOpenId(null)}>
@@ -1097,13 +1113,12 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                 </div>
               ) : (
                 <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-                  <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe (vista previa)</div>
+                  <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe completo</div>
                   <div className="text-sm text-[var(--muted-foreground)]">
-                    Para descargar el informe con el estilo "dossier", usa <b>Descargar INFORME (HTML)</b> y ábrelo en el navegador.
-                    Desde ahí puedes imprimir/guardar como PDF.
+                    Haz clic en <b>"📄 PDF Informe Completo"</b> arriba para descargar el informe completo en PDF con todas las secciones.
                   </div>
                   <div className="mt-3 rounded-xl border border-[var(--border)] p-3 bg-[var(--background)]">
-                    <div className="text-sm font-bold">Incluye:</div>
+                    <div className="text-sm font-bold">El PDF incluye:</div>
                     <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)] mt-2">
                       <li>Portada con mapa circular y leyenda de categorías</li>
                       <li>Top 3 talentos con símbolos y descripciones completas</li>
