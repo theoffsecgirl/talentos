@@ -639,8 +639,8 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* QUESTIONS - DEFENSIVE NULL CHECK WITH SAFE TEXT RENDERING */}
-          {isQuestionStep && currentQ && (
+          {/* QUESTIONS - FIX: Add explicit text validation */}
+          {isQuestionStep && currentQ && currentQ.text && (
             <>
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-lg font-semibold text-[var(--foreground)]">
@@ -653,7 +653,7 @@ export default function StartPage() {
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[var(--muted-foreground)]">{STEM}</div>
                   <div className="text-xl font-semibold leading-snug text-[var(--foreground)]">
-                    {normalizeItemText(currentQ?.text)}
+                    {normalizeItemText(currentQ.text)}
                   </div>
                 </div>
 
