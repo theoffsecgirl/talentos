@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G } from "@react-pdf/renderer";
 
-const TALENT_CONFIG: Record<number, { symbol: string; color: string }> = {
-  2: { symbol: "Π", color: "#8B5CF6" },
-  3: { symbol: "Ψ", color: "#7C3AED" },
-  5: { symbol: "Ω", color: "#F59E0B" },
-  7: { symbol: "Θ", color: "#10B981" },
-  4: { symbol: "Α", color: "#EF4444" },
-  1: { symbol: "Δ", color: "#DC2626" },
-  6: { symbol: "Φ", color: "#06B6D4" },
-  8: { symbol: "▭", color: "#D97706" },
+const TALENT_CONFIG: Record<number, { symbol: string; color: string; code: string; quizTitle: string; reportTitle: string; reportSummary: string; fields: string[] }> = {
+  2: { symbol: "Π", color: "#8B5CF6", code: "T2", quizTitle: "Pensamiento", reportTitle: "Pensamiento Analítico", reportSummary: "Capacidad para analizar información y resolver problemas complejos.", fields: ["Ciencia", "Ingeniería", "Investigación"] },
+  3: { symbol: "Ψ", color: "#7C3AED", code: "T3", quizTitle: "Contexto", reportTitle: "Visión de Contexto", reportSummary: "Habilidad para ver el panorama completo y conectar ideas.", fields: ["Estrategia", "Consultoría", "Gestión"] },
+  5: { symbol: "Ω", color: "#F59E0B", code: "T5", quizTitle: "Rendimiento", reportTitle: "Alto Rendimiento", reportSummary: "Energía y motivación para alcanzar objetivos ambiciosos.", fields: ["Deportes", "Ventas", "Emprendimiento"] },
+  7: { symbol: "Θ", color: "#10B981", code: "T7", quizTitle: "Relaciones", reportTitle: "Relaciones Sociales", reportSummary: "Facilidad para conectar con otros y trabajar en equipo.", fields: ["Recursos Humanos", "Educación", "Comunicación"] },
+  4: { symbol: "Α", color: "#EF4444", code: "T4", quizTitle: "Acción", reportTitle: "Orientación a la Acción", reportSummary: "Impulso para tomar decisiones rápidas y ejecutar.", fields: ["Operaciones", "Logística", "Emergencias"] },
+  1: { symbol: "Δ", color: "#DC2626", code: "T1", quizTitle: "Impacto", reportTitle: "Impacto y Liderazgo", reportSummary: "Capacidad de influir y dirigir equipos hacia resultados.", fields: ["Liderazgo", "Política", "Dirección"] },
+  6: { symbol: "Φ", color: "#06B6D4", code: "T6", quizTitle: "Creatividad", reportTitle: "Imaginación Creativa", reportSummary: "Talento para generar ideas originales y artísticas.", fields: ["Arte", "Diseño", "Marketing Creativo"] },
+  8: { symbol: "▭", color: "#D97706", code: "T8", quizTitle: "Estructura", reportTitle: "Organización y Estructura", reportSummary: "Habilidad para crear sistemas y mantener el orden.", fields: ["Administración", "Finanzas", "Procesos"] },
 };
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
@@ -326,7 +326,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const assessment = person.assessments[0];
-    const talents = await prisma.talent.findMany({ orderBy: { id: 'asc' } });
 
     const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
       ? assessment.scoresJson
@@ -339,7 +338,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .sort((a, b) => b.score - a.score)
       .slice(0, 3)
       .map((s) => {
-        const t = talents.find((x: any) => x.id === s.talentId);
+        const t = TALENT_CONFIG[s.talentId];
         return {
           talentId: s.talentId,
           code: t?.code ?? `T${s.talentId}`,
