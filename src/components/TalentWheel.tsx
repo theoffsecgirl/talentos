@@ -38,6 +38,12 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryCo
 // Orden exacto del diagrama (sentido horario desde arriba)
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
 
+// Helper: asegurar que score/max sean números válidos
+function toSafeNumber(value: any, fallback: number = 0): number {
+  if (typeof value === 'number' && !isNaN(value)) return value;
+  return fallback;
+}
+
 export default function TalentWheel({ scores }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
@@ -49,8 +55,8 @@ export default function TalentWheel({ scores }: Props) {
         code: `T${talentId}`,
         title: getTalentTitle(talentId),
         symbol: config.symbol,
-        score: scoreData?.score ?? 0,
-        maxScore: scoreData?.max ?? 15,
+        score: toSafeNumber(scoreData?.score, 0),
+        maxScore: toSafeNumber(scoreData?.max, 15),
         color: config.color,
         secondaryColor: config.secondaryColor,
         category: config.category,
@@ -71,7 +77,7 @@ export default function TalentWheel({ scores }: Props) {
     const endAngle = startAngle + anglePerSection;
 
     // Calcular porcentaje de sombreado (0-1)
-    const fillPercentage = talent.score / talent.maxScore;
+    const fillPercentage = talent.maxScore > 0 ? talent.score / talent.maxScore : 0;
     const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
 
     return {
@@ -248,9 +254,9 @@ export default function TalentWheel({ scores }: Props) {
             </div>
             <div className="text-right">
               <div className="font-bold" style={{ color: t.color }}>
-                {t.score}
+                {String(t.score)}
               </div>
-              <div className="text-xs text-zinc-500">/ {t.maxScore}</div>
+              <div className="text-xs text-zinc-500">/ {String(t.maxScore)}</div>
             </div>
           </div>
         ))}
