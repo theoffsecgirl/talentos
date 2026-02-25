@@ -213,7 +213,7 @@ export default function StartPage() {
   // luego: resultado
   // luego: post-1 (datos básicos)
   // luego: post-2 (idea carrera final)
-  // luego: post-3 (identificaCampos)
+  // luego: post-3 (identificaCampos - AHORA CON CLICABLES)
   // luego: pantalla final (ok)
   const N = questions.length;
   const STEP_PRE = 1;
@@ -222,7 +222,7 @@ export default function StartPage() {
   const STEP_RESULT = STEP_Q_END + 1;
   const STEP_POST_1 = STEP_RESULT + 1; // apellidos + nacimiento + sexo + curso + modalidad + centro
   const STEP_POST_2 = STEP_POST_1 + 1; // idea carrera final
-  const STEP_POST_3 = STEP_POST_2 + 1; // identificaCampos
+  const STEP_POST_3 = STEP_POST_2 + 1; // identificaCampos - CAMPOS CLICABLES
   const STEP_DONE = STEP_POST_3 + 1;
 
   const totalSteps = STEP_DONE;
@@ -284,10 +284,8 @@ export default function StartPage() {
     }
 
     if (step === STEP_POST_3) {
-      if (!post.identificaCampos) return "Indica si te identificas con alguno de los campos.";
-      if (post.identificaCampos === "Sí" && post.campoIdentificado.trim().length < 2) {
-        return "Especifica con cuál te identificas.";
-      }
+      // Ya no es obligatorio seleccionar nada
+      return "";
     }
 
     return "";
@@ -357,6 +355,9 @@ export default function StartPage() {
     setError("");
 
     try {
+      const identificaCampos = selectedCareers.length > 0 ? "Sí" : "No";
+      const campoIdentificado = selectedCareers.join(", ");
+
       const res = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -379,8 +380,8 @@ export default function StartPage() {
           ideaCarreraFinal: post.ideaCarreraFinal || null,
           ideaCarreraTextoFinal: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
 
-          identificaCampos: post.identificaCampos || null,
-          campoIdentificado: post.identificaCampos === "Sí" ? post.campoIdentificado.trim() : null,
+          identificaCampos,
+          campoIdentificado: selectedCareers.length > 0 ? campoIdentificado : null,
 
           answers,
         }),
@@ -452,54 +453,6 @@ export default function StartPage() {
                 </li>
               ))}
             </ol>
-          </div>
-
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
-            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              Basado en tus talentos principales. Marca las opciones con las que te identificas:
-            </p>
-
-            <div className="mt-4 space-y-2">
-              {suggestedCareers.map((career, idx) => (
-                <button
-                  key={`${career}-${idx}`}
-                  onClick={() => toggleCareer(career)}
-                  className={cx(
-                    "w-full p-3 rounded-lg border-2 text-left transition-all",
-                    selectedCareers.includes(career)
-                      ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
-                      : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cx(
-                        "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
-                        selectedCareers.includes(career)
-                          ? "border-[var(--background)] bg-[var(--background)]"
-                          : "border-[var(--muted-foreground)]"
-                      )}
-                    >
-                      {selectedCareers.includes(career) && (
-                        <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-sm">{career}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {selectedCareers.length > 0 && (
-              <div className="mt-4 p-3 rounded-lg bg-green-50 border border-green-200">
-                <p className="text-sm text-green-800">
-                  ✓ Has seleccionado {selectedCareers.length} opción(es)
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="mt-6 flex justify-between gap-3">
@@ -716,45 +669,69 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* POST 3: identificaCampos */}
-          {step === STEP_POST_3 && (
-            <div className="grid gap-5">
-              <div>
-                <h2 className="text-lg font-semibold text-[var(--foreground)]">Afinidad con campos profesionales</h2>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">Indica si te identificas con alguno de los campos mostrados.</p>
-              </div>
+          {/* POST 3: identificaCampos - NUEVO CON CLICABLES */}
+          {step === STEP_POST_3 && (() => {
+            const top3 = ranked.slice(0, 3);
+            const suggestedCareers = top3.flatMap((t) => t.exampleRoles);
 
-              <div className="grid gap-4 sm:grid-cols-2">
+            return (
+              <div className="grid gap-5">
                 <div>
-                  <Label>¿Te identificas con alguno?</Label>
-                  <Select
-                    value={post.identificaCampos}
-                    onChange={(e) => updatePost("identificaCampos", e.target.value as PostData["identificaCampos"])}
-                  >
-                    <option value="">Selecciona…</option>
-                    <option value="Sí">Sí</option>
-                    <option value="No">No</option>
-                  </Select>
+                  <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                    Basado en tus talentos principales. Marca las opciones con las que te identificas:
+                  </p>
                 </div>
 
-                <div>
-                  <Label>¿Cuál?</Label>
-                  <Input
-                    value={post.campoIdentificado}
-                    onChange={(e) => updatePost("campoIdentificado", e.target.value)}
-                    placeholder="Ej: Investigación, Salud, Diseño…"
-                    disabled={post.identificaCampos !== "Sí"}
-                  />
+                <div className="space-y-2">
+                  {suggestedCareers.map((career, idx) => (
+                    <button
+                      key={`${career}-${idx}`}
+                      onClick={() => toggleCareer(career)}
+                      className={cx(
+                        "w-full p-3 rounded-lg border-2 text-left transition-all",
+                        selectedCareers.includes(career)
+                          ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
+                          : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cx(
+                            "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
+                            selectedCareers.includes(career)
+                              ? "border-[var(--background)] bg-[var(--background)]"
+                              : "border-[var(--muted-foreground)]"
+                          )}
+                        >
+                          {selectedCareers.includes(career) && (
+                            <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm">{career}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {selectedCareers.length > 0 && (
+                  <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                    <p className="text-sm text-green-800">
+                      ✓ Has seleccionado {selectedCareers.length} opción(es)
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
+                    {saving ? "Guardando…" : "Guardar y finalizar"}
+                  </ButtonPrimary>
                 </div>
               </div>
-
-              <div className="pt-2">
-                <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
-                  {saving ? "Guardando…" : "Guardar y finalizar"}
-                </ButtonPrimary>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* DONE */}
           {step === STEP_DONE && (
