@@ -180,7 +180,7 @@ function PDFDocument({
   modalidad,
   centro,
 }: any) {
-  const allFields = Array.from(new Set(top3.flatMap((t: any) => t.fields || [])));
+  const allFields = Array.from(new Set(top3.flatMap((t: any) => t.fields || []))) as string[];
 
   return (
     <Document>
@@ -252,7 +252,7 @@ function PDFDocument({
       <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>De tus resultados, encajas en estos campos profesionales</Text>
         <View style={styles.card}>
-          {allFields.map((field: string, idx: number) => (
+          {allFields.map((field, idx) => (
             <View key={idx} style={styles.fieldItem}>
               <View style={styles.dot} />
               <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{field}</Text>
