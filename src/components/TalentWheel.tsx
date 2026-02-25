@@ -177,9 +177,9 @@ export default function TalentWheel({ scores }: Props) {
                 strokeWidth="1"
               />
 
-              {/* Borde exterior (siempre visible) */}
+              {/* Borde exterior COMPLETO (siempre visible hasta radius) */}
               <path
-                d={createArcPath(startAngle, endAngle, radius, fillRadius > innerRadius ? fillRadius : innerRadius)}
+                d={createArcPath(startAngle, endAngle, radius, innerRadius)}
                 fill="none"
                 stroke={talent.color}
                 strokeWidth="2"
