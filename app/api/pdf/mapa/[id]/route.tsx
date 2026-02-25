@@ -139,9 +139,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       scores,
     });
 
-    const pdfBuffer = await pdf(doc).toBuffer();
+    const pdfBlob = await pdf(doc).toBlob();
+    const buffer = await pdfBlob.arrayBuffer();
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(buffer, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${person.nombre}-${person.apellido}-Mapa-Talentos.pdf"`,
