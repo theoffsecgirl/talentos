@@ -237,7 +237,7 @@ export default function StartPage() {
         talentQuizTitle: t.quizTitle,
       }))
     );
-  }, []);
+  }, []); // CRITICAL: Empty deps para no re-shuffle
 
   // pasos:
   // 1) pre (nombre+email)
@@ -272,7 +272,8 @@ export default function StartPage() {
 
   const isQuestionStep = step >= STEP_Q_START && step <= STEP_Q_END;
   const qIndex = isQuestionStep ? step - STEP_Q_START : -1;
-  const currentQ = isQuestionStep ? questions[qIndex] : null;
+  // DEFENSIVE: bounds check
+  const currentQ = isQuestionStep && qIndex >= 0 && qIndex < questions.length ? questions[qIndex] : null;
 
   const progress = Math.round((step / totalSteps) * 100);
 
@@ -335,17 +336,17 @@ export default function StartPage() {
     setStep((s) => clamp(s - 1, STEP_PRE, totalSteps));
   }
 
-  function computeScores() {
-    const scores = new Map<number, number>();
+  // Memoize properly
+  const scores = useMemo(() => {
+    const scoreMap = new Map<number, number>();
     for (const q of questions) {
       const v = answers[q.itemId];
-      if (v === undefined) continue;
-      scores.set(q.talentId, (scores.get(q.talentId) ?? 0) + v);
+      if (v !== undefined) {
+        scoreMap.set(q.talentId, (scoreMap.get(q.talentId) ?? 0) + v);
+      }
     }
-    return scores;
-  }
-
-  const scores = useMemo(() => computeScores(), [answers, questions]);
+    return scoreMap;
+  }, [questions, answers]);
 
   const ranked = useMemo(() => {
     return TALENTS.map((t) => ({
@@ -440,7 +441,7 @@ export default function StartPage() {
   if (step === STEP_RESULT) {
     const top3 = ranked.slice(0, 3);
 
-    // Agrupar preguntas por talento (FIX: agregar dependencies)
+    // Agrupar preguntas por talento
     const questionsByTalent = useMemo(() => {
       const map = new Map<number, QuestionItem[]>();
       
@@ -618,7 +619,7 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* QUESTIONS */}
+          {/* QUESTIONS - DEFENSIVE NULL CHECK */}
           {isQuestionStep && currentQ && (
             <>
               <div className="flex items-baseline justify-between gap-4">
