@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium-min";
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string }> = {
   2: { symbol: "Π", color: "#8B5CF6" },
@@ -32,11 +33,8 @@ function buildReportHTML(data: {
   modalidad: string;
   centro: string;
 }) {
-  const { nombre, apellido, fecha, scores, top3, mapSvg, identificaCampos, campoIdentificado, ideaCarrera, ideaCarreraTexto, fechaNacimiento, genero, curso, modalidad, centro } = data;
+  const { nombre, apellido, fecha, top3, mapSvg, identificaCampos, campoIdentificado, ideaCarrera, ideaCarreraTexto, fechaNacimiento, genero, curso, modalidad, centro } = data;
 
-  const byId = new Map(scores.map((s) => [s.talentId, s]));
-
-  // Portada
   const portada = `
     <section class="page">
       <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
@@ -85,7 +83,6 @@ function buildReportHTML(data: {
       </div>
     </section>`;
 
-  // Top 3 con resumen
   const resumenPage = `
     <section class="page">
       <h2 class="h2">Tus 3 talentos más destacados</h2>
@@ -115,7 +112,6 @@ function buildReportHTML(data: {
       </div>
     </section>`;
 
-  // Campos profesionales donde encaja
   const allFields = Array.from(new Set(top3.flatMap((t: any) => t.fields || [])));
   const camposProfesionales = `
     <section class="page">
@@ -139,7 +135,6 @@ function buildReportHTML(data: {
       </div>` : ''}
     </section>`;
 
-  // Idea de carrera + datos personales
   const datosYCarrera = `
     <section class="page">
       <h2 class="h2">Tu orientación profesional</h2>
@@ -174,11 +169,7 @@ function buildReportHTML(data: {
     .muted{color:var(--muted)}
     .card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
     .grid{display:grid;gap:12px}
-    .grid2{grid-template-columns:1fr 1fr}
     .pill{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted)}
-    table{width:100%;border-collapse:collapse;font-size:12px}
-    th,td{border:1px solid var(--border);padding:8px;vertical-align:top}
-    th{background:#f8fafc;text-align:left}
     @media print{body{background:#fff}.page{padding:16mm}}
   `;
 
@@ -265,9 +256,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       centro: person.centroEducativo || '',
     });
 
+    const isLocal = process.env.NODE_ENV === 'development';
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: isLocal ? [] : chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: isLocal ? undefined : await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
