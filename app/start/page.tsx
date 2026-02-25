@@ -59,8 +59,9 @@ const initialPost: PostData = {
 // Enunciado fijo: las frases de cada ítem continúan este inicio.
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
-function normalizeItemText(s: string) {
-  const t = (s ?? "").trim();
+function normalizeItemText(s: any): string {
+  if (typeof s !== 'string') return '';
+  const t = s.trim();
   if (!t) return "";
   return t.replace(/\s+/g, " ");
 }
@@ -563,6 +564,18 @@ export default function StartPage() {
     );
   }
 
+  // FALLBACK: si currentQ es null, renderizar error placeholder
+  if (isQuestionStep && !currentQ) {
+    return (
+      <main className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-[var(--foreground)]">Error: No se pudo cargar la pregunta</p>
+          <ButtonPrimary className="mt-4" onClick={back}>Volver</ButtonPrimary>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <div className="max-w-2xl mx-auto px-4 py-12">
@@ -626,7 +639,7 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* QUESTIONS - DEFENSIVE NULL CHECK */}
+          {/* QUESTIONS - DEFENSIVE NULL CHECK WITH SAFE TEXT RENDERING */}
           {isQuestionStep && currentQ && (
             <>
               <div className="flex items-baseline justify-between gap-4">
@@ -640,7 +653,7 @@ export default function StartPage() {
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-[var(--muted-foreground)]">{STEM}</div>
                   <div className="text-xl font-semibold leading-snug text-[var(--foreground)]">
-                    {normalizeItemText(currentQ.text)}
+                    {normalizeItemText(currentQ?.text)}
                   </div>
                 </div>
 
