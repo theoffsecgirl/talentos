@@ -215,6 +215,12 @@ function Accordion({ title, children, defaultOpen = false }: { title: string; ch
   );
 }
 
+type QuestionItem = {
+  itemId: string;
+  text: string;
+  answer: number;
+};
+
 export default function StartPage() {
   const questions = useMemo<Question[]>(() => {
     const shuffledTalents = shuffle(TALENTS).map((t) => ({
@@ -435,19 +441,22 @@ export default function StartPage() {
     const top3 = ranked.slice(0, 3);
     const suggestedCareers = top3.flatMap((t) => t.exampleRoles);
 
-    // Agrupar preguntas por talento
+    // Agrupar preguntas por talento (FIX: syntax correcto)
     const questionsByTalent = useMemo(() => {
-      const map = new Map<number, Array<{ itemId: string; text: string; answer: number }>>>();
+      const map = new Map<number, QuestionItem[]>();
       
       for (const q of questions) {
         if (!map.has(q.talentId)) {
           map.set(q.talentId, []);
         }
-        map.get(q.talentId)!.push({
-          itemId: q.itemId,
-          text: q.text,
-          answer: answers[q.itemId] ?? 0,
-        });
+        const list = map.get(q.talentId);
+        if (list) {
+          list.push({
+            itemId: q.itemId,
+            text: q.text,
+            answer: answers[q.itemId] ?? 0,
+          });
+        }
       }
       
       return map;
