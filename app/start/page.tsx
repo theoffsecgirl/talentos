@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState } from "react";
 import { TALENTS } from "@/lib/talents";
 import TalentWheel from "@/components/TalentWheel";
 
@@ -98,6 +98,22 @@ function ProgressRing({ value }: { value: number }) {
         <div className="w-full h-full rounded-full bg-[var(--card)] flex items-center justify-center border border-[var(--border)]">
           <span className="text-[11px] font-semibold text-[var(--foreground)]">{pct}%</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DonutMeter({ score, max }: { score: number; max: number }) {
+  const pct = max > 0 ? clamp(Math.round((score / max) * 100), 0, 100) : 0;
+  const color = pct >= 65 ? "var(--danger)" : "var(--foreground)";
+  const style = {
+    background: `conic-gradient(${color} ${pct}%, rgba(148,163,184,0.35) ${pct}% 100%)`,
+  } as React.CSSProperties;
+
+  return (
+    <div className="w-11 h-11 rounded-full p-[3px]" style={style} aria-label={`${pct}%`}>
+      <div className="w-full h-full rounded-full bg-[var(--card)] flex items-center justify-center border border-[var(--border)]">
+        <span className="text-[11px] font-semibold" style={{ color }}>{pct}%</span>
       </div>
     </div>
   );
@@ -206,16 +222,13 @@ type QuestionItem = {
 };
 
 export default function StartPage() {
-  console.log("[DEBUG] Component render started");
-
   const questions = useMemo<Question[]>(() => {
-    console.log("[DEBUG] Generating questions");
     const shuffledTalents = shuffle(TALENTS).map((t) => ({
       ...t,
       items: shuffle(t.items),
     }));
 
-    const result = shuffledTalents.flatMap((t) =>
+    return shuffledTalents.flatMap((t) =>
       t.items.map((it) => ({
         itemId: it.id,
         text: it.text,
@@ -224,18 +237,24 @@ export default function StartPage() {
         talentQuizTitle: t.quizTitle,
       }))
     );
-    console.log("[DEBUG] Questions generated:", result.length);
-    return result;
   }, []); // CRITICAL: Empty deps para no re-shuffle
 
+  // pasos:
+  // 1) pre (nombre+email)
+  // 2..(1+N) preguntas
+  // luego: resultado
+  // luego: post-1 (datos básicos)
+  // luego: post-2 (idea carrera final)
+  // luego: post-3 (identificaCampos - AHORA CON CLICABLES)
+  // luego: pantalla final (ok)
   const N = questions.length;
   const STEP_PRE = 1;
   const STEP_Q_START = 2;
   const STEP_Q_END = STEP_Q_START + N - 1;
   const STEP_RESULT = STEP_Q_END + 1;
-  const STEP_POST_1 = STEP_RESULT + 1;
-  const STEP_POST_2 = STEP_POST_1 + 1;
-  const STEP_POST_3 = STEP_POST_2 + 1;
+  const STEP_POST_1 = STEP_RESULT + 1; // apellidos + nacimiento + sexo + curso + modalidad + centro
+  const STEP_POST_2 = STEP_POST_1 + 1; // idea carrera final
+  const STEP_POST_3 = STEP_POST_2 + 1; // identificaCampos - CAMPOS CLICABLES
   const STEP_DONE = STEP_POST_3 + 1;
 
   const totalSteps = STEP_DONE;
@@ -253,13 +272,10 @@ export default function StartPage() {
 
   const isQuestionStep = step >= STEP_Q_START && step <= STEP_Q_END;
   const qIndex = isQuestionStep ? step - STEP_Q_START : -1;
+  // DEFENSIVE: bounds check
   const currentQ = isQuestionStep && qIndex >= 0 && qIndex < questions.length ? questions[qIndex] : null;
 
   const progress = Math.round((step / totalSteps) * 100);
-
-  useEffect(() => {
-    console.log("[DEBUG] Step changed:", { step, isQuestionStep, qIndex, currentQ: currentQ?.itemId });
-  }, [step]);
 
   function updatePre<K extends keyof PreData>(key: K, value: PreData[K]) {
     setPre((d) => ({ ...d, [key]: value }));
@@ -268,12 +284,10 @@ export default function StartPage() {
     setPost((d) => ({ ...d, [key]: value }));
   }
   function setAnswer(itemId: string, value: number) {
-    console.log("[DEBUG] Setting answer:", { itemId, value });
     setAnswers((a) => ({ ...a, [itemId]: value }));
   }
 
   function validateStep(): string {
-    console.log("[DEBUG] Validating step:", step);
     if (step === STEP_PRE) {
       if (!pre.nombre.trim()) return "Escribe tu nombre.";
       const email = pre.email.trim();
@@ -302,20 +316,19 @@ export default function StartPage() {
       }
     }
 
+    if (step === STEP_POST_3) {
+      // Ya no es obligatorio seleccionar nada
+      return "";
+    }
+
     return "";
   }
 
   function next() {
-    console.log("[DEBUG] Next clicked");
     const msg = validateStep();
-    if (msg) {
-      console.log("[DEBUG] Validation failed:", msg);
-      return setError(msg);
-    }
+    if (msg) return setError(msg);
     setError("");
-    const newStep = clamp(step + 1, STEP_PRE, totalSteps);
-    console.log("[DEBUG] Moving to step:", newStep);
-    setStep(newStep);
+    setStep((s) => clamp(s + 1, STEP_PRE, totalSteps));
   }
 
   function back() {
@@ -323,8 +336,8 @@ export default function StartPage() {
     setStep((s) => clamp(s - 1, STEP_PRE, totalSteps));
   }
 
+  // Memoize properly
   const scores = useMemo(() => {
-    console.log("[DEBUG] Computing scores");
     const scoreMap = new Map<number, number>();
     for (const q of questions) {
       const v = answers[q.itemId];
@@ -332,13 +345,11 @@ export default function StartPage() {
         scoreMap.set(q.talentId, (scoreMap.get(q.talentId) ?? 0) + v);
       }
     }
-    console.log("[DEBUG] Scores computed:", Array.from(scoreMap.entries()));
     return scoreMap;
   }, [questions, answers]);
 
   const ranked = useMemo(() => {
-    console.log("[DEBUG] Ranking talents");
-    const result = TALENTS.map((t) => ({
+    return TALENTS.map((t) => ({
       id: t.id,
       code: t.code,
       quizTitle: t.quizTitle,
@@ -350,9 +361,9 @@ export default function StartPage() {
       score: scores.get(t.id) ?? 0,
       max: t.items.length * 3,
     })).sort((a, b) => b.score - a.score);
-    console.log("[DEBUG] Ranked:", result.map(r => ({ id: r.id, score: r.score })));
-    return result;
   }, [scores]);
+
+  const winner = ranked[0];
 
   function toggleCareer(career: string) {
     setSelectedCareers((prev) =>
@@ -361,11 +372,11 @@ export default function StartPage() {
   }
 
   async function saveAll() {
-    console.log("[DEBUG] Save all triggered");
     const msg = validateStep();
     if (msg) return setError(msg);
     if (saving) return;
 
+    // asegura que estén todas las respuestas
     for (const q of questions) {
       if (answers[q.itemId] === undefined) {
         setError("Faltan respuestas del cuestionario.");
@@ -392,12 +403,19 @@ export default function StartPage() {
           curso: post.curso.trim(),
           modalidad: post.modalidad.trim(),
           centroEducativo: post.centroEducativo.trim() || null,
+
+          // "idea de carrera" original del modelo (para compatibilidad admin/filtros actuales)
+          // aquí la fijamos con la "final"
           tienesIdeaCarrera: post.ideaCarreraFinal || "No",
           ideaCarrera: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
+
+          // nuevos
           ideaCarreraFinal: post.ideaCarreraFinal || null,
           ideaCarreraTextoFinal: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
+
           identificaCampos,
           campoIdentificado: selectedCareers.length > 0 ? campoIdentificado : null,
+
           answers,
         }),
       });
@@ -419,14 +437,12 @@ export default function StartPage() {
     }
   }
 
-  console.log("[DEBUG] About to render, step:", step, "STEP_RESULT:", STEP_RESULT);
-
+  // Pantalla de resultados después del cuestionario
   if (step === STEP_RESULT) {
-    console.log("[DEBUG] Rendering RESULT screen");
     const top3 = ranked.slice(0, 3);
 
+    // Agrupar preguntas por talento
     const questionsByTalent = useMemo(() => {
-      console.log("[DEBUG] Building questionsByTalent map");
       const map = new Map<number, QuestionItem[]>();
       
       for (const q of questions) {
@@ -443,7 +459,6 @@ export default function StartPage() {
         }
       }
       
-      console.log("[DEBUG] questionsByTalent map size:", map.size);
       return map;
     }, [questions, answers]);
 
@@ -461,7 +476,6 @@ export default function StartPage() {
           </header>
 
           <div className="mb-12">
-            {console.log("[DEBUG] About to render TalentWheel")}
             <TalentWheel
               scores={ranked.map((t) => ({
                 talentId: t.id,
@@ -469,7 +483,6 @@ export default function StartPage() {
                 max: t.max,
               }))}
             />
-            {console.log("[DEBUG] TalentWheel rendered")}
           </div>
 
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
@@ -495,6 +508,7 @@ export default function StartPage() {
             </ol>
           </div>
 
+          {/* NUEVO: Desplegables con respuestas por talento */}
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
             <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">Detalle de respuestas por talento</h2>
             <div className="space-y-2">
@@ -542,7 +556,350 @@ export default function StartPage() {
     );
   }
 
-  console.log("[DEBUG] Rendering normal flow")
-  // Resto del componente sin cambios...
-  return <main className="min-h-screen bg-[var(--background)]"><div className="max-w-2xl mx-auto px-4 py-12"><p className="text-red-500">DEBUG BUILD - Check console for logs. Step: {step}</p></div></main>;
+  return (
+    <main className="min-h-screen bg-[var(--background)]">
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <header className="flex items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-xs text-[var(--muted-foreground)] shadow-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+              Cuestionario basado en neurociencia
+            </div>
+            <h1 className="mt-3 text-3xl font-bold text-[var(--foreground)]">Descubre tu futuro profesional</h1>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Paso {step} de {totalSteps} · Orientación personalizada
+            </p>
+          </div>
+          <ProgressRing value={progress} />
+        </header>
+
+        <section className="mt-8 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+          {error && (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          {/* STEP 1: PRE (nombre + email) */}
+          {step === STEP_PRE && (
+            <div className="grid gap-5">
+              <div>
+                <h2 className="text-lg font-semibold text-[var(--foreground)]">Bienvenido/a</h2>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                  Completa {questions.length} preguntas para obtener tu perfil de talentos y orientación profesional personalizada.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Nombre</Label>
+                  <Input value={pre.nombre} onChange={(e) => updatePre("nombre", e.target.value)} placeholder="Nombre" />
+                </div>
+                <div>
+                  <Label>Correo</Label>
+                  <Input
+                    value={pre.email}
+                    onChange={(e) => updatePre("email", e.target.value)}
+                    placeholder="correo@ejemplo.com"
+                    type="email"
+                    inputMode="email"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4">
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">Cómo funciona</h3>
+                <ul className="mt-2 space-y-1 text-sm text-[var(--muted-foreground)]">
+                  <li>• {questions.length} afirmaciones presentadas de forma aleatoria</li>
+                  <li>• Responde de 0 a 3 según tu forma habitual de ser</li>
+                  <li>• No hay respuestas correctas o incorrectas</li>
+                  <li>• Las preguntas no revelan a qué talento corresponden</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* QUESTIONS - DEFENSIVE NULL CHECK */}
+          {isQuestionStep && currentQ && (
+            <>
+              <div className="flex items-baseline justify-between gap-4">
+                <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                  Pregunta {qIndex + 1} de {questions.length}
+                </h2>
+                <div className="text-xs text-[var(--muted-foreground)]">0–3</div>
+              </div>
+
+              <div className="mt-5 rounded-3xl border border-[var(--border)] bg-[var(--background)] p-6">
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-[var(--muted-foreground)]">{STEM}</div>
+                  <div className="text-xl font-semibold leading-snug text-[var(--foreground)]">
+                    {normalizeItemText(currentQ.text)}
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {SCALE.map(({ n, label }) => {
+                    const active = answers[currentQ.itemId] === n;
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setAnswer(currentQ.itemId, n)}
+                        className={cx(
+                          "rounded-2xl px-4 py-3 text-left transition border",
+                          active
+                            ? "bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-[0_14px_30px_-18px_rgba(0,0,0,0.35)]"
+                            : "bg-[var(--card)] border-[var(--border)] text-[var(--foreground)] hover:-translate-y-[1px] hover:opacity-95"
+                        )}
+                      >
+                        <div className="text-sm font-semibold">{n}</div>
+                        <div
+                          className={cx(
+                            "text-xs",
+                            active ? "text-[var(--background)]/80" : "text-[var(--muted-foreground)]"
+                          )}
+                        >
+                          {label}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="mt-4 text-xs text-[var(--muted-foreground)]">
+                  Responde según tu forma habitual de ser. No hay respuestas correctas o incorrectas.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* POST 1 */}
+          {step === STEP_POST_1 && (
+            <div className="grid gap-5">
+              <div>
+                <h2 className="text-lg font-semibold text-[var(--foreground)]">Datos académicos</h2>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">Completa la información para finalizar.</p>
+              </div>
+
+              <div>
+                <Label>Apellidos</Label>
+                <Input value={post.apellido} onChange={(e) => updatePost("apellido", e.target.value)} placeholder="Apellidos" />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Fecha de nacimiento</Label>
+                  <Input type="date" value={post.fechaNacimiento} onChange={(e) => updatePost("fechaNacimiento", e.target.value)} />
+                </div>
+                <div>
+                  <Label>Sexo</Label>
+                  <Select value={post.genero} onChange={(e) => updatePost("genero", e.target.value as PostData["genero"])}>
+                    <option value="">Selecciona…</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Masculino">Masculino</option>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Curso</Label>
+                  <Input value={post.curso} onChange={(e) => updatePost("curso", e.target.value)} placeholder="Ej: 1º Bachillerato" />
+                </div>
+                <div>
+                  <Label>Modalidad</Label>
+                  <Input value={post.modalidad} onChange={(e) => updatePost("modalidad", e.target.value)} placeholder="Ej: Ciencias / Letras / FP…" />
+                </div>
+              </div>
+
+              <div>
+                <Label>Centro educativo (opcional)</Label>
+                <Input
+                  value={post.centroEducativo}
+                  onChange={(e) => updatePost("centroEducativo", e.target.value)}
+                  placeholder="IES / Colegio / Universidad…"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* POST 2: idea carrera final */}
+          {step === STEP_POST_2 && (
+            <div className="grid gap-5">
+              <div>
+                <h2 className="text-lg font-semibold text-[var(--foreground)]">Preferencias</h2>
+                <p className="mt-1 text-sm text-[var(--muted-foreground)]">Sobre tu idea de carrera.</p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>¿Tienes una idea de carrera?</Label>
+                  <Select
+                    value={post.ideaCarreraFinal}
+                    onChange={(e) => updatePost("ideaCarreraFinal", e.target.value as PostData["ideaCarreraFinal"])}
+                  >
+                    <option value="">Selecciona…</option>
+                    <option value="Sí">Sí</option>
+                    <option value="No">No</option>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>¿Cuál?</Label>
+                  <Input
+                    value={post.ideaCarreraTextoFinal}
+                    onChange={(e) => updatePost("ideaCarreraTextoFinal", e.target.value)}
+                    placeholder="Ej: Medicina, Informática, Diseño…"
+                    disabled={post.ideaCarreraFinal !== "Sí"}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* POST 3: identificaCampos - FIX: deduplicar careers */}
+          {step === STEP_POST_3 && (() => {
+            const top3 = ranked.slice(0, 3);
+            // FIX: filtrar undefined/null y deduplicar
+            const allCareers = top3
+              .filter((t) => Array.isArray(t.exampleRoles) && t.exampleRoles.length > 0)
+              .flatMap((t) => t.exampleRoles.filter((role): role is string => typeof role === "string" && role.trim().length > 0));
+            const suggestedCareers = Array.from(new Set(allCareers)); // Deduplicar
+
+            if (suggestedCareers.length === 0) {
+              // Fallback: no hay carreras sugeridas
+              return (
+                <div className="grid gap-5">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                      No hay sugerencias disponibles en este momento. Continúa para finalizar.
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
+                      {saving ? "Guardando…" : "Guardar y finalizar"}
+                    </ButtonPrimary>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid gap-5">
+                <div>
+                  <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                    Basado en tus talentos principales. Marca las opciones con las que te identificas:
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {suggestedCareers.map((career) => (
+                    <button
+                      key={career}
+                      onClick={() => toggleCareer(career)}
+                      className={cx(
+                        "w-full p-3 rounded-lg border-2 text-left transition-all",
+                        selectedCareers.includes(career)
+                          ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
+                          : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cx(
+                            "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
+                            selectedCareers.includes(career)
+                              ? "border-[var(--background)] bg-[var(--background)]"
+                              : "border-[var(--muted-foreground)]"
+                          )}
+                        >
+                          {selectedCareers.includes(career) && (
+                            <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm">{career}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {selectedCareers.length > 0 && (
+                  <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                    <p className="text-sm text-green-800">
+                      ✓ Has seleccionado {selectedCareers.length} opción(es)
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
+                    {saving ? "Guardando…" : "Guardar y finalizar"}
+                  </ButtonPrimary>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* DONE */}
+          {step === STEP_DONE && (
+            <div className="grid gap-4">
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">Registro completado</h2>
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Gracias. Tus respuestas han quedado registradas correctamente.
+              </p>
+
+              <ButtonPrimary
+                type="button"
+                className="w-full"
+                onClick={() => {
+                  setStep(STEP_PRE);
+                  setPre(initialPre);
+                  setPost(initialPost);
+                  setAnswers({});
+                  setError("");
+                  setSaving(false);
+                  setSavedOk(false);
+                  setSelectedCareers([]);
+                  submittingRef.current = false;
+                }}
+              >
+                Empezar de nuevo
+              </ButtonPrimary>
+            </div>
+          )}
+
+          {/* NAV (cuando no estás en DONE o RESULT) */}
+          {step !== STEP_DONE && step !== STEP_RESULT && (
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <ButtonGhost type="button" onClick={back} disabled={step === STEP_PRE || saving}>
+                Atrás
+              </ButtonGhost>
+
+              {step < STEP_Q_END ? (
+                <ButtonPrimary type="button" onClick={next}>
+                  Siguiente
+                </ButtonPrimary>
+              ) : step === STEP_Q_END ? (
+                <ButtonPrimary type="button" onClick={next}>
+                  Ver resultado
+                </ButtonPrimary>
+              ) : step === STEP_POST_1 || step === STEP_POST_2 ? (
+                <ButtonPrimary type="button" onClick={next} disabled={saving}>
+                  Siguiente
+                </ButtonPrimary>
+              ) : (
+                // STEP_POST_3 tiene su propio botón Guardar
+                <div />
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
 }
