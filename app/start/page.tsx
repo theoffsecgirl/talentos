@@ -470,6 +470,15 @@ export default function StartPage() {
       return map;
     }, [questions, answers]);
 
+    // FIX: Memoize scores array to prevent TalentWheel infinite loop
+    const wheelScores = useMemo(() => {
+      return ranked.map((t) => ({
+        talentId: t.id,
+        score: t.score,
+        max: t.max,
+      }));
+    }, [ranked]);
+
     return (
       <main className="min-h-screen bg-[var(--background)]">
         <div className="max-w-4xl mx-auto px-4 py-12">
@@ -484,13 +493,7 @@ export default function StartPage() {
           </header>
 
           <div className="mb-12">
-            <TalentWheel
-              scores={ranked.map((t) => ({
-                talentId: t.id,
-                score: t.score,
-                max: t.max,
-              }))}
-            />
+            <TalentWheel scores={wheelScores} />
           </div>
 
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
