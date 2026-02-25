@@ -21,12 +21,18 @@ function buildReportHTML(data: {
   fecha: string;
   scores: Array<{ talentId: number; score: number; max: number }>;
   top3: Array<any>;
-  talents: Array<any>;
   mapSvg: string;
-  answers: Record<string, number>;
-  questionMap: Record<string, { text: string; talentQuizTitle: string }>;
+  identificaCampos: string;
+  campoIdentificado: string;
+  ideaCarrera: string;
+  ideaCarreraTexto: string;
+  fechaNacimiento: string;
+  genero: string;
+  curso: string;
+  modalidad: string;
+  centro: string;
 }) {
-  const { nombre, apellido, fecha, scores, top3, talents, mapSvg, answers, questionMap } = data;
+  const { nombre, apellido, fecha, scores, top3, mapSvg, identificaCampos, campoIdentificado, ideaCarrera, ideaCarreraTexto, fechaNacimiento, genero, curso, modalidad, centro } = data;
 
   const byId = new Map(scores.map((s) => [s.talentId, s]));
 
@@ -36,8 +42,8 @@ function buildReportHTML(data: {
       <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
       <div style="display:flex;justify-content:space-between;gap:16px;margin-top:18px;align-items:flex-end">
         <div>
-          <h1 class="h1">CONOCE TU TALENTO</h1>
-          <div class="muted" style="font-size:14px;">Mapa visual de tus talentos basado en neurociencia aplicada</div>
+          <h1 class="h1">TU INFORME DE TALENTOS</h1>
+          <div class="muted" style="font-size:14px;">Mapa visual basado en neurociencia aplicada</div>
           <div style="margin-top:18px;font-size:16px;font-weight:800">${nombre} ${apellido}</div>
           <div class="muted" style="margin-top:4px">${fecha}</div>
         </div>
@@ -79,20 +85,7 @@ function buildReportHTML(data: {
       </div>
     </section>`;
 
-  // Top 3
-  const talentosTable = TALENT_ORDER.map((tid) => {
-    const s = byId.get(tid);
-    const config = TALENT_CONFIG[tid];
-    const t = talents.find((x: any) => x.id === tid);
-    return `
-      <tr>
-        <td style="text-align:center;font-size:20px;color:${config.color}">${config.symbol}</td>
-        <td style="font-weight:700">${t?.reportTitle || t?.quizTitle || `T${tid}`}</td>
-        <td style="text-align:center">T${tid}</td>
-        <td style="text-align:center;font-weight:700">${s?.score ?? 0} / ${s?.max ?? 15}</td>
-      </tr>`;
-  }).join("\n");
-
+  // Top 3 con resumen
   const resumenPage = `
     <section class="page">
       <h2 class="h2">Tus 3 talentos más destacados</h2>
@@ -120,131 +113,53 @@ function buildReportHTML(data: {
           })
           .join("\n")}
       </div>
-
-      <div style="margin-top:16px" class="card">
-        <div style="font-weight:900;margin-bottom:8px">Listado completo de talentos</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Símbolo</th>
-              <th>Talento</th>
-              <th>Código</th>
-              <th>Puntuación</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${talentosTable}
-          </tbody>
-        </table>
-      </div>
     </section>`;
 
-  // Profesiones
-  const profesionesPage = `
+  // Campos profesionales donde encaja
+  const allFields = Array.from(new Set(top3.flatMap((t: any) => t.fields || [])));
+  const camposProfesionales = `
     <section class="page">
-      <h2 class="h2">Profesiones y roles sugeridos</h2>
-      <div class="muted" style="font-size:13px;margin-bottom:12px">Basado en tus talentos principales:</div>
-      <div class="card">
-        ${top3
-          .flatMap((t: any) => t.exampleRoles || [])
+      <h2 class="h2">De tus resultados, encajas en estos campos profesionales</h2>
+      <div class="card" style="margin-top:14px">
+        ${allFields
           .map(
-            (role: string) => `
+            (field: string) => `
             <div style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
-              <div style="width:18px;height:18px;border:2px solid #64748b;border-radius:4px"></div>
-              <div style="font-size:13px">${role}</div>
+              <div style="width:18px;height:18px;border-radius:50%;background:#10B981"></div>
+              <div style="font-size:14px;font-weight:600">${field}</div>
             </div>`
           )
           .join("\n")}
       </div>
+      
+      ${identificaCampos === 'Sí' && campoIdentificado ? `
+      <div class="card" style="margin-top:16px;border:2px solid #10B981;background:#f0fdf4">
+        <div style="font-weight:900;margin-bottom:6px;color:#10B981">Te identificas con:</div>
+        <div style="font-size:14px;color:#047857">${campoIdentificado}</div>
+      </div>` : ''}
     </section>`;
 
-  // Páginas individuales de cada talento
-  const detailPages = talents
-    .slice()
-    .sort((a: any, b: any) => a.id - b.id)
-    .map((t: any) => {
-      const s = byId.get(t.id);
-      const config = TALENT_CONFIG[t.id];
-      const fields = (t.fields ?? []).map((x: string) => `<li>${x}</li>`).join("");
-      const comps = (t.competencies ?? []).map((x: string) => `<li>${x}</li>`).join("");
-      const roles = (t.exampleRoles ?? []).map((x: string) => `<li>${x}</li>`).join("");
-
-      return `
-        <section class="page">
-          <div class="pill">${t.code} · ${config?.symbol || ""} · ${t.titleGenotype || ""}</div>
-          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:14px">
-            <div>
-              <h2 class="h2">${t.reportTitle || t.quizTitle}</h2>
-              <div class="muted" style="font-size:13px">${t.group || t.quizTitle}</div>
-            </div>
-            <div style="text-align:right">
-              <div class="muted" style="font-size:12px;font-weight:700">Puntuación</div>
-              <div style="font-size:28px;font-weight:900;color:${config?.color || "#000"}">${s?.score ?? 0}</div>
-              <div class="muted" style="font-size:12px">/ ${s?.max ?? 15}</div>
-            </div>
-          </div>
-          <div class="card" style="margin-top:14px">
-            <div style="font-weight:900;margin-bottom:6px">Resumen neurocognitivo</div>
-            <div style="font-size:13px" class="muted">${t.reportSummary || ""}</div>
-          </div>
-          <div class="grid grid2" style="margin-top:12px">
-            <div class="card">
-              <div style="font-weight:900;margin-bottom:8px">Ámbitos profesionales</div>
-              <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${fields}</ul>
-            </div>
-            <div class="card">
-              <div style="font-weight:900;margin-bottom:8px">Competencias personales</div>
-              <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${comps}</ul>
-            </div>
-          </div>
-          <div class="card" style="margin-top:12px">
-            <div style="font-weight:900;margin-bottom:8px">Roles y profesiones de ejemplo</div>
-            <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${roles}</ul>
-          </div>
-        </section>`;
-    })
-    .join("\n");
-
-  // Detalle de respuestas
-  const answerRows = Object.entries(answers)
-    .sort(([a], [b]) => a.localeCompare(b, "es"))
-    .map(([qid, v]) => {
-      const meta = questionMap[qid];
-      const text = meta?.text || "(Pregunta no encontrada)";
-      const vv = Number(v);
-      const x = (n: number) => (vv === n ? "X" : "");
-      return `
-        <tr>
-          <td style="width:64px"><b>${qid}</b></td>
-          <td>${text}</td>
-          <td style="width:40px;text-align:center">${x(0)}</td>
-          <td style="width:40px;text-align:center">${x(1)}</td>
-          <td style="width:40px;text-align:center">${x(2)}</td>
-          <td style="width:40px;text-align:center">${x(3)}</td>
-        </tr>`;
-    })
-    .join("\n");
-
-  const cierre = `
+  // Idea de carrera + datos personales
+  const datosYCarrera = `
     <section class="page">
-      <h2 class="h2">Detalle de respuestas</h2>
-      <div class="muted" style="font-size:13px">Escala 0–3. Marca "X" en la columna correspondiente.</div>
-      <div class="card" style="margin-top:12px">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Afirmación</th>
-              <th>0</th>
-              <th>1</th>
-              <th>2</th>
-              <th>3</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${answerRows}
-          </tbody>
-        </table>
+      <h2 class="h2">Tu orientación profesional</h2>
+      
+      ${ideaCarrera ? `
+      <div class="card" style="margin-top:14px;border:2px solid #0ea5e9;background:#eff6ff">
+        <div style="font-weight:900;margin-bottom:6px;color:#0ea5e9">Idea de carrera</div>
+        <div style="font-size:15px;color:#0369a1;font-weight:600">${ideaCarrera}</div>
+        ${ideaCarreraTexto ? `<div style="font-size:13px;color:#475569;margin-top:6px">${ideaCarreraTexto}</div>` : ''}
+      </div>` : ''}
+
+      <div class="card" style="margin-top:16px">
+        <div style="font-weight:900;margin-bottom:10px">Datos personales</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+          <div><span class="muted">Fecha nacimiento:</span> <b>${fechaNacimiento}</b></div>
+          <div><span class="muted">Sexo:</span> <b>${genero}</b></div>
+          <div><span class="muted">Curso:</span> <b>${curso}</b></div>
+          <div><span class="muted">Modalidad:</span> <b>${modalidad}</b></div>
+          <div style="grid-column:span 2"><span class="muted">Centro educativo:</span> <b>${centro || '—'}</b></div>
+        </div>
       </div>
     </section>`;
 
@@ -278,9 +193,8 @@ function buildReportHTML(data: {
 <body>
 ${portada}
 ${resumenPage}
-${profesionesPage}
-${detailPages}
-${cierre}
+${camposProfesionales}
+${datosYCarrera}
 </body>
 </html>`;
 }
@@ -289,7 +203,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
 
-    // FIX: Usar 'submission' (el modelo correcto del schema)
     const person = await prisma.submission.findUnique({
       where: { id },
       include: {
@@ -326,23 +239,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           quizTitle: t?.quizTitle ?? "",
           reportTitle: t?.reportTitle ?? "",
           reportSummary: t?.reportSummary ?? "",
-          exampleRoles: t?.exampleRoles ?? [],
+          fields: t?.fields ?? [],
           score: s.score,
           max: s.max,
         };
       });
 
-    const answers: Record<string, number> =
-      assessment?.answersJson && typeof assessment.answersJson === "object" ? (assessment.answersJson as any) : {};
-
-    const questionMap: Record<string, { text: string; talentQuizTitle: string }> = {};
-    for (const t of talents) {
-      for (const it of t.items || []) {
-        questionMap[it.id] = { text: it.text, talentQuizTitle: t.quizTitle };
-      }
-    }
-
-    // Generate SVG map
     const mapSvg = generateTalentWheelSVG(scores);
 
     const html = buildReportHTML({
@@ -351,13 +253,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       fecha: new Date(person.createdAt).toLocaleDateString("es-ES"),
       scores,
       top3,
-      talents,
       mapSvg,
-      answers,
-      questionMap,
+      identificaCampos: person.identificaCampos || 'No',
+      campoIdentificado: person.campoIdentificado || '',
+      ideaCarrera: person.ideaCarreraFinal || person.ideaCarrera || '',
+      ideaCarreraTexto: person.ideaCarreraTextoFinal || '',
+      fechaNacimiento: new Date(person.fechaNacimiento).toLocaleDateString("es-ES"),
+      genero: person.genero,
+      curso: person.curso,
+      modalidad: person.modalidad,
+      centro: person.centroEducativo || '',
     });
 
-    // Generate PDF with Puppeteer
     const browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
