@@ -439,9 +439,8 @@ export default function StartPage() {
   // Pantalla de resultados después del cuestionario
   if (step === STEP_RESULT) {
     const top3 = ranked.slice(0, 3);
-    const suggestedCareers = top3.flatMap((t) => t.exampleRoles);
 
-    // Agrupar preguntas por talento (FIX: syntax correcto)
+    // Agrupar preguntas por talento (FIX: agregar dependencies)
     const questionsByTalent = useMemo(() => {
       const map = new Map<number, QuestionItem[]>();
       
@@ -517,7 +516,7 @@ export default function StartPage() {
                 return (
                   <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${t.score}/${t.max})`}>
                     <div className="space-y-3">
-                      {talentQuestions.map((item, idx) => (
+                      {talentQuestions.map((item) => (
                         <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
