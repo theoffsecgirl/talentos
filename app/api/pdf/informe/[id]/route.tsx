@@ -1,17 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G } from "@react-pdf/renderer";
+import { TALENTS } from "@/lib/talents";
 
-const TALENT_CONFIG: Record<number, { symbol: string; color: string; code: string; quizTitle: string; reportTitle: string; reportSummary: string; fields: string[] }> = {
-  2: { symbol: "Π", color: "#8B5CF6", code: "T2", quizTitle: "Pensamiento", reportTitle: "Pensamiento Analítico", reportSummary: "Capacidad para analizar información y resolver problemas complejos.", fields: ["Ciencia", "Ingeniería", "Investigación"] },
-  3: { symbol: "Ψ", color: "#7C3AED", code: "T3", quizTitle: "Contexto", reportTitle: "Visión de Contexto", reportSummary: "Habilidad para ver el panorama completo y conectar ideas.", fields: ["Estrategia", "Consultoría", "Gestión"] },
-  5: { symbol: "Ω", color: "#F59E0B", code: "T5", quizTitle: "Rendimiento", reportTitle: "Alto Rendimiento", reportSummary: "Energía y motivación para alcanzar objetivos ambiciosos.", fields: ["Deportes", "Ventas", "Emprendimiento"] },
-  7: { symbol: "Θ", color: "#10B981", code: "T7", quizTitle: "Relaciones", reportTitle: "Relaciones Sociales", reportSummary: "Facilidad para conectar con otros y trabajar en equipo.", fields: ["Recursos Humanos", "Educación", "Comunicación"] },
-  4: { symbol: "Α", color: "#EF4444", code: "T4", quizTitle: "Acción", reportTitle: "Orientación a la Acción", reportSummary: "Impulso para tomar decisiones rápidas y ejecutar.", fields: ["Operaciones", "Logística", "Emergencias"] },
-  1: { symbol: "Δ", color: "#DC2626", code: "T1", quizTitle: "Impacto", reportTitle: "Impacto y Liderazgo", reportSummary: "Capacidad de influir y dirigir equipos hacia resultados.", fields: ["Liderazgo", "Política", "Dirección"] },
-  6: { symbol: "Φ", color: "#06B6D4", code: "T6", quizTitle: "Creatividad", reportTitle: "Imaginación Creativa", reportSummary: "Talento para generar ideas originales y artísticas.", fields: ["Arte", "Diseño", "Marketing Creativo"] },
-  8: { symbol: "▭", color: "#D97706", code: "T8", quizTitle: "Estructura", reportTitle: "Organización y Estructura", reportSummary: "Habilidad para crear sistemas y mantener el orden.", fields: ["Administración", "Finanzas", "Procesos"] },
-};
+// Construir TALENT_CONFIG desde los datos reales
+const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
+  acc[t.id] = {
+    symbol: t.titleSymbolic.match(/\((.+?)\)/)?.[1] || t.code,
+    color: getTalentColor(t.id),
+    code: t.code,
+    quizTitle: t.quizTitle,
+    reportTitle: t.reportTitle || t.quizTitle,
+    reportSummary: t.reportSummary || "",
+    fields: t.fields || [],
+    competencies: t.competencies || [],
+    exampleRoles: t.exampleRoles || [],
+    axis: t.axis || "",
+    group: t.group || "",
+  };
+  return acc;
+}, {} as Record<number, { symbol: string; color: string; code: string; quizTitle: string; reportTitle: string; reportSummary: string; fields: string[]; competencies: string[]; exampleRoles: string[]; axis: string; group: string }>);
+
+function getTalentColor(id: number): string {
+  const colorMap: Record<number, string> = {
+    1: "#DC2626", // T1 - Δ - Rojo oscuro
+    2: "#8B5CF6", // T2 - Π - Violeta
+    3: "#7C3AED", // T3 - Ψ - Violeta oscuro
+    4: "#EF4444", // T4 - Α - Rojo
+    5: "#F59E0B", // T5 - Ω - Naranja
+    6: "#06B6D4", // T6 - Φ - Cian
+    7: "#10B981", // T7 - Θ - Verde
+    8: "#D97706", // T8 - ▭ - Naranja oscuro
+  };
+  return colorMap[id] || "#64748b";
+}
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
 
@@ -75,44 +97,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  fieldItem: {
-    padding: 8,
-    border: '1px solid #e2e8f0',
-    borderRadius: 6,
-    marginBottom: 6,
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#10B981',
-  },
-  identifyBox: {
-    border: '2px solid #10B981',
-    backgroundColor: '#f0fdf4',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 10,
-  },
-  careerBox: {
-    border: '2px solid #0ea5e9',
-    backgroundColor: '#eff6ff',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 10,
-  },
-  dataGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  dataItem: {
-    width: '48%',
-    fontSize: 9,
-  },
 });
 
 function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
@@ -170,20 +154,10 @@ function PDFDocument({
   fecha,
   scores,
   top3,
-  identificaCampos,
-  campoIdentificado,
-  ideaCarrera,
-  ideaCarreraTexto,
-  fechaNacimiento,
-  genero,
-  curso,
-  modalidad,
-  centro,
 }: any) {
-  const allFields = Array.from(new Set(top3.flatMap((t: any) => t.fields || []))) as string[];
-
   return (
     <Document>
+      {/* Portada con mapa */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.pill}>NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</Text>
         <Text style={styles.h1}>TU INFORME DE TALENTOS</Text>
@@ -193,6 +167,7 @@ function PDFDocument({
 
         <TalentWheelSVG scores={scores} />
 
+        {/* Leyenda de categorías */}
         <View style={styles.grid2}>
           <View style={{ ...styles.card, flex: 1 }}>
             <View style={styles.flexRow}>
@@ -227,6 +202,7 @@ function PDFDocument({
         </View>
       </Page>
 
+      {/* Top 3 talentos */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>Tus 3 talentos más destacados</Text>
         {top3.map((t: any, idx: number) => {
@@ -247,61 +223,93 @@ function PDFDocument({
             </View>
           );
         })}
+
+        {/* Tabla completa de talentos */}
+        <View style={{ ...styles.card, marginTop: 10 }}>
+          <Text style={{ fontWeight: 'bold', marginBottom: 8, fontSize: 11 }}>Todos los talentos</Text>
+          {TALENT_ORDER.map((tid) => {
+            const s = scores.find((x: any) => x.talentId === tid);
+            const config = TALENT_CONFIG[tid];
+            return (
+              <View key={tid} style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottom: '1px solid #e5e7eb', paddingVertical: 4 }}>
+                <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 14, color: config.color }}>{config.symbol}</Text>
+                  <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{config.reportTitle}</Text>
+                </View>
+                <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{s?.score ?? 0} / {s?.max ?? 15}</Text>
+              </View>
+            );
+          })}
+        </View>
       </Page>
 
+      {/* Profesiones y roles sugeridos */}
       <Page size="A4" style={styles.page}>
-        <Text style={styles.h2}>De tus resultados, encajas en estos campos profesionales</Text>
-        <View style={styles.card}>
-          {allFields.map((field, idx) => (
-            <View key={idx} style={styles.fieldItem}>
-              <View style={styles.dot} />
-              <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{field}</Text>
+        <Text style={styles.h2}>Profesiones y roles sugeridos</Text>
+        <Text style={styles.muted}>Basado en tus talentos principales:</Text>
+        <View style={{ ...styles.card, marginTop: 8 }}>
+          {top3.flatMap((t: any) => t.exampleRoles).map((role: string, idx: number) => (
+            <View key={idx} style={{ flexDirection: 'row', gap: 8, paddingVertical: 4, borderBottom: idx < top3.flatMap((t: any) => t.exampleRoles).length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+              <Text style={{ fontSize: 12 }}>•</Text>
+              <Text style={{ fontSize: 9, flex: 1 }}>{role}</Text>
             </View>
           ))}
         </View>
-        {identificaCampos === 'Sí' && campoIdentificado && (
-          <View style={styles.identifyBox}>
-            <Text style={{ fontWeight: 'bold', marginBottom: 4, color: '#10B981' }}>Te identificas con:</Text>
-            <Text style={{ fontSize: 10, color: '#047857' }}>{campoIdentificado}</Text>
-          </View>
-        )}
       </Page>
 
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.h2}>Tu orientación profesional</Text>
-        {ideaCarrera && (
-          <View style={styles.careerBox}>
-            <Text style={{ fontWeight: 'bold', marginBottom: 4, color: '#0ea5e9' }}>Idea de carrera</Text>
-            <Text style={{ fontSize: 11, color: '#0369a1', fontWeight: 'bold' }}>{ideaCarrera}</Text>
-            {ideaCarreraTexto && <Text style={{ fontSize: 9, color: '#475569', marginTop: 4 }}>{ideaCarreraTexto}</Text>}
-          </View>
-        )}
-        <View style={{ ...styles.card, marginTop: 12 }}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Datos personales</Text>
-          <View style={styles.dataGrid}>
-            <View style={styles.dataItem}>
-              <Text style={styles.muted}>Fecha nacimiento:</Text>
-              <Text style={{ fontWeight: 'bold' }}>{fechaNacimiento}</Text>
+      {/* Páginas individuales por talento */}
+      {TALENTS.sort((a, b) => a.id - b.id).map((talent) => {
+        const s = scores.find((x: any) => x.talentId === talent.id);
+        const config = TALENT_CONFIG[talent.id];
+        
+        return (
+          <Page key={talent.id} size="A4" style={styles.page}>
+            <Text style={styles.pill}>{talent.code} · {config.symbol} · {talent.titleGenotype}</Text>
+            
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.h2}>{talent.reportTitle || talent.quizTitle}</Text>
+                <Text style={styles.muted}>{talent.group || talent.quizTitle}</Text>
+              </View>
+              <View style={{ textAlign: 'right' }}>
+                <Text style={{ ...styles.muted, fontWeight: 'bold' }}>Puntuación</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: config.color }}>{s?.score ?? 0}</Text>
+                <Text style={styles.muted}>/ {s?.max ?? 15}</Text>
+              </View>
             </View>
-            <View style={styles.dataItem}>
-              <Text style={styles.muted}>Sexo:</Text>
-              <Text style={{ fontWeight: 'bold' }}>{genero}</Text>
+
+            {/* Resumen neurocognitivo */}
+            <View style={{ ...styles.card, marginTop: 10 }}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 6 }}>Resumen neurocognitivo</Text>
+              <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{talent.reportSummary}</Text>
             </View>
-            <View style={styles.dataItem}>
-              <Text style={styles.muted}>Curso:</Text>
-              <Text style={{ fontWeight: 'bold' }}>{curso}</Text>
+
+            {/* Ámbitos profesionales y Competencias personales */}
+            <View style={styles.grid2}>
+              <View style={{ ...styles.card, flex: 1 }}>
+                <Text style={{ fontWeight: 'bold', marginBottom: 6, fontSize: 9 }}>Ámbitos profesionales</Text>
+                {(talent.fields || []).map((field, idx) => (
+                  <Text key={idx} style={{ fontSize: 8, marginBottom: 3 }}>• {field}</Text>
+                ))}
+              </View>
+              <View style={{ ...styles.card, flex: 1 }}>
+                <Text style={{ fontWeight: 'bold', marginBottom: 6, fontSize: 9 }}>Competencias personales</Text>
+                {(talent.competencies || []).map((comp, idx) => (
+                  <Text key={idx} style={{ fontSize: 8, marginBottom: 3 }}>• {comp}</Text>
+                ))}
+              </View>
             </View>
-            <View style={styles.dataItem}>
-              <Text style={styles.muted}>Modalidad:</Text>
-              <Text style={{ fontWeight: 'bold' }}>{modalidad}</Text>
+
+            {/* Roles y profesiones de ejemplo */}
+            <View style={{ ...styles.card, marginTop: 10 }}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 6 }}>Roles y profesiones de ejemplo</Text>
+              {(talent.exampleRoles || []).map((role, idx) => (
+                <Text key={idx} style={{ fontSize: 9, marginBottom: 3 }}>• {role}</Text>
+              ))}
             </View>
-            <View style={{ width: '100%', fontSize: 9, marginTop: 4 }}>
-              <Text style={styles.muted}>Centro educativo:</Text>
-              <Text style={{ fontWeight: 'bold' }}>{centro || '—'}</Text>
-            </View>
-          </View>
-        </View>
-      </Page>
+          </Page>
+        );
+      })}
     </Document>
   );
 }
@@ -346,6 +354,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           reportTitle: t?.reportTitle ?? '',
           reportSummary: t?.reportSummary ?? '',
           fields: t?.fields ?? [],
+          competencies: t?.competencies ?? [],
+          exampleRoles: t?.exampleRoles ?? [],
           score: s.score,
           max: s.max,
         };
@@ -357,15 +367,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       fecha: new Date(person.createdAt).toLocaleDateString('es-ES'),
       scores,
       top3,
-      identificaCampos: person.identificaCampos || 'No',
-      campoIdentificado: person.campoIdentificado || '',
-      ideaCarrera: person.ideaCarreraFinal || person.ideaCarrera || '',
-      ideaCarreraTexto: person.ideaCarreraTextoFinal || '',
-      fechaNacimiento: new Date(person.fechaNacimiento).toLocaleDateString('es-ES'),
-      genero: person.genero,
-      curso: person.curso,
-      modalidad: person.modalidad,
-      centro: person.centroEducativo || '',
     });
 
     const pdfBlob = await pdf(doc).toBlob();
