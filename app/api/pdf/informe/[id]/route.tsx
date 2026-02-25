@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G } from "@react-pdf/renderer";
-import { TALENTS } from "@/src/lib/talents";
+import { TALENTS } from "@/lib/talents";
 
 // Construir TALENT_CONFIG desde los datos reales
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
