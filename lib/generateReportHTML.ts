@@ -1,6 +1,6 @@
 /**
  * Genera HTML estático completo para el informe en PDF
- * Basado en el diseño GenioTipo pero con el estilo de la app
+ * Estilo basado en el diseño neurocientífico con estructura completa
  */
 
 type TalentData = {
@@ -14,6 +14,7 @@ type TalentData = {
   competencies: string;
   exampleRoles: string;
   color: string;
+  axis: string;
 };
 
 type ScoreData = {
@@ -52,493 +53,360 @@ export function generateReportHTML({
   // Crear mapa de talentos por ID
   const talentMap = new Map(talents.map((t) => [t.id, t]));
 
-  // Generar preguntas ordenadas por talento
-  const orderedQuestions: Array<{ qid: string; text: string; talentTitle: string }> = [];
-  const sortedTalents = [...talents].sort((a, b) => a.id - b.id);
-
   // Función para calcular porcentaje
   const pct = (score: number, max: number) => {
     return max > 0 ? Math.round((score / max) * 100) : 0;
   };
 
+  // Agrupar respuestas por talento para la tabla detallada
+  const answersByTalent = new Map<number, Array<{ qid: string; text: string; value: number }>>();
+  
+  const currentDate = new Date().toISOString().split('T')[0];
+
   return `
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Informe de Talentos - ${person.nombre} ${person.apellido}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${person.nombre} ${person.apellido} - Informe</title>
   <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #0b1220;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #0ea5e9;
+      --danger: #ef4444;
+    }
+
     * {
-      margin: 0;
-      padding: 0;
       box-sizing: border-box;
     }
 
-    @page {
-      size: A4;
-      margin: 0;
-    }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #0f172a;
-      background: #ffffff;
-      line-height: 1.6;
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+      color: var(--fg);
+      background: var(--bg);
     }
 
     .page {
       width: 210mm;
       min-height: 297mm;
-      padding: 25mm;
+      margin: 0 auto;
+      padding: 18mm 16mm;
       page-break-after: always;
-      position: relative;
     }
 
     .page:last-child {
       page-break-after: auto;
     }
 
-    /* PORTADA */
-    .cover {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      background: linear-gradient(135deg, rgba(14,165,233,0.05) 0%, rgba(239,68,68,0.03) 100%);
+    .h1 {
+      font-size: 34px;
+      line-height: 1.05;
+      margin: 0 0 10px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
     }
 
-    .cover h1 {
-      font-size: 48px;
-      font-weight: 700;
-      color: #0ea5e9;
-      margin-bottom: 8px;
-      letter-spacing: -1px;
+    .h2 {
+      font-size: 20px;
+      margin: 0 0 8px;
+      font-weight: 800;
     }
 
-    .cover h2 {
-      font-size: 32px;
-      font-weight: 600;
-      color: #0f172a;
-      margin-bottom: 60px;
+    .muted {
+      color: var(--muted);
     }
 
-    .cover .student-name {
-      font-size: 36px;
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 40px;
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
     }
 
-    .cover .map-container {
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    .cover .map-container svg {
-      width: 100%;
-      height: auto;
-    }
-
-    /* RESUMEN */
-    .summary-header {
-      text-align: center;
-      margin-bottom: 40px;
-      padding-bottom: 20px;
-      border-bottom: 3px solid #0ea5e9;
-    }
-
-    .summary-header h1 {
-      font-size: 36px;
-      color: #0f172a;
-      margin-bottom: 8px;
-    }
-
-    .summary-header p {
-      font-size: 14px;
-      color: #64748b;
-    }
-
-    .top3-grid {
+    .grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-bottom: 40px;
+      gap: 12px;
     }
 
-    .top3-card {
-      border: 2px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 20px;
-      background: #ffffff;
-      text-align: center;
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
     }
 
-    .top3-card .symbol {
-      font-size: 48px;
-      margin-bottom: 12px;
+    .grid-3 {
+      grid-template-columns: 1fr 1fr 1fr;
     }
 
-    .top3-card .code {
-      font-size: 12px;
-      color: #64748b;
-      margin-bottom: 4px;
-    }
-
-    .top3-card .title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #0f172a;
-      margin-bottom: 16px;
-    }
-
-    .top3-card .score {
-      font-size: 32px;
-      font-weight: 700;
-      color: #0ea5e9;
-    }
-
-    .top3-card .score-label {
-      font-size: 12px;
-      color: #64748b;
-    }
-
-    /* TABLA COMPLETA */
-    .full-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    .full-table th {
-      background: #f8fafc;
-      padding: 12px;
-      text-align: left;
-      font-size: 12px;
-      font-weight: 600;
-      color: #475569;
-      border-bottom: 2px solid #e2e8f0;
-    }
-
-    .full-table td {
-      padding: 12px;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 12px;
-    }
-
-    .full-table .symbol-cell {
-      font-size: 24px;
-      text-align: center;
-    }
-
-    .full-table .score-cell {
-      font-weight: 700;
-      color: #0ea5e9;
-    }
-
-    /* PÁGINA INDIVIDUAL DE TALENTO */
-    .talent-page {
-      background: linear-gradient(135deg, rgba(14,165,233,0.03) 0%, transparent 100%);
-    }
-
-    .talent-header {
-      text-align: center;
-      margin-bottom: 40px;
-      padding: 30px;
-      border-radius: 20px;
-      background: #ffffff;
-      border: 3px solid;
-    }
-
-    .talent-header .symbol {
-      font-size: 80px;
-      margin-bottom: 12px;
-    }
-
-    .talent-header .code {
-      font-size: 16px;
-      color: #64748b;
-      margin-bottom: 8px;
-    }
-
-    .talent-header .title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 20px;
-    }
-
-    .talent-header .score {
-      font-size: 48px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .talent-header .score-label {
-      font-size: 14px;
-      color: #64748b;
-    }
-
-    .talent-section {
-      margin-bottom: 30px;
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      border-left: 4px solid;
-    }
-
-    .talent-section h3 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #0f172a;
-      margin-bottom: 12px;
-    }
-
-    .talent-section p,
-    .talent-section ul {
-      font-size: 14px;
-      color: #475569;
-      line-height: 1.7;
-    }
-
-    .talent-section ul {
-      padding-left: 20px;
-    }
-
-    .talent-section li {
-      margin-bottom: 8px;
-    }
-
-    /* TABLA DE RESPUESTAS */
-    .answers-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 10px;
-    }
-
-    .answers-table th {
-      background: #f8fafc;
-      padding: 8px;
-      text-align: left;
-      font-weight: 600;
-      color: #475569;
-      border-bottom: 2px solid #e2e8f0;
-    }
-
-    .answers-table td {
-      padding: 8px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .answers-table .checkbox {
+    .pill {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #cbd5e1;
-      border-radius: 4px;
-      font-weight: 700;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--muted);
     }
 
-    .answers-table .checkbox.checked {
-      background: #0ea5e9;
-      color: #ffffff;
-      border-color: #0ea5e9;
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: var(--border);
+      overflow: hidden;
     }
 
-    /* FOOTER */
-    .page-footer {
-      position: absolute;
-      bottom: 15mm;
-      left: 25mm;
-      right: 25mm;
-      text-align: center;
-      font-size: 10px;
-      color: #94a3b8;
-      padding-top: 10px;
-      border-top: 1px solid #e2e8f0;
+    .bar span {
+      display: block;
+      height: 100%;
+      background: var(--fg);
+    }
+
+    .bar.danger span {
+      background: var(--danger);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      text-align: left;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+      .page {
+        padding: 16mm;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- PORTADA -->
-  <div class="page cover">
-    <h1>CONOCE TU TALENTO</h1>
-    <h2>Neurociencia Aplicada</h2>
-    <div class="student-name">${person.nombre} ${person.apellido}</div>
-    <div class="map-container">
+  <!-- PÁGINA 1: PORTADA -->
+  <section class="page">
+    <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
+    
+    <div style="display:flex;justify-content:space-between;gap:16px;margin-top:18px;align-items:flex-end;">
+      <div>
+        <h1 class="h1">TUS RESULTADOS</h1>
+        <div style="margin-top:18px;font-size:16px;font-weight:800;">${person.nombre} ${person.apellido}</div>
+        <div class="muted" style="margin-top:4px;">${currentDate}</div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;display:flex;justify-content:center;">
       ${mapSvg}
     </div>
-    <div class="page-footer">encuentra-tu-talento.online</div>
-  </div>
 
-  <!-- RESUMEN -->
-  <div class="page">
-    <div class="summary-header">
-      <h1>${person.nombre} ${person.apellido}</h1>
-      <p>${person.email || ''} ${person.genero ? '· ' + person.genero : ''} ${person.edad ? '· ' + person.edad + ' años' : ''}</p>
-    </div>
-
-    <h2 style="font-size: 24px; margin-bottom: 20px; color: #0f172a;">Top 3 Talentos</h2>
-    <div class="top3-grid">
-      ${top3
-        .map((s) => {
-          const t = talentMap.get(s.talentId);
-          if (!t) return '';
-          const percentage = pct(s.score, s.max);
-          return `
-        <div class="top3-card">
-          <div class="symbol" style="color: ${t.color};">${t.symbol}</div>
-          <div class="code">${t.code}</div>
-          <div class="title">${t.reportTitle}</div>
-          <div class="score" style="color: ${t.color};">${percentage}%</div>
-          <div class="score-label">${s.score} / ${s.max}</div>
+    <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      ${[
+        { label: 'Acción', sublabel: 'Resultados', color: '#EF4444' },
+        { label: 'Conocimiento', sublabel: 'Ciencia aplicada', color: '#8B5CF6' },
+        { label: 'Imaginación', sublabel: 'Arte', color: '#06B6D4' },
+        { label: 'Desempeño', sublabel: 'Energía', color: '#F59E0B' }
+      ].map(({ label, sublabel, color }) => `
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="width:16px;height:16px;border-radius:4px;background:${color};"></div>
+            <div style="font-weight:900;font-size:13px;">${label}</div>
+          </div>
+          <div class="muted" style="font-size:11px;">${sublabel}</div>
         </div>
-      `;
-        })
-        .join('')}
+      `).join('')}
+    </div>
+  </section>
+
+  <!-- PÁGINA 2: TOP 3 TALENTOS -->
+  <section class="page">
+    <h2 class="h2">Tus 3 talentos más destacados</h2>
+    
+    <div class="grid" style="margin-top:14px;">
+      ${top3.map((s, idx) => {
+        const t = talentMap.get(s.talentId);
+        if (!t) return '';
+        const percentage = pct(s.score, s.max);
+        
+        return `
+          <div class="card">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div style="font-size:32px;color:${t.color};">${t.symbol}</div>
+              <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                  <span style="font-size:12px;font-weight:700;color:var(--muted);">${idx + 1}</span>
+                  <span style="font-weight:900;font-size:16px;">${t.reportTitle}</span>
+                </div>
+                <div class="muted" style="font-size:13px;line-height:1.5;">${t.reportSummary}</div>
+                <div style="margin-top:8px;text-align:right;">
+                  <span style="font-size:20px;font-weight:900;">${s.score}</span>
+                  <span class="muted" style="font-size:12px;"> / ${s.max}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
     </div>
 
-    <h2 style="font-size: 20px; margin: 40px 0 20px; color: #0f172a;">Puntuaciones Completas</h2>
-    <table class="full-table">
-      <thead>
-        <tr>
-          <th>Símbolo</th>
-          <th>Talento</th>
-          <th>Código</th>
-          <th style="text-align: right;">Puntuación</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sortedScores
-          .map((s) => {
+    <div style="margin-top:16px;" class="card">
+      <div style="font-weight:900;margin-bottom:8px;">Listado completo de talentos</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Símbolo</th>
+            <th>Talento</th>
+            <th>Código</th>
+            <th>Puntuación</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedScores.map((s) => {
             const t = talentMap.get(s.talentId);
             if (!t) return '';
             return `
-          <tr>
-            <td class="symbol-cell" style="color: ${t.color};">${t.symbol}</td>
-            <td><strong>${t.reportTitle}</strong></td>
-            <td>${t.code}</td>
-            <td class="score-cell" style="text-align: right; color: ${t.color};">${s.score} / ${s.max}</td>
-          </tr>
-        `;
-          })
-          .join('')}
-      </tbody>
-    </table>
+              <tr>
+                <td style="text-align:center;font-size:20px;color:${t.color};">${t.symbol}</td>
+                <td style="font-weight:700;">${t.reportTitle}</td>
+                <td style="text-align:center;">${t.code}</td>
+                <td style="text-align:center;font-weight:700;">${s.score} / ${s.max}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-    <div class="page-footer">encuentra-tu-talento.online · Página 2</div>
-  </div>
+  <!-- PÁGINA 3: PROFESIONES SUGERIDAS -->
+  <section class="page">
+    <h2 class="h2">Profesiones y roles sugeridos</h2>
+    <div class="muted" style="font-size:13px;margin-bottom:12px;">Basado en tus talentos principales. Marca las opciones con las que te identificas.</div>
+    
+    <div class="card">
+      ${top3.flatMap((s) => {
+        const t = talentMap.get(s.talentId);
+        if (!t) return [];
+        const roles = t.exampleRoles?.split('\n').filter((x) => x.trim()) || [];
+        return roles.map((role) => `
+          <div style="padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+            <div style="width:18px;height:18px;border:2px solid var(--muted);border-radius:4px;"></div>
+            <div style="font-size:13px;">${role}</div>
+          </div>
+        `);
+      }).join('')}
+    </div>
+  </section>
 
-  <!-- PÁGINAS INDIVIDUALES DE CADA TALENTO -->
-  ${sortedScores
-    .map((s, idx) => {
-      const t = talentMap.get(s.talentId);
-      if (!t) return '';
-      const percentage = pct(s.score, s.max);
+  <!-- PÁGINAS INDIVIDUALES POR TALENTO -->
+  ${sortedScores.map((s) => {
+    const t = talentMap.get(s.talentId);
+    if (!t) return '';
+    const percentage = pct(s.score, s.max);
+    
+    const fieldsList = t.fields?.split('\n').filter((x) => x.trim()) || [];
+    const competenciesList = t.competencies?.split('\n').filter((x) => x.trim()) || [];
+    const rolesList = t.exampleRoles?.split('\n').filter((x) => x.trim()) || [];
 
-      // Parsear listas si vienen separadas por saltos de línea
-      const fieldsList = t.fields?.split('\n').filter((x) => x.trim()) || [];
-      const competenciesList = t.competencies?.split('\n').filter((x) => x.trim()) || [];
-      const rolesList = t.exampleRoles?.split('\n').filter((x) => x.trim()) || [];
-
-      return `
-  <div class="page talent-page">
-    <div class="talent-header" style="border-color: ${t.color};">
-      <div class="symbol" style="color: ${t.color};">${t.symbol}</div>
-      <div class="code">${t.code}</div>
-      <div class="title">${t.reportTitle}</div>
-      <div class="score" style="color: ${t.color};">${percentage}%</div>
-      <div class="score-label">${s.score} de ${s.max} puntos</div>
+    return `
+  <section class="page">
+    <div class="pill">${t.code} · ${t.symbol}</div>
+    
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:14px;">
+      <div>
+        <h2 class="h2">${t.reportTitle}</h2>
+        <div class="muted" style="font-size:13px;">${t.axis || 'CREATIVIDAD Y VÍNCULO'}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="muted" style="font-size:12px;font-weight:700;">Puntuación</div>
+        <div style="font-size:28px;font-weight:900;color:${t.color};">${s.score}</div>
+        <div class="muted" style="font-size:12px;"> / ${s.max}</div>
+      </div>
     </div>
 
-    ${t.reportSummary ? `
-    <div class="talent-section" style="border-left-color: ${t.color};">
-      <h3>Resumen Neurocognitivo</h3>
-      <p>${t.reportSummary}</p>
+    <div class="card" style="margin-top:14px;">
+      <div style="font-weight:900;margin-bottom:6px;">Resumen neurocognitivo</div>
+      <div style="font-size:13px;" class="muted">${t.reportSummary}</div>
     </div>
-    ` : ''}
 
-    ${fieldsList.length > 0 ? `
-    <div class="talent-section" style="border-left-color: ${t.color};">
-      <h3>Ámbitos Profesionales</h3>
-      <ul>
-        ${fieldsList.map((f) => `<li>${f}</li>`).join('')}
-      </ul>
+    <div class="grid grid-2" style="margin-top:12px;">
+      ${fieldsList.length > 0 ? `
+      <div class="card">
+        <div style="font-weight:900;margin-bottom:8px;">Ámbitos profesionales</div>
+        <ul style="margin:0;padding-left:18px;font-size:13px;" class="muted">
+          ${fieldsList.map((f) => `<li>${f}</li>`).join('')}
+        </ul>
+      </div>
+      ` : ''}
+      
+      ${competenciesList.length > 0 ? `
+      <div class="card">
+        <div style="font-weight:900;margin-bottom:8px;">Competencias personales</div>
+        <ul style="margin:0;padding-left:18px;font-size:13px;" class="muted">
+          ${competenciesList.map((c) => `<li>${c}</li>`).join('')}
+        </ul>
+      </div>
+      ` : ''}
     </div>
-    ` : ''}
-
-    ${competenciesList.length > 0 ? `
-    <div class="talent-section" style="border-left-color: ${t.color};">
-      <h3>Competencias Personales</h3>
-      <ul>
-        ${competenciesList.map((c) => `<li>${c}</li>`).join('')}
-      </ul>
-    </div>
-    ` : ''}
 
     ${rolesList.length > 0 ? `
-    <div class="talent-section" style="border-left-color: ${t.color};">
-      <h3>Roles y Profesiones de Ejemplo</h3>
-      <ul>
+    <div class="card" style="margin-top:12px;">
+      <div style="font-weight:900;margin-bottom:8px;">Roles y profesiones de ejemplo</div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;" class="muted">
         ${rolesList.map((r) => `<li>${r}</li>`).join('')}
       </ul>
     </div>
     ` : ''}
+  </section>
+    `;
+  }).join('')}
 
-    <div class="page-footer">encuentra-tu-talento.online · Página ${idx + 3}</div>
-  </div>
-  `;
-    })
-    .join('')}
-
-  <!-- TABLA DE RESPUESTAS DETALLADA -->
-  <div class="page">
-    <h1 style="font-size: 28px; margin-bottom: 20px; color: #0f172a;">Detalle de Respuestas</h1>
-    <p style="font-size: 14px; color: #64748b; margin-bottom: 30px;">
-      A continuación se muestran todas las afirmaciones del test con las respuestas seleccionadas.
-    </p>
+  <!-- PÁGINA FINAL: DETALLE DE RESPUESTAS -->
+  <section class="page">
+    <h2 class="h2">Detalle de respuestas</h2>
+    <div class="muted" style="font-size:13px;">Escala 0–3. Marca X en la columna correspondiente.</div>
     
-    <table class="answers-table">
-      <thead>
-        <tr>
-          <th style="width: 50px;">ID</th>
-          <th>Pregunta</th>
-          <th style="text-align: center; width: 50px;">0</th>
-          <th style="text-align: center; width: 50px;">1</th>
-          <th style="text-align: center; width: 50px;">2</th>
-          <th style="text-align: center; width: 50px;">3</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${orderedQuestions
-          .map((q) => {
-            const answerVal = answers[q.qid] ?? 0;
-            return `
+    <div class="card" style="margin-top:12px;">
+      <div style="font-size:12px;font-weight:800;margin-bottom:8px;">ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...</div>
+      
+      <table>
+        <thead>
           <tr>
-            <td style="color: #64748b;">${q.qid}</td>
-            <td>
-              <div style="font-weight: 600; color: #0f172a;">${q.text}</div>
-              <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">${q.talentTitle}</div>
-            </td>
-            ${[0, 1, 2, 3]
-              .map((val) => {
-                const isChecked = answerVal === val;
-                return `<td style="text-align: center;"><span class="checkbox ${isChecked ? 'checked' : ''}">${isChecked ? 'X' : ''}</span></td>`;
-              })
-              .join('')}
+            <th>ID</th>
+            <th>Afirmación</th>
+            <th>0</th>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
           </tr>
-        `;
-          })
-          .join('')}
-      </tbody>
-    </table>
-
-    <div class="page-footer">encuentra-tu-talento.online · Página ${sortedScores.length + 3}</div>
-  </div>
+        </thead>
+        <tbody>
+          ${Object.entries(answers).map(([qid, value]) => `
+            <tr>
+              <td style="width:64px;"><b>${qid}</b></td>
+              <td>Pregunta ${qid}</td>
+              ${[0, 1, 2, 3].map((v) => `
+                <td style="width:40px;text-align:center;">${value === v ? 'X' : ''}</td>
+              `).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </section>
 
 </body>
 </html>
