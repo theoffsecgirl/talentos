@@ -60,7 +60,7 @@ const initialPost: PostData = {
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
 function normalizeItemText(s: any): string {
-  if (typeof s !== 'string') return '';
+  if (typeof s !== "string") return "";
   const t = s.trim();
   if (!t) return "";
   return t.replace(/\s+/g, " ");
@@ -89,9 +89,9 @@ function cx(...parts: Array<string | false | null | undefined>) {
 
 // Helper: safe render for numbers (prevent React #310)
 function safeNum(value: any): string {
-  if (typeof value === 'number' && !isNaN(value)) return String(value);
-  if (typeof value === 'string') return value;
-  return '0';
+  if (typeof value === "number" && !isNaN(value)) return String(value);
+  if (typeof value === "string") return value;
+  return "0";
 }
 
 function ProgressRing({ value }: { value: number }) {
@@ -121,7 +121,9 @@ function DonutMeter({ score, max }: { score: number; max: number }) {
   return (
     <div className="w-11 h-11 rounded-full p-[3px]" style={style} aria-label={`${pct}%`}>
       <div className="w-full h-full rounded-full bg-[var(--card)] flex items-center justify-center border border-[var(--border)]">
-        <span className="text-[11px] font-semibold" style={{ color }}>{pct}%</span>
+        <span className="text-[11px] font-semibold" style={{ color }}>
+          {pct}%
+        </span>
       </div>
     </div>
   );
@@ -198,7 +200,15 @@ const SCALE = [
 ] as const;
 
 // Componente Accordion para mostrar respuestas por talento
-function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Accordion({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -373,10 +383,32 @@ export default function StartPage() {
 
   const winner = ranked[0];
 
+  // ✅ NO METER HOOKS dentro de if/loops: deben ejecutarse siempre
+  const questionsByTalent = useMemo(() => {
+    const map = new Map<number, QuestionItem[]>();
+
+    for (const q of questions) {
+      if (!map.has(q.talentId)) map.set(q.talentId, []);
+      map.get(q.talentId)!.push({
+        itemId: q.itemId,
+        text: q.text,
+        answer: answers[q.itemId] ?? 0,
+      });
+    }
+
+    return map;
+  }, [questions, answers]);
+
+  const wheelScores = useMemo(() => {
+    return ranked.map((t) => ({
+      talentId: t.id,
+      score: t.score,
+      max: t.max,
+    }));
+  }, [ranked]);
+
   function toggleCareer(career: string) {
-    setSelectedCareers((prev) =>
-      prev.includes(career) ? prev.filter((c) => c !== career) : [...prev, career]
-    );
+    setSelectedCareers((prev) => (prev.includes(career) ? prev.filter((c) => c !== career) : [...prev, career]));
   }
 
   async function saveAll() {
@@ -449,45 +481,13 @@ export default function StartPage() {
   if (step === STEP_RESULT) {
     const top3 = ranked.slice(0, 3);
 
-    // Agrupar preguntas por talento
-    const questionsByTalent = useMemo(() => {
-      const map = new Map<number, QuestionItem[]>();
-      
-      for (const q of questions) {
-        if (!map.has(q.talentId)) {
-          map.set(q.talentId, []);
-        }
-        const list = map.get(q.talentId);
-        if (list) {
-          list.push({
-            itemId: q.itemId,
-            text: q.text,
-            answer: answers[q.itemId] ?? 0,
-          });
-        }
-      }
-      
-      return map;
-    }, [questions, answers]);
-
-    // FIX: Memoize scores array to prevent TalentWheel infinite loop
-    const wheelScores = useMemo(() => {
-      return ranked.map((t) => ({
-        talentId: t.id,
-        score: t.score,
-        max: t.max,
-      }));
-    }, [ranked]);
-
     return (
       <main className="min-h-screen bg-[var(--background)]">
         <div className="max-w-4xl mx-auto px-4 py-12">
           <header className="flex items-end justify-between gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-[var(--foreground)]">Tus Resultados</h1>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                Mapa visual de tus talentos basado en neurociencia aplicada
-              </p>
+              <p className="mt-2 text-sm text-[var(--muted-foreground)]">Mapa visual de tus talentos basado en neurociencia aplicada</p>
             </div>
             <ProgressRing value={progress} />
           </header>
@@ -532,12 +532,8 @@ export default function StartPage() {
                         <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
-                              <div className="text-xs text-[var(--muted-foreground)] mb-1">
-                                {STEM}
-                              </div>
-                              <div className="text-sm text-[var(--foreground)]">
-                                {normalizeItemText(item.text)}
-                              </div>
+                              <div className="text-xs text-[var(--muted-foreground)] mb-1">{STEM}</div>
+                              <div className="text-sm text-[var(--foreground)]">{normalizeItemText(item.text)}</div>
                             </div>
                             <div className="flex-shrink-0">
                               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] text-sm font-bold">
@@ -573,7 +569,9 @@ export default function StartPage() {
       <main className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg text-[var(--foreground)]">Error: No se pudo cargar la pregunta</p>
-          <ButtonPrimary className="mt-4" onClick={back}>Volver</ButtonPrimary>
+          <ButtonPrimary className="mt-4" onClick={back}>
+            Volver
+          </ButtonPrimary>
         </div>
       </main>
     );
@@ -598,9 +596,7 @@ export default function StartPage() {
 
         <section className="mt-8 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           {error && (
-            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
           )}
 
           {/* STEP 1: PRE (nombre + email) */}
@@ -676,12 +672,7 @@ export default function StartPage() {
                         )}
                       >
                         <div className="text-sm font-semibold">{n}</div>
-                        <div
-                          className={cx(
-                            "text-xs",
-                            active ? "text-[var(--background)]/80" : "text-[var(--muted-foreground)]"
-                          )}
-                        >
+                        <div className={cx("text-xs", active ? "text-[var(--background)]/80" : "text-[var(--muted-foreground)]")}>
                           {label}
                         </div>
                       </button>
@@ -731,7 +722,11 @@ export default function StartPage() {
                 </div>
                 <div>
                   <Label>Modalidad</Label>
-                  <Input value={post.modalidad} onChange={(e) => updatePost("modalidad", e.target.value)} placeholder="Ej: Ciencias / Letras / FP…" />
+                  <Input
+                    value={post.modalidad}
+                    onChange={(e) => updatePost("modalidad", e.target.value)}
+                    placeholder="Ej: Ciencias / Letras / FP…"
+                  />
                 </div>
               </div>
 
@@ -781,24 +776,84 @@ export default function StartPage() {
           )}
 
           {/* POST 3: identificaCampos - FIX: deduplicar careers */}
-          {step === STEP_POST_3 && (() => {
-            const top3 = ranked.slice(0, 3);
-            // FIX: filtrar undefined/null y deduplicar
-            const allCareers = top3
-              .filter((t) => Array.isArray(t.exampleRoles) && t.exampleRoles.length > 0)
-              .flatMap((t) => t.exampleRoles.filter((role): role is string => typeof role === "string" && role.trim().length > 0));
-            const suggestedCareers = Array.from(new Set(allCareers)); // Deduplicar
+          {step === STEP_POST_3 &&
+            (() => {
+              const top3 = ranked.slice(0, 3);
+              // FIX: filtrar undefined/null y deduplicar
+              const allCareers = top3
+                .filter((t) => Array.isArray(t.exampleRoles) && t.exampleRoles.length > 0)
+                .flatMap((t) =>
+                  t.exampleRoles.filter((role): role is string => typeof role === "string" && role.trim().length > 0)
+                );
+              const suggestedCareers = Array.from(new Set(allCareers)); // Deduplicar
 
-            if (suggestedCareers.length === 0) {
-              // Fallback: no hay carreras sugeridas
+              if (suggestedCareers.length === 0) {
+                // Fallback: no hay carreras sugeridas
+                return (
+                  <div className="grid gap-5">
+                    <div>
+                      <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                        No hay sugerencias disponibles en este momento. Continúa para finalizar.
+                      </p>
+                    </div>
+
+                    <div className="pt-2">
+                      <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
+                        {saving ? "Guardando…" : "Guardar y finalizar"}
+                      </ButtonPrimary>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div className="grid gap-5">
                   <div>
                     <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
                     <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                      No hay sugerencias disponibles en este momento. Continúa para finalizar.
+                      Basado en tus talentos principales. Marca las opciones con las que te identificas:
                     </p>
                   </div>
+
+                  <div className="space-y-2">
+                    {suggestedCareers.map((career) => (
+                      <button
+                        key={career}
+                        onClick={() => toggleCareer(career)}
+                        className={cx(
+                          "w-full p-3 rounded-lg border-2 text-left transition-all",
+                          selectedCareers.includes(career)
+                            ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
+                            : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={cx(
+                              "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
+                              selectedCareers.includes(career)
+                                ? "border-[var(--background)] bg-[var(--background)]"
+                                : "border-[var(--muted-foreground)]"
+                            )}
+                          >
+                            {selectedCareers.includes(career) && (
+                              <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-sm">{career}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {selectedCareers.length > 0 && (
+                    <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                      <p className="text-sm text-green-800">✓ Has seleccionado {selectedCareers.length} opción(es)</p>
+                    </div>
+                  )}
 
                   <div className="pt-2">
                     <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
@@ -807,74 +862,13 @@ export default function StartPage() {
                   </div>
                 </div>
               );
-            }
-
-            return (
-              <div className="grid gap-5">
-                <div>
-                  <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
-                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                    Basado en tus talentos principales. Marca las opciones con las que te identificas:
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  {suggestedCareers.map((career) => (
-                    <button
-                      key={career}
-                      onClick={() => toggleCareer(career)}
-                      className={cx(
-                        "w-full p-3 rounded-lg border-2 text-left transition-all",
-                        selectedCareers.includes(career)
-                          ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
-                          : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cx(
-                            "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
-                            selectedCareers.includes(career)
-                              ? "border-[var(--background)] bg-[var(--background)]"
-                              : "border-[var(--muted-foreground)]"
-                          )}
-                        >
-                          {selectedCareers.includes(career) && (
-                            <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="text-sm">{career}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {selectedCareers.length > 0 && (
-                  <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-                    <p className="text-sm text-green-800">
-                      ✓ Has seleccionado {selectedCareers.length} opción(es)
-                    </p>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
-                    {saving ? "Guardando…" : "Guardar y finalizar"}
-                  </ButtonPrimary>
-                </div>
-              </div>
-            );
-          })()}
+            })()}
 
           {/* DONE */}
           {step === STEP_DONE && (
             <div className="grid gap-4">
               <h2 className="text-lg font-semibold text-[var(--foreground)]">Registro completado</h2>
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Gracias. Tus respuestas han quedado registradas correctamente.
-              </p>
+              <p className="text-sm text-[var(--muted-foreground)]">Gracias. Tus respuestas han quedado registradas correctamente.</p>
 
               <ButtonPrimary
                 type="button"
