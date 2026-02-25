@@ -930,7 +930,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           max: s?.max ?? 0,
         };
       })
-      .sort((a, b) => b.score - a.score);
+      .sort((a: any, b: any) => b.score - a.score);
   }, [talents, scores]);
 
   return (
