@@ -756,10 +756,34 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* POST 3: identificaCampos - NUEVO CON CLICABLES */}
+          {/* POST 3: identificaCampos - FIX: deduplicar careers */}
           {step === STEP_POST_3 && (() => {
             const top3 = ranked.slice(0, 3);
-            const suggestedCareers = top3.flatMap((t) => t.exampleRoles);
+            // FIX: filtrar undefined/null y deduplicar
+            const allCareers = top3
+              .filter((t) => Array.isArray(t.exampleRoles) && t.exampleRoles.length > 0)
+              .flatMap((t) => t.exampleRoles.filter((role): role is string => typeof role === "string" && role.trim().length > 0));
+            const suggestedCareers = Array.from(new Set(allCareers)); // Deduplicar
+
+            if (suggestedCareers.length === 0) {
+              // Fallback: no hay carreras sugeridas
+              return (
+                <div className="grid gap-5">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                      No hay sugerencias disponibles en este momento. Continúa para finalizar.
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
+                      {saving ? "Guardando…" : "Guardar y finalizar"}
+                    </ButtonPrimary>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div className="grid gap-5">
@@ -771,9 +795,9 @@ export default function StartPage() {
                 </div>
 
                 <div className="space-y-2">
-                  {suggestedCareers.map((career, idx) => (
+                  {suggestedCareers.map((career) => (
                     <button
-                      key={`${career}-${idx}`}
+                      key={career}
                       onClick={() => toggleCareer(career)}
                       className={cx(
                         "w-full p-3 rounded-lg border-2 text-left transition-all",
