@@ -86,6 +86,13 @@ function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
+// Helper: safe render for numbers (prevent React #310)
+function safeNum(value: any): string {
+  if (typeof value === 'number' && !isNaN(value)) return String(value);
+  if (typeof value === 'string') return value;
+  return '0';
+}
+
 function ProgressRing({ value }: { value: number }) {
   const pct = clamp(Math.round(value), 0, 100);
   const style = {
@@ -499,8 +506,8 @@ export default function StartPage() {
                       <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t.reportSummary}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-[var(--foreground)]">{t.score}</div>
-                      <div className="text-xs text-[var(--muted-foreground)]">/ {t.max}</div>
+                      <div className="text-2xl font-bold text-[var(--foreground)]">{safeNum(t.score)}</div>
+                      <div className="text-xs text-[var(--muted-foreground)]">/ {safeNum(t.max)}</div>
                     </div>
                   </div>
                 </li>
@@ -515,7 +522,7 @@ export default function StartPage() {
               {ranked.map((t) => {
                 const talentQuestions = questionsByTalent.get(t.id) || [];
                 return (
-                  <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${t.score}/${t.max})`}>
+                  <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${safeNum(t.score)}/${safeNum(t.max)})`}>
                     <div className="space-y-3">
                       {talentQuestions.map((item) => (
                         <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
@@ -530,7 +537,7 @@ export default function StartPage() {
                             </div>
                             <div className="flex-shrink-0">
                               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] text-sm font-bold">
-                                {item.answer}
+                                {safeNum(item.answer)}
                               </span>
                             </div>
                           </div>
@@ -624,7 +631,7 @@ export default function StartPage() {
             <>
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                  Pregunta {qIndex + 1} de {questions.length}
+                  Pregunta {safeNum(qIndex + 1)} de {questions.length}
                 </h2>
                 <div className="text-xs text-[var(--muted-foreground)]">0–3</div>
               </div>
