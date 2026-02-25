@@ -772,9 +772,18 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
   const questionsByTalent = useMemo(() => {
     const map = new Map<number, Array<{ itemId: string; text: string; answer: number }>>();
     
+    // DEBUG: Ver qué claves tenemos
+    console.log("🔍 DEBUG answers keys (primeras 10):", Object.keys(answers).slice(0, 10));
+    console.log("🔍 DEBUG QUESTION_MAP keys (primeras 10):", Object.keys(QUESTION_MAP).slice(0, 10));
+    console.log("🔍 DEBUG Total answers:", Object.keys(answers).length);
+    console.log("🔍 DEBUG Total QUESTION_MAP:", Object.keys(QUESTION_MAP).length);
+    
     Object.entries(answers).forEach(([itemId, answer]) => {
       const meta = QUESTION_MAP[itemId];
-      if (!meta) return;
+      if (!meta) {
+        console.warn(`⚠️ No se encontró metadata para itemId: "${itemId}"`);
+        return;
+      }
       
       if (!map.has(meta.talentId)) {
         map.set(meta.talentId, []);
@@ -784,11 +793,13 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
         list.push({
           itemId,
           text: meta.text,
-          answer,
+          answer: Number(answer),
         });
       }
     });
     
+    console.log("✅ questionsByTalent construido:", map);
+    console.log("📊 Talentos con preguntas:", Array.from(map.keys()));
     return map;
   }, [answers, QUESTION_MAP]);
 
