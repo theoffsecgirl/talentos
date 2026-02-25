@@ -209,6 +209,32 @@ function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   );
 }
 
+// Componente Accordion
+function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border border-[var(--border)] rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--background)] hover:bg-black/5 dark:hover:bg-white/5 transition"
+      >
+        <span className="font-semibold text-sm text-[var(--foreground)]">{title}</span>
+        <svg
+          className={cx("w-5 h-5 text-[var(--muted-foreground)] transition-transform", isOpen && "rotate-180")}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && <div className="px-4 py-3 bg-[var(--card)] border-t border-[var(--border)]">{children}</div>}
+    </div>
+  );
+}
+
 type FilterState = {
   q: string;
   genero: string;
@@ -742,6 +768,30 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     return a && typeof a === "object" ? (a as Record<string, number>) : {};
   }, [assessment?.answersJson]);
 
+  // Agrupar preguntas por talento para acordeones
+  const questionsByTalent = useMemo(() => {
+    const map = new Map<number, Array<{ itemId: string; text: string; answer: number }>>();
+    
+    Object.entries(answers).forEach(([itemId, answer]) => {
+      const meta = QUESTION_MAP[itemId];
+      if (!meta) return;
+      
+      if (!map.has(meta.talentId)) {
+        map.set(meta.talentId, []);
+      }
+      const list = map.get(meta.talentId);
+      if (list) {
+        list.push({
+          itemId,
+          text: meta.text,
+          answer,
+        });
+      }
+    });
+    
+    return map;
+  }, [answers, QUESTION_MAP]);
+
   const svgRef = useRef<SVGSVGElement>(null);
 
   function downloadJson() {
@@ -856,6 +906,21 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     if (!selected) return;
     window.open(`/api/pdf/mapa/${selected.id}`, "_blank");
   }
+
+  // Ranked talents para mostrar en orden de puntuación
+  const rankedTalents = useMemo(() => {
+    return talents
+      .slice()
+      .map((t: any) => {
+        const s = scores.find((x) => x.talentId === t.id);
+        return {
+          ...t,
+          score: s?.score ?? 0,
+          max: s?.max ?? 0,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+  }, [talents, scores]);
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10 bg-[var(--background)] text-[var(--foreground)]">
@@ -1100,6 +1165,43 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                             </div>
                           );
                         })}
+                    </div>
+                  </div>
+
+                  {/* NUEVO: Acordeones con respuestas detalladas por talento */}
+                  <div className="mt-4 rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
+                    <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">Detalle de respuestas por talento</div>
+                    <div className="space-y-2">
+                      {rankedTalents.map((t: any) => {
+                        const talentQuestions = questionsByTalent.get(t.id) || [];
+                        if (talentQuestions.length === 0) return null;
+
+                        return (
+                          <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${t.score}/${t.max})`}>
+                            <div className="space-y-3">
+                              {talentQuestions.map((item) => (
+                                <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1">
+                                      <div className="text-xs text-[var(--muted-foreground)] mb-1">
+                                        {STEM}
+                                      </div>
+                                      <div className="text-sm text-[var(--foreground)]">
+                                        {normalizeItemText(item.text)}
+                                      </div>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] text-sm font-bold">
+                                        {item.answer}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </Accordion>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
