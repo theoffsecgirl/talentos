@@ -189,6 +189,32 @@ const SCALE = [
   { n: 3, label: "Totalmente" },
 ] as const;
 
+// Componente Accordion para mostrar respuestas por talento
+function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border border-[var(--border)] rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--background)] hover:bg-black/5 dark:hover:bg-white/5 transition"
+      >
+        <span className="font-semibold text-sm text-[var(--foreground)]">{title}</span>
+        <svg
+          className={cx("w-5 h-5 text-[var(--muted-foreground)] transition-transform", isOpen && "rotate-180")}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && <div className="px-4 py-3 bg-[var(--card)] border-t border-[var(--border)]">{children}</div>}
+    </div>
+  );
+}
+
 export default function StartPage() {
   const questions = useMemo<Question[]>(() => {
     const shuffledTalents = shuffle(TALENTS).map((t) => ({
@@ -409,6 +435,24 @@ export default function StartPage() {
     const top3 = ranked.slice(0, 3);
     const suggestedCareers = top3.flatMap((t) => t.exampleRoles);
 
+    // Agrupar preguntas por talento
+    const questionsByTalent = useMemo(() => {
+      const map = new Map<number, Array<{ itemId: string; text: string; answer: number }>>>();
+      
+      for (const q of questions) {
+        if (!map.has(q.talentId)) {
+          map.set(q.talentId, []);
+        }
+        map.get(q.talentId)!.push({
+          itemId: q.itemId,
+          text: q.text,
+          answer: answers[q.itemId] ?? 0,
+        });
+      }
+      
+      return map;
+    }, [questions, answers]);
+
     return (
       <main className="min-h-screen bg-[var(--background)]">
         <div className="max-w-4xl mx-auto px-4 py-12">
@@ -453,6 +497,41 @@ export default function StartPage() {
                 </li>
               ))}
             </ol>
+          </div>
+
+          {/* NUEVO: Desplegables con respuestas por talento */}
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
+            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">Detalle de respuestas por talento</h2>
+            <div className="space-y-2">
+              {ranked.map((t) => {
+                const talentQuestions = questionsByTalent.get(t.id) || [];
+                return (
+                  <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${t.score}/${t.max})`}>
+                    <div className="space-y-3">
+                      {talentQuestions.map((item, idx) => (
+                        <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="text-xs text-[var(--muted-foreground)] mb-1">
+                                {STEM}
+                              </div>
+                              <div className="text-sm text-[var(--foreground)]">
+                                {normalizeItemText(item.text)}
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0">
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] text-sm font-bold">
+                                {item.answer}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Accordion>
+                );
+              })}
+            </div>
           </div>
 
           <div className="mt-6 flex justify-between gap-3">
