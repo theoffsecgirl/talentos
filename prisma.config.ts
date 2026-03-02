@@ -7,7 +7,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    // Usar DATABASE_URL (configurada en Vercel)
-    url: env("DATABASE_URL"),
+    // Usar DATABASE_URL o valor dummy durante build
+    url: process.env.DATABASE_URL || "postgresql://dummy:dummy@localhost:5432/dummy",
   },
 });
