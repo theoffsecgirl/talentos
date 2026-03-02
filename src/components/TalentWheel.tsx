@@ -10,6 +10,7 @@ type Props = {
     max: number;
   }>;
   printMode?: boolean;
+  showFullLabels?: boolean;
 };
 
 // Configuración de talentos según el diagrama adjunto
@@ -32,7 +33,7 @@ function toSafeNumber(value: any, fallback: number = 0): number {
   return fallback;
 }
 
-export default function TalentWheel({ scores, printMode = false }: Props) {
+export default function TalentWheel({ scores, printMode = false, showFullLabels = false }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
       const scoreData = scores.find((s) => s.talentId === talentId);
@@ -59,8 +60,7 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
   const size = 700;
   const center = size / 2;
   const radius = 260;
-  const innerRadius = 70;
-  const labelDistance = 85; // Más distancia para evitar que se corten
+  const innerRadius = 80;
 
   const sections = talents.map((talent, index) => {
     const anglePerSection = (Math.PI * 2) / 8;
@@ -103,7 +103,7 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[500px]">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[550px]">
         <defs>
           {sections.map(({ talent, fillPercentage }) => (
             <radialGradient
@@ -144,7 +144,8 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
         {/* Secciones de talentos */}
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelPos = polarToCartesian(midAngle, radius + labelDistance);
+          const labelDistance = showFullLabels ? radius + 80 : radius + 50;
+          const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
           return (
@@ -176,16 +177,16 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
                   fontSize="18"
                   fontWeight="bold"
                   fill="white"
-                  style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}
+                  style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
                 >
                   {talent.percentage}%
                 </text>
               )}
 
-              {/* Etiqueta con símbolo */}
+              {/* Etiqueta con símbolo y nombre */}
               <text
                 x={labelPos.x}
-                y={labelPos.y - 8}
+                y={labelPos.y - (showFullLabels ? 12 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize="24"
@@ -194,18 +195,20 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
               >
                 {talent.symbol}
               </text>
-              {/* Nombre del talento */}
-              <text
-                x={labelPos.x}
-                y={labelPos.y + 12}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize="11"
-                fontWeight="600"
-                fill="#333"
-              >
-                {talent.title}
-              </text>
+              {showFullLabels && (
+                <text
+                  x={labelPos.x}
+                  y={labelPos.y + 16}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize="13"
+                  fontWeight="600"
+                  fill="#333"
+                  className="print:text-xs"
+                >
+                  {talent.title}
+                </text>
+              )}
             </g>
           );
         })}
@@ -225,66 +228,70 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
         </text>
       </svg>
 
-      {/* Leyenda de ejes */}
-      <div className="w-full max-w-2xl print:max-w-full">
-        <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Ejes neurocognitivos</h3>
-        <div className="grid grid-cols-2 gap-3 text-xs print:grid-cols-3 print:gap-2">
-          {[
-            { axis: "Acción", description: "Control y resultados", color: "#EF4444" },
-            { axis: "Conocimiento", description: "Ciencia aplicada", color: "#8B5CF6" },
-            { axis: "Imaginación", description: "Arte", color: "#06B6D4" },
-            { axis: "Desempeño", description: "Servicio y estabilidad", color: "#F59E0B" },
-            { axis: "Entrega", description: "Conexión humana", color: "#F59E0B" },
-          ].map((cat) => (
-            <div key={cat.axis} className="flex items-start gap-2 p-2 rounded border border-[var(--border)] print:border-gray-300">
-              <div className="w-3 h-3 rounded-full mt-0.5" style={{ backgroundColor: cat.color }} />
-              <div>
-                <div className="font-semibold text-[var(--foreground)] print:text-black">{cat.axis}</div>
-                <div className="text-[var(--muted-foreground)] print:text-gray-600">{cat.description}</div>
-              </div>
+      {!showFullLabels && (
+        <>
+          {/* Leyenda de ejes */}
+          <div className="w-full max-w-2xl print:max-w-full">
+            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Ejes neurocognitivos</h3>
+            <div className="grid grid-cols-2 gap-3 text-xs print:grid-cols-3 print:gap-2">
+              {[
+                { axis: "Acción", description: "Control y resultados", color: "#EF4444" },
+                { axis: "Conocimiento", description: "Ciencia aplicada", color: "#8B5CF6" },
+                { axis: "Imaginación", description: "Arte", color: "#06B6D4" },
+                { axis: "Desempeño", description: "Servicio y estabilidad", color: "#F59E0B" },
+                { axis: "Entrega", description: "Conexión humana", color: "#F59E0B" },
+              ].map((cat) => (
+                <div key={cat.axis} className="flex items-start gap-2 p-2 rounded border border-[var(--border)] print:border-gray-300">
+                  <div className="w-3 h-3 rounded-full mt-0.5" style={{ backgroundColor: cat.color }} />
+                  <div>
+                    <div className="font-semibold text-[var(--foreground)] print:text-black">{cat.axis}</div>
+                    <div className="text-[var(--muted-foreground)] print:text-gray-600">{cat.description}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* Lista de talentos con porcentajes */}
-      <div className="w-full max-w-2xl print:max-w-full">
-        <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Detalle por talento</h3>
-        <div className="grid gap-2 print:gap-1">
-          {talents.map((t) => (
-            <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] print:border-gray-300 print:bg-white print:p-2">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl print:text-xl" style={{ color: t.color }}>
-                  {t.symbol}
-                </span>
-                <div>
-                  <div className="font-semibold text-sm text-[var(--foreground)] print:text-black">{t.title}</div>
-                  <div className="text-xs text-[var(--muted-foreground)] print:text-gray-600">{t.axis}</div>
+          {/* Lista de talentos con porcentajes */}
+          <div className="w-full max-w-2xl print:max-w-full">
+            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Detalle por talento</h3>
+            <div className="grid gap-2 print:gap-1">
+              {talents.map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] print:border-gray-300 print:bg-white print:p-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl print:text-xl" style={{ color: t.color }}>
+                      {t.symbol}
+                    </span>
+                    <div>
+                      <div className="font-semibold text-sm text-[var(--foreground)] print:text-black">{t.title}</div>
+                      <div className="text-xs text-[var(--muted-foreground)] print:text-gray-600">{t.axis}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-lg print:text-base" style={{ color: t.color }}>
+                      {t.percentage}%
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="font-bold text-lg print:text-base" style={{ color: t.color }}>
-                  {t.percentage}%
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 function getTalentTitle(id: number): string {
   const titles: Record<number, string> = {
-    1: "Estrategia",
-    2: "Saber",
-    3: "Instruir",
-    4: "Control",
-    5: "Trascender",
-    6: "Creatividad",
-    7: "Introspección",
-    8: "Hacer",
+    1: "Estrategia y comunicación",
+    2: "Analítico y riguroso",
+    3: "Acompañamiento y docencia",
+    4: "Gestión y organización",
+    5: "Empático y compasivo",
+    6: "Imaginación y creatividad",
+    7: "Profundo e introspectivo",
+    8: "Aplicado y cooperador",
   };
   return titles[id] || "";
 }
