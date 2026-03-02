@@ -154,29 +154,29 @@ const styles = StyleSheet.create({
   },
   svgContainer: {
     position: 'relative',
-    width: 400,
-    height: 400,
+    width: 500,
+    height: 500,
     alignSelf: 'center',
     marginVertical: 20,
   },
   labelContainer: {
     position: 'absolute',
-    width: 80,
+    width: 90,
     textAlign: 'center',
   },
   labelSymbol: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Helvetica-Bold',
     marginBottom: 2,
   },
   labelTitle: {
-    fontSize: 8,
+    fontSize: 9,
     fontFamily: 'Helvetica-Bold',
   },
 });
 
 function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
-  const size = 400;
+  const size = 500;
   const center = size / 2;
   const radius = 150;
   const innerRadius = 50;
@@ -246,7 +246,7 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
         <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
       </Svg>
 
-      <Text style={{ position: 'absolute', left: center - 25, top: center - 6, fontSize: 12, fontFamily: 'Helvetica-Bold', color: '#666', width: 50, textAlign: 'center' }}>
+      <Text style={{ position: 'absolute', left: center - 30, top: center - 8, fontSize: 14, fontFamily: 'Helvetica-Bold', color: '#666', width: 60, textAlign: 'center' }}>
         Talentos
       </Text>
 
@@ -255,18 +255,18 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
         const startAngle = index * anglePerSection - Math.PI / 2;
         const endAngle = startAngle + anglePerSection;
         const midAngle = (startAngle + endAngle) / 2;
-        const labelDistance = radius + 60;
+        const labelDistance = radius + 70;
         const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
         const labelPos = polarToCartesian(midAngle, labelDistance);
         
         return (
           <View key={`label-${talent.id}`}>
             {talent.percentage > 15 && (
-              <Text style={{ position: 'absolute', left: percentPos.x - 15, top: percentPos.y - 7, width: 30, fontSize: 14, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: 'white' }}>
+              <Text style={{ position: 'absolute', left: percentPos.x - 18, top: percentPos.y - 9, width: 36, fontSize: 16, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: 'white' }}>
                 {talent.percentage}%
               </Text>
             )}
-            <View style={{ ...styles.labelContainer, left: labelPos.x - 40, top: labelPos.y - 20 }}>
+            <View style={{ ...styles.labelContainer, left: labelPos.x - 45, top: labelPos.y - 25 }}>
               <Text style={{ ...styles.labelSymbol, color: talent.color }}>{talent.symbol}</Text>
               <Text style={styles.labelTitle}>{talent.titleLine1}</Text>
               {talent.titleLine2 && <Text style={styles.labelTitle}>{talent.titleLine2}</Text>}
