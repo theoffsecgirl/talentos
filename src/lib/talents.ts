@@ -51,7 +51,7 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Estrategia y comunicación",
     reportSummary:
-      "Perfil con facilidad para la estrategia y el arte de la palabra, así como su divulgación. Capacidad para vender, convencer y negociar. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil profesional con facilidad para la estrategia y el arte de la palabra, así como su divulgación. Capacidad para vender, convencer y negociar. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
     wheelCategory: "Resultados",
     wheelLabel: "DELTA (Δ) ESTRATEGIA",
     fields: [
@@ -94,7 +94,7 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Analítico y riguroso",
     reportSummary:
-      "Perfil que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que genere ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental.",
+      "Perfil profesional que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que genere ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental.",
     wheelCategory: "Ciencia aplicada",
     wheelLabel: "PI (Π) SABER",
     fields: [
@@ -140,7 +140,7 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Acompañamiento y docencia",
     reportSummary:
-      "Perfil con pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica. Este perfil se ubica en el eje generador, relacionado con la conexión humana, el equilibrio entre emoción y razón, y las capacidades creativas aplicadas.",
+      "Perfil profesional con pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica. Este perfil se ubica en el eje generador, relacionado con la conexión humana, el equilibrio entre emoción y razón, y las capacidades creativas aplicadas.",
     wheelCategory: "Conocimiento",
     wheelLabel: "PSI (Ψ) INSTRUIR",
     fields: [
@@ -184,7 +184,7 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Gestión y organización",
     reportSummary:
-      "Perfil que muestra capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental en la forma de funcionar.",
+      "Perfil profesional que muestra capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental en la forma de funcionar.",
     wheelCategory: "Acción",
     wheelLabel: "ALFA (Α) CONTROL",
     fields: [
@@ -229,7 +229,7 @@ export const TALENTS: Talent[] = [
     group: "PROFUNDIDAD Y SENSIBILIDAD",
     reportTitle: "Vocación de servicio",
     reportSummary:
-      "Perfil que prioriza el bienestar de las personas, acompañarlas es una prioridad. Se caracteriza por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Este perfil pertenece al eje de vínculo, relacionado con la intuición, la capacidad de relación con los demás y con uno mismo.",
+      "Perfil profesional que prioriza el bienestar de las personas, acompañarlas es una prioridad. Se caracteriza por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Este perfil pertenece al eje de vínculo, relacionado con la intuición, la capacidad de relación con los demás y con uno mismo.",
     wheelCategory: "Entrega",
     wheelLabel: "OMEGA (Ω) TRASCENDER",
     fields: [
@@ -260,7 +260,7 @@ export const TALENTS: Talent[] = [
     quizTitle: "Creatividad e innovación",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
-      { id: "6.1", text: "Puedo aplicar mis ideas y creatividad sin demasiadas limitaciones." },
+      { id: "6.1", text: "Me interesa la práctica deportiva de élite profesional." },
       { id: "6.2", text: "Puedo vivir de una creatividad práctica, innovadora y en constante cambio." },
       { id: "6.3", text: "Expreso mi sensibilidad a través del arte, la imaginación o lo visual." },
       { id: "6.4", text: "Me gusta formar parte de equipos creativos con retos estimulantes." },
@@ -271,7 +271,7 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Imaginación y creatividad",
     reportSummary:
-      "Perfil que se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil profesional que se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
     wheelCategory: "Imaginación",
     wheelLabel: "FI (Φ) CREATIVIDAD",
     fields: [
@@ -295,6 +295,7 @@ export const TALENTS: Talent[] = [
       "Diseño de moda",
       "Diseño de interiores",
       "Publicidad creativa",
+      "Deporte de élite profesional",
     ],
   },
   {
@@ -309,14 +310,14 @@ export const TALENTS: Talent[] = [
       { id: "7.2", text: "Se tratan temas difíciles como el dolor, el trauma, la enfermedad o la muerte." },
       { id: "7.3", text: "Puedo investigar fraudes, engaños o comportamientos ocultos." },
       { id: "7.4", text: "Me atrae explorar lo oculto, el misterio, el crimen o lo no evidente." },
-      { id: "7.5", text: "Expreso sensibilidad hacia aquello que no es visible a simple vista." },
+      { id: "7.5", text: "Me interesa el arte neo-gótico, gore, la estética dark y los tatuajes." },
     ],
 
     axis: "VÍNCULO",
     group: "PROFUNDIDAD Y SENSIBILIDAD",
     reportTitle: "Profundo e introspectivo",
     reportSummary:
-      "Perfil que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
+      "Perfil profesional que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual, así como expresiones artísticas alternativas. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
     wheelCategory: "Arte",
     wheelLabel: "THETA (Θ) INTROSPECCIÓN",
     fields: [
@@ -339,6 +340,7 @@ export const TALENTS: Talent[] = [
       "Auditoría forense",
       "Inspección de fraudes",
       "Tanatología",
+      "Arte alternativo y tatuaje profesional",
     ],
   },
   {
@@ -360,7 +362,7 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Aplicado y cooperador",
     reportSummary:
-      "Perfil que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y la ejecución práctica.",
+      "Perfil profesional que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y la ejecución práctica.",
     wheelCategory: "Servicio",
     wheelLabel: "MEANDRO (▭) HACER",
     fields: [
