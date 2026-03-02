@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import TalentWheel from "@/components/TalentWheel";
-import { TALENTS } from "@/lib/talents";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -27,7 +26,6 @@ export default async function MapaPage({ params }: Props) {
 
   const assessment = person.assessments[0];
 
-  // Extraer puntuaciones
   const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
     ? assessment.scoresJson
         .map((x: any) => ({ 
@@ -65,6 +63,8 @@ export default async function MapaPage({ params }: Props) {
             background: white;
             color: #333;
             padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
           }
           .header {
             text-align: center;
@@ -89,19 +89,20 @@ export default async function MapaPage({ params }: Props) {
           }
           .diagram-container {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             margin: 40px 0;
           }
-          .no-print {
-            display: none !important;
-          }
           @media print {
             body {
-              padding: 0;
+              padding: 10px;
+              max-width: 100%;
             }
-            .no-print {
-              display: none !important;
+            .header h1 {
+              font-size: 20px;
+            }
+            .diagram-container {
+              margin: 20px 0;
             }
           }
         `}</style>
