@@ -1,14 +1,14 @@
 # Talentos
 
-Plataforma de evaluación de talentos con neurociencia aplicada.
+Plataforma de evaluación de talentos con generación de informes PDF.
 
 ## Características
 
-- Quiz interactivo de evaluación
-- Generación de informes PDF personalizados con diagrama circular
-- Mapa visual de talentos
-- Sistema de pagos con Stripe
+- Evaluaciones personalizadas de talentos
+- Generación de mapas visuales
+- Exportación a PDF con Puppeteer
+- Desplegado en Vercel
 
 ## Deploy
 
-Last updated: 2026-03-02 21:40 CET
+Último test: 2026-03-02 22:22 CET
