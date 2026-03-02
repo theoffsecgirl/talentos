@@ -65,7 +65,7 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Fondo sutil (mejora visual sin “cutrez”) */
+/* Fondo sutil (mejora visual sin "cutrez") */
 body::before {
   content: "";
   position: fixed;
@@ -173,4 +173,111 @@ tr:hover td {
 
 .animate-step {
   animation: stepIn 180ms ease-out both;
+}
+
+/* =========================
+   Estilos de impresión / PDF
+   ========================= */
+@media print {
+  /* Eliminar fondos y efectos */
+  body::before {
+    display: none;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  /* Forzar colores legibles */
+  * {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ocultar elementos de navegación */
+  header button,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Optimizar márgenes */
+  @page {
+    margin: 1.5cm;
+  }
+
+  /* Evitar saltos de página dentro de elementos importantes */
+  h1, h2, h3,
+  .talent-card,
+  svg {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Asegurar que los colores del SVG se impriman */
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  svg text {
+    fill: currentColor;
+  }
+
+  /* Bordes y fondos visibles */
+  .border,
+  [class*="border-"] {
+    border-color: #d1d5db !important;
+  }
+
+  /* Tarjetas con fondo blanco */
+  .bg-\[var\(--card\)\],
+  .bg-\[var\(--background\)\] {
+    background: white !important;
+  }
+
+  /* Texto negro por defecto */
+  .text-\[var\(--foreground\)\] {
+    color: black !important;
+  }
+
+  .text-\[var\(--muted-foreground\)\] {
+    color: #6b7280 !important;
+  }
+
+  /* Ajustar tamaños para impresión */
+  .print\:text-sm {
+    font-size: 0.875rem;
+  }
+
+  .print\:text-base {
+    font-size: 1rem;
+  }
+
+  .print\:max-w-full {
+    max-width: 100%;
+  }
+
+  .print\:gap-2 {
+    gap: 0.5rem;
+  }
+
+  .print\:p-2 {
+    padding: 0.5rem;
+  }
+
+  /* Sombras y efectos visuales innecesarios en PDF */
+  .shadow,
+  .shadow-sm,
+  .shadow-lg,
+  [class*="shadow-"] {
+    box-shadow: none !important;
+  }
+
+  /* Mantener estructura de grid */
+  .print\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
