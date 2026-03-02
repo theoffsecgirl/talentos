@@ -114,6 +114,14 @@ export default function TalentWheel({ scores }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-8">
+      {/* Título y subtítulo */}
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-bold text-zinc-900">Descubre tu futuro</h2>
+        <p className="text-base text-zinc-600 italic">
+          Cómo piensas, cómo sientes, cómo aprendes
+        </p>
+      </div>
+
       {/* Mapa circular */}
       <svg
         width={size}
