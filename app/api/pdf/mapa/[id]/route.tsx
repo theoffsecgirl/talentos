@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Document, Page, Text, View, StyleSheet, pdf, Image } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer";
 import { TALENTS } from "@/lib/talents";
-import { createCanvas } from "canvas";
 
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
   acc[t.id] = {
@@ -30,15 +29,6 @@ function getAxisForTalent(id: number): string {
   return axisMap[id] || "";
 }
 
-function splitTalentTitle(title: string): [string, string] {
-  if (title.includes(' y ')) { const parts = title.split(' y '); if (parts.length === 2) return [parts[0] + ' y', parts[1]]; }
-  if (title.includes(' e ')) { const parts = title.split(' e '); if (parts.length === 2) return [parts[0] + ' e', parts[1]]; }
-  const words = title.split(' ');
-  if (words.length <= 2) return [title, ''];
-  const midPoint = Math.ceil(words.length / 2);
-  return [words.slice(0, midPoint).join(' '), words.slice(midPoint).join(' ')];
-}
-
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
 
 const styles = StyleSheet.create({
@@ -48,150 +38,49 @@ const styles = StyleSheet.create({
   muted: { color: "#64748b", fontSize: 10, marginBottom: 20, textAlign: "center" },
   h3: { fontSize: 12, fontFamily: "Helvetica-Bold", marginBottom: 8, marginTop: 20 },
   talentDetailCard: { border: "1px solid #e5e7eb", borderRadius: 8, padding: 10, marginBottom: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  wheelImage: { width: 400, height: 400, alignSelf: "center", marginVertical: 20 },
+  visualGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginVertical: 20, justifyContent: "center" },
+  talentBox: { width: 120, alignItems: "center", padding: 12, border: "2px solid", borderRadius: 8 },
+  talentSymbol: { fontSize: 32, fontFamily: "Helvetica-Bold", marginBottom: 6 },
+  talentName: { fontSize: 9, textAlign: "center", marginBottom: 6 },
+  percentageBar: { width: 100, height: 12, backgroundColor: "#e5e7eb", borderRadius: 6, marginTop: 4, overflow: "hidden" },
+  percentageFill: { height: 12, borderRadius: 6 },
+  percentageText: { fontSize: 14, fontFamily: "Helvetica-Bold", marginTop: 4 },
 });
 
-function generateTalentWheelImage(scores: Array<{ talentId: number; score: number; max: number }>): string {
-  const size = 800;
-  const center = size / 2;
-  const radius = 280;
-  const innerRadius = 100;
-  
-  const canvas = createCanvas(size, size);
-  const ctx = canvas.getContext('2d');
-  
-  // Fondo blanco
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, size, size);
-  
+function TalentVisualGrid({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
   const talents = TALENT_ORDER.map((talentId) => {
     const scoreData = scores.find((s) => s.talentId === talentId);
     const config = TALENT_CONFIG[talentId];
     const score = scoreData?.score ?? 0;
     const maxScore = scoreData?.max ?? 15;
-    const fillPercentage = maxScore > 0 ? score / maxScore : 0;
-    const percentage = Math.round(fillPercentage * 100);
-    const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
-    const [line1, line2] = splitTalentTitle(config.reportTitle);
-    return { id: talentId, symbol: config.symbol, color: config.color, fillRadius, percentage, titleLine1: line1, titleLine2: line2 };
+    const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+    return { id: talentId, symbol: config.symbol, color: config.color, reportTitle: config.reportTitle, percentage };
   });
-  
-  // Dibujar secciones de talentos
-  talents.forEach((talent, index) => {
-    const anglePerSection = (Math.PI * 2) / 8;
-    const startAngle = index * anglePerSection - Math.PI / 2;
-    const endAngle = startAngle + anglePerSection;
-    
-    // Área rellena
-    ctx.beginPath();
-    ctx.arc(center, center, talent.fillRadius, startAngle, endAngle);
-    ctx.lineTo(center, center);
-    ctx.closePath();
-    ctx.fillStyle = talent.color;
-    ctx.globalAlpha = 0.7;
-    ctx.fill();
-    ctx.globalAlpha = 1.0;
-    
-    // Borde exterior completo
-    ctx.beginPath();
-    ctx.arc(center, center, radius, startAngle, endAngle);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = talent.color;
-    ctx.globalAlpha = 0.3;
-    ctx.stroke();
-    ctx.globalAlpha = 1.0;
-  });
-  
-  // Líneas separadoras principales
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(center, center - radius);
-  ctx.lineTo(center, center + radius);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(center - radius, center);
-  ctx.lineTo(center + radius, center);
-  ctx.stroke();
-  
-  // Líneas diagonales
-  ctx.strokeStyle = '#666';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([8, 8]);
-  [1, 3, 5, 7].forEach((index) => {
-    const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
-    const x = center + radius * Math.cos(angle);
-    const y = center + radius * Math.sin(angle);
-    ctx.beginPath();
-    ctx.moveTo(center, center);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  });
-  ctx.setLineDash([]);
-  
-  // Círculo central
-  ctx.beginPath();
-  ctx.arc(center, center, innerRadius, 0, Math.PI * 2);
-  ctx.fillStyle = 'white';
-  ctx.fill();
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  
-  // Texto central
-  ctx.fillStyle = '#666';
-  ctx.font = 'bold 28px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Talentos', center, center);
-  
-  // Etiquetas y porcentajes
-  talents.forEach((talent, index) => {
-    const anglePerSection = (Math.PI * 2) / 8;
-    const startAngle = index * anglePerSection - Math.PI / 2;
-    const midAngle = startAngle + anglePerSection / 2;
-    
-    // Porcentaje
-    if (talent.percentage > 15) {
-      const percentDist = (talent.fillRadius + innerRadius) / 2;
-      const px = center + percentDist * Math.cos(midAngle);
-      const py = center + percentDist * Math.sin(midAngle);
-      ctx.fillStyle = '#333';
-      ctx.font = 'bold 32px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${talent.percentage}%`, px, py);
-    }
-    
-    // Símbolo y nombre
-    const labelDist = radius + 120;
-    const lx = center + labelDist * Math.cos(midAngle);
-    const ly = center + labelDist * Math.sin(midAngle);
-    
-    ctx.fillStyle = talent.color;
-    ctx.font = 'bold 36px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(talent.symbol, lx, ly - 30);
-    
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText(talent.titleLine1, lx, ly);
-    if (talent.titleLine2) {
-      ctx.fillText(talent.titleLine2, lx, ly + 20);
-    }
-  });
-  
-  return canvas.toDataURL();
+
+  return (
+    <View style={styles.visualGrid}>
+      {talents.map((talent) => (
+        <View key={talent.id} style={{ ...styles.talentBox, borderColor: talent.color }}>
+          <Text style={{ ...styles.talentSymbol, color: talent.color }}>{talent.symbol}</Text>
+          <Text style={styles.talentName}>{talent.reportTitle}</Text>
+          <View style={styles.percentageBar}>
+            <View style={{ ...styles.percentageFill, width: `${talent.percentage}%`, backgroundColor: talent.color }} />
+          </View>
+          <Text style={{ ...styles.percentageText, color: talent.color }}>{talent.percentage}%</Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
-function MapPDFDocument({ nombre, apellido, fecha, scores, wheelImageData }: any) {
+function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.pill}>MAPA DE TALENTOS</Text>
         <Text style={styles.title}>{nombre} {apellido}</Text>
         <Text style={styles.muted}>{fecha}</Text>
-        <Image src={wheelImageData} style={styles.wheelImage} />
+        <TalentVisualGrid scores={scores} />
         <View style={{ marginTop: 20 }}>
           <Text style={styles.h3}>Detalle por talento</Text>
           {TALENT_ORDER.map((tid) => {
@@ -226,9 +115,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
       ? assessment.scoresJson.map((x: any) => ({ talentId: Number(x?.talentId), score: Number(x?.score ?? 0), max: Number(x?.max ?? 0) })).filter((x: any) => Number.isFinite(x.talentId))
       : [];
-    
-    const wheelImageData = generateTalentWheelImage(scores);
-    const doc = MapPDFDocument({ nombre: person.nombre, apellido: person.apellido, fecha: new Date(person.createdAt).toLocaleDateString('es-ES'), scores, wheelImageData });
+    const doc = MapPDFDocument({ nombre: person.nombre, apellido: person.apellido, fecha: new Date(person.createdAt).toLocaleDateString('es-ES'), scores });
     const pdfBlob = await pdf(doc).toBlob();
     const buffer = await pdfBlob.arrayBuffer();
     return new NextResponse(buffer, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${person.nombre}-${person.apellido}-Mapa-Talentos.pdf"` } });
