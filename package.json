@@ -15,8 +15,10 @@
     "@prisma/client": "^7.3.0",
     "@react-pdf/renderer": "^4.1.6",
     "@vercel/og": "^0.6.3",
+    "chrome-aws-lambda": "^10.1.0",
     "exceljs": "^4.4.0",
     "next": "16.1.2",
+    "puppeteer-core": "^23.11.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
