@@ -90,8 +90,8 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
   const size = 700;
   const center = size / 2;
-  const radius = 260;
-  const innerRadius = 80;
+  const radius = 230;  // Reducido de 260 a 230
+  const innerRadius = 75;  // Reducido de 80 a 75
 
   const sections = talents.map((talent, index) => {
     const anglePerSection = (Math.PI * 2) / 8;
@@ -175,7 +175,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         {/* Secciones de talentos */}
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelDistance = showFullLabels ? radius + 95 : radius + 50;
+          const labelDistance = showFullLabels ? radius + 100 : radius + 50;
           const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
