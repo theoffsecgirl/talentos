@@ -121,6 +121,21 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
+function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      {...props}
+      className={cx(
+        "mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-3",
+        "text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] shadow-sm",
+        "focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition disabled:opacity-60",
+        "min-h-[100px] resize-y",
+        props.className
+      )}
+    />
+  );
+}
+
 function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
@@ -211,6 +226,8 @@ export default function StartPage() {
   const [saving, setSaving] = useState<boolean>(false);
   const [savedOk, setSavedOk] = useState<boolean>(false);
   const [selectedCareers, setSelectedCareers] = useState<string[]>([]);
+  const [customCareers, setCustomCareers] = useState<string>("");
+  const [downloadingPDF, setDownloadingPDF] = useState<boolean>(false);
 
   const submittingRef = useRef(false);
 
@@ -299,12 +316,11 @@ export default function StartPage() {
       reportTitle: t.reportTitle,
       reportSummary: t.reportSummary,
       exampleRoles: t.exampleRoles || [],
+      wheelLabel: t.wheelLabel || t.quizTitle,
       score: scores.get(t.id) ?? 0,
       max: t.items.length * 3,
     })).sort((a, b) => b.score - a.score);
   }, [scores]);
-
-  const winner = ranked[0];
 
   const wheelScores = useMemo(() => {
     return ranked.map((t) => ({
@@ -316,6 +332,50 @@ export default function StartPage() {
 
   function toggleCareer(career: string) {
     setSelectedCareers((prev) => (prev.includes(career) ? prev.filter((c) => c !== career) : [...prev, career]));
+  }
+
+  async function downloadPDF() {
+    setDownloadingPDF(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: pre.nombre.trim(),
+          apellido: post.apellido.trim(),
+          email: pre.email.trim(),
+          fechaNacimiento: post.fechaNacimiento,
+          genero: post.genero,
+          curso: post.curso.trim(),
+          modalidad: post.modalidad.trim(),
+          centroEducativo: post.centroEducativo.trim(),
+          scores: wheelScores,
+          selectedCareers,
+          customCareers: customCareers.trim(),
+          ideaCarreraTexto: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : "",
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Error al generar el PDF");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `informe-talentos-${pre.nombre.toLowerCase().replace(/\s+/g, "-")}-${post.apellido.toLowerCase().replace(/\s+/g, "-")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError("No se pudo generar el PDF. Inténtalo de nuevo.");
+    } finally {
+      setDownloadingPDF(false);
+    }
   }
 
   async function saveAll() {
@@ -334,8 +394,11 @@ export default function StartPage() {
     setError("");
 
     try {
-      const identificaCampos = selectedCareers.length > 0 ? "Sí" : "No";
-      const campoIdentificado = selectedCareers.join(", ");
+      const identificaCampos = selectedCareers.length > 0 || customCareers.trim().length > 0 ? "Sí" : "No";
+      const campoIdentificado = [
+        ...selectedCareers,
+        ...(customCareers.trim().length > 0 ? ["[PERSONALIZADO] " + customCareers.trim()] : []),
+      ].join(", ");
 
       const res = await fetch("/api/onboarding", {
         method: "POST",
@@ -354,7 +417,7 @@ export default function StartPage() {
           ideaCarreraFinal: post.ideaCarreraFinal || null,
           ideaCarreraTextoFinal: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
           identificaCampos,
-          campoIdentificado: selectedCareers.length > 0 ? campoIdentificado : null,
+          campoIdentificado: campoIdentificado || null,
           answers,
         }),
       });
@@ -391,6 +454,31 @@ export default function StartPage() {
             <ProgressRing value={progress} />
           </header>
 
+          {/* Botón descargar PDF */}
+          <div className="mb-6 flex justify-end">
+            <ButtonPrimary
+              type="button"
+              onClick={downloadPDF}
+              disabled={downloadingPDF}
+              className="flex items-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              {downloadingPDF ? "Generando PDF..." : "Descargar informe PDF"}
+            </ButtonPrimary>
+          </div>
+
           <div className="mb-12">
             <TalentWheel scores={wheelScores} />
           </div>
@@ -414,7 +502,6 @@ export default function StartPage() {
                         <div className="text-3xl font-bold text-[var(--foreground)]">{percentage}%</div>
                       </div>
                     </div>
-                    {/* Barra de progreso */}
                     <div className="w-full h-2 bg-zinc-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
@@ -727,6 +814,21 @@ export default function StartPage() {
                     </div>
                   )}
 
+                  {/* Campo de profesiones personalizadas */}
+                  <div className="rounded-xl border-2 border-[var(--border)] bg-[var(--card)] p-5">
+                    <div className="mb-3">
+                      <h3 className="text-lg font-semibold text-[var(--foreground)]">📝 Otras profesiones que te interesan</h3>
+                      <p className="text-sm text-[var(--muted-foreground)] mt-1">
+                        Si tienes interés en profesiones que no aparecen en la lista, escríbelas aquí (ej: "Futbolista profesional", "Mecánico de alta competición", etc.)
+                      </p>
+                    </div>
+                    <Textarea
+                      value={customCareers}
+                      onChange={(e) => setCustomCareers(e.target.value)}
+                      placeholder="Escribe las profesiones que te interesan, aunque no estén relacionadas con tus resultados..."
+                    />
+                  </div>
+
                   <div className="pt-2">
                     <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
                       {saving ? "Guardando…" : "Guardar y finalizar"}
@@ -754,6 +856,7 @@ export default function StartPage() {
                   setSaving(false);
                   setSavedOk(false);
                   setSelectedCareers([]);
+                  setCustomCareers("");
                   submittingRef.current = false;
                 }}
               >
