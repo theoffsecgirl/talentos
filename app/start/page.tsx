@@ -434,7 +434,7 @@ export default function StartPage() {
           </header>
 
           <div className="mb-12">
-            <TalentWheel scores={wheelScores} />
+            <TalentWheel scores={wheelScores} showFullLabels={true} />
           </div>
 
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
