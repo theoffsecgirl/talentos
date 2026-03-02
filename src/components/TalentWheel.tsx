@@ -32,7 +32,7 @@ function toSafeNumber(value: any, fallback: number = 0): number {
 }
 
 function splitTalentTitle(title: string): [string, string] {
-  // Intentar dividir por "y" primero
+  // Intentar dividir por "y" o "e" primero
   if (title.includes(' y ')) {
     const parts = title.split(' y ');
     if (parts.length === 2) {
@@ -40,7 +40,14 @@ function splitTalentTitle(title: string): [string, string] {
     }
   }
   
-  // Si no hay "y", dividir por la mitad
+  if (title.includes(' e ')) {
+    const parts = title.split(' e ');
+    if (parts.length === 2) {
+      return [parts[0] + ' e', parts[1]];
+    }
+  }
+  
+  // Si no hay "y" o "e", dividir por la mitad
   const words = title.split(' ');
   if (words.length <= 2) {
     return [title, ''];
@@ -168,7 +175,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         {/* Secciones de talentos */}
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelDistance = showFullLabels ? radius + 100 : radius + 50;
+          const labelDistance = showFullLabels ? radius + 95 : radius + 50;
           const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
@@ -210,7 +217,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
               {/* Etiqueta con símbolo y nombre */}
               <text
                 x={labelPos.x}
-                y={labelPos.y - (showFullLabels ? 22 : 0)}
+                y={labelPos.y - (showFullLabels ? 20 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize="24"
@@ -223,26 +230,26 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 <>
                   <text
                     x={labelPos.x}
-                    y={labelPos.y + 6}
+                    y={labelPos.y + 4}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="12"
+                    fontSize="10"
                     fontWeight="600"
                     fill="#333"
-                    className="print:text-[10px]"
+                    className="print:text-[9px]"
                   >
                     {talent.titleLine1}
                   </text>
                   {talent.titleLine2 && (
                     <text
                       x={labelPos.x}
-                      y={labelPos.y + 22}
+                      y={labelPos.y + 17}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="12"
+                      fontSize="10"
                       fontWeight="600"
                       fill="#333"
-                      className="print:text-[10px]"
+                      className="print:text-[9px]"
                     >
                       {talent.titleLine2}
                     </text>
