@@ -56,10 +56,11 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
     });
   }, [scores]);
 
-  const size = 600;
+  const size = 700;
   const center = size / 2;
-  const radius = 240;
-  const innerRadius = 60;
+  const radius = 260;
+  const innerRadius = 70;
+  const labelDistance = 85; // Más distancia para evitar que se corten
 
   const sections = talents.map((talent, index) => {
     const anglePerSection = (Math.PI * 2) / 8;
@@ -143,7 +144,7 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
         {/* Secciones de talentos */}
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelPos = polarToCartesian(midAngle, radius + 40);
+          const labelPos = polarToCartesian(midAngle, radius + labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
           return (
@@ -172,10 +173,10 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
                   y={percentPos.y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="16"
+                  fontSize="18"
                   fontWeight="bold"
                   fill="white"
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+                  style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}
                 >
                   {talent.percentage}%
                 </text>
@@ -184,21 +185,22 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
               {/* Etiqueta con símbolo */}
               <text
                 x={labelPos.x}
-                y={labelPos.y}
+                y={labelPos.y - 8}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="20"
+                fontSize="24"
                 fontWeight="bold"
                 fill={talent.color}
               >
                 {talent.symbol}
               </text>
+              {/* Nombre del talento */}
               <text
                 x={labelPos.x}
-                y={labelPos.y + 18}
+                y={labelPos.y + 12}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="12"
+                fontSize="11"
                 fontWeight="600"
                 fill="#333"
               >
@@ -215,7 +217,7 @@ export default function TalentWheel({ scores, printMode = false }: Props) {
           y={center}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize="14"
+          fontSize="16"
           fontWeight="600"
           fill="#666"
         >
