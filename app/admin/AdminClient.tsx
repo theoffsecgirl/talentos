@@ -2,6 +2,7 @@
 
 import React, { useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import TalentWheel from "@/components/TalentWheel";
 
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
@@ -278,160 +279,6 @@ function topN(talents: any[], scoresJson: any, n: number) {
       max: s.max ?? 0,
     };
   });
-}
-
-function TalentWheelSVG({
-  scores,
-  svgRef,
-}: {
-  scores: ScoreRow[];
-  svgRef?: React.RefObject<SVGSVGElement | null>;
-}) {
-  const size = 600;
-  const center = size / 2;
-  const radius = 240;
-  const innerRadius = 60;
-
-  const talents = TALENT_ORDER.map((talentId) => {
-    const scoreData = scores.find((s) => s.talentId === talentId);
-    const config = TALENT_CONFIG[talentId];
-    const score = scoreData?.score ?? 0;
-    const maxScore = scoreData?.max ?? 15;
-    const fillPercentage = maxScore > 0 ? score / maxScore : 0;
-    const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
-
-    return {
-      id: talentId,
-      code: `T${talentId}`,
-      symbol: config.symbol,
-      score,
-      maxScore,
-      color: config.color,
-      fillRadius,
-      fillPercentage,
-    };
-  });
-
-  const sections = talents.map((talent, index) => {
-    const anglePerSection = (Math.PI * 2) / 8;
-    const startAngle = index * anglePerSection - Math.PI / 2;
-    const endAngle = startAngle + anglePerSection;
-
-    return {
-      talent,
-      startAngle,
-      endAngle,
-    };
-  });
-
-  const polarToCartesian = (angle: number, r: number) => ({
-    x: center + r * Math.cos(angle),
-    y: center + r * Math.sin(angle),
-  });
-
-  const createArcPath = (startAngle: number, endAngle: number, outerR: number, innerR: number) => {
-    const start = polarToCartesian(startAngle, outerR);
-    const end = polarToCartesian(endAngle, outerR);
-    const innerStart = polarToCartesian(startAngle, innerR);
-    const innerEnd = polarToCartesian(endAngle, innerR);
-
-    const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
-
-    return [
-      `M ${start.x} ${start.y}`,
-      `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
-      `L ${innerEnd.x} ${innerEnd.y}`,
-      `A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
-      `Z`,
-    ].join(" ");
-  };
-
-  return (
-    <svg ref={svgRef} width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: "100%", height: "auto" }}>
-      <defs>
-        {sections.map(({ talent }) => (
-          <radialGradient key={`gradient-${talent.id}`} id={`gradient-${talent.id}`} cx="50%" cy="50%">
-            <stop offset="0%" stopColor={talent.color} stopOpacity={Math.min(talent.fillPercentage * 1.2, 1)} />
-            <stop offset={`${talent.fillPercentage * 100}%`} stopColor={talent.color} stopOpacity="0.6" />
-            <stop offset="100%" stopColor={talent.color} stopOpacity="0.1" />
-          </radialGradient>
-        ))}
-      </defs>
-
-      <line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
-      <line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
-
-      {[1, 3, 5, 7].map((index) => {
-        const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
-        const outer = polarToCartesian(angle, radius);
-        return (
-          <line
-            key={`divider-${index}`}
-            x1={center}
-            y1={center}
-            x2={outer.x}
-            y2={outer.y}
-            stroke="#666"
-            strokeWidth="1"
-            strokeDasharray="4 4"
-          />
-        );
-      })}
-
-      {sections.map(({ talent, startAngle, endAngle }) => {
-        const midAngle = (startAngle + endAngle) / 2;
-        const labelPos = polarToCartesian(midAngle, radius + 30);
-
-        return (
-          <g key={talent.id}>
-            <path
-              d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)}
-              fill={`url(#gradient-${talent.id})`}
-              stroke={talent.color}
-              strokeWidth="1"
-            />
-
-            <path
-              d={createArcPath(
-                startAngle,
-                endAngle,
-                radius,
-                talent.fillRadius > innerRadius ? talent.fillRadius : innerRadius
-              )}
-              fill="none"
-              stroke={talent.color}
-              strokeWidth="2"
-              opacity="0.3"
-            />
-
-            <text
-              x={labelPos.x}
-              y={labelPos.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize="18"
-              fontWeight="bold"
-              fill={talent.color}
-            >
-              {talent.symbol}
-            </text>
-            <text
-              x={labelPos.x}
-              y={labelPos.y + 16}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize="12"
-              fill="#666"
-            >
-              {talent.code}
-            </text>
-          </g>
-        );
-      })}
-
-      <circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
-    </svg>
-  );
 }
 
 function buildHtmlDoc(title: string, body: string, extraCss = "") {
@@ -1219,7 +1066,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               ) : tab === "mapa" ? (
                 <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                   <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Mapa</div>
-                  <TalentWheelSVG scores={scores} svgRef={svgRef} />
+                  <TalentWheel scores={scores} showFullLabels={true} />
                   <div className="mt-3 text-xs text-[var(--muted-foreground)]">
                     Mapa visual de tus talentos basado en neurociencia aplicada.
                   </div>
