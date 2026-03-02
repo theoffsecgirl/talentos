@@ -1,3 +1,4 @@
+import React from "react";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Document, Page, Text, View, StyleSheet, pdf, Svg, Circle, Line } from "@react-pdf/renderer";
