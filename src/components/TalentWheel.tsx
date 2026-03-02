@@ -9,6 +9,7 @@ type Props = {
     score: number;
     max: number;
   }>;
+  printMode?: boolean;
 };
 
 // Configuración de talentos según el diagrama adjunto
@@ -31,7 +32,7 @@ function toSafeNumber(value: any, fallback: number = 0): number {
   return fallback;
 }
 
-export default function TalentWheel({ scores }: Props) {
+export default function TalentWheel({ scores, printMode = false }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
       const scoreData = scores.find((s) => s.talentId === talentId);
@@ -100,8 +101,8 @@ export default function TalentWheel({ scores }: Props) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto">
+    <div className="flex flex-col items-center gap-8 print:gap-4">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[500px]">
         <defs>
           {sections.map(({ talent, fillPercentage }) => (
             <radialGradient
@@ -171,7 +172,8 @@ export default function TalentWheel({ scores }: Props) {
                   y={percentPos.y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="text-sm font-bold"
+                  fontSize="16"
+                  fontWeight="bold"
                   fill="white"
                   style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                 >
@@ -185,7 +187,8 @@ export default function TalentWheel({ scores }: Props) {
                 y={labelPos.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-lg font-bold"
+                fontSize="20"
+                fontWeight="bold"
                 fill={talent.color}
               >
                 {talent.symbol}
@@ -195,7 +198,8 @@ export default function TalentWheel({ scores }: Props) {
                 y={labelPos.y + 18}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-xs font-semibold"
+                fontSize="12"
+                fontWeight="600"
                 fill="#333"
               >
                 {talent.title}
@@ -211,7 +215,8 @@ export default function TalentWheel({ scores }: Props) {
           y={center}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="text-xs font-semibold"
+          fontSize="14"
+          fontWeight="600"
           fill="#666"
         >
           Talentos
@@ -219,9 +224,9 @@ export default function TalentWheel({ scores }: Props) {
       </svg>
 
       {/* Leyenda de ejes */}
-      <div className="w-full max-w-2xl">
-        <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3">Ejes neurocognitivos</h3>
-        <div className="grid grid-cols-2 gap-3 text-xs">
+      <div className="w-full max-w-2xl print:max-w-full">
+        <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Ejes neurocognitivos</h3>
+        <div className="grid grid-cols-2 gap-3 text-xs print:grid-cols-3 print:gap-2">
           {[
             { axis: "Acción", description: "Control y resultados", color: "#EF4444" },
             { axis: "Conocimiento", description: "Ciencia aplicada", color: "#8B5CF6" },
@@ -229,11 +234,11 @@ export default function TalentWheel({ scores }: Props) {
             { axis: "Desempeño", description: "Servicio y estabilidad", color: "#F59E0B" },
             { axis: "Entrega", description: "Conexión humana", color: "#F59E0B" },
           ].map((cat) => (
-            <div key={cat.axis} className="flex items-start gap-2 p-2 rounded border border-[var(--border)]">
+            <div key={cat.axis} className="flex items-start gap-2 p-2 rounded border border-[var(--border)] print:border-gray-300">
               <div className="w-3 h-3 rounded-full mt-0.5" style={{ backgroundColor: cat.color }} />
               <div>
-                <div className="font-semibold text-[var(--foreground)]">{cat.axis}</div>
-                <div className="text-[var(--muted-foreground)]">{cat.description}</div>
+                <div className="font-semibold text-[var(--foreground)] print:text-black">{cat.axis}</div>
+                <div className="text-[var(--muted-foreground)] print:text-gray-600">{cat.description}</div>
               </div>
             </div>
           ))}
@@ -241,22 +246,22 @@ export default function TalentWheel({ scores }: Props) {
       </div>
 
       {/* Lista de talentos con porcentajes */}
-      <div className="w-full max-w-2xl">
-        <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3">Detalle por talento</h3>
-        <div className="grid gap-2">
+      <div className="w-full max-w-2xl print:max-w-full">
+        <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Detalle por talento</h3>
+        <div className="grid gap-2 print:gap-1">
           {talents.map((t) => (
-            <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+            <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] print:border-gray-300 print:bg-white print:p-2">
               <div className="flex items-center gap-3">
-                <span className="text-2xl" style={{ color: t.color }}>
+                <span className="text-2xl print:text-xl" style={{ color: t.color }}>
                   {t.symbol}
                 </span>
                 <div>
-                  <div className="font-semibold text-sm text-[var(--foreground)]">{t.title}</div>
-                  <div className="text-xs text-[var(--muted-foreground)]">{t.axis}</div>
+                  <div className="font-semibold text-sm text-[var(--foreground)] print:text-black">{t.title}</div>
+                  <div className="text-xs text-[var(--muted-foreground)] print:text-gray-600">{t.axis}</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-lg" style={{ color: t.color }}>
+                <div className="font-bold text-lg print:text-base" style={{ color: t.color }}>
                   {t.percentage}%
                 </div>
               </div>
