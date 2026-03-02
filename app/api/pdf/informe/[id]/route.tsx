@@ -152,6 +152,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  svgContainer: {
+    position: 'relative',
+    width: 400,
+    height: 400,
+    alignSelf: 'center',
+    marginVertical: 20,
+  },
+  labelContainer: {
+    position: 'absolute',
+    width: 80,
+    textAlign: 'center',
+  },
+  labelSymbol: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  labelTitle: {
+    fontSize: 8,
+    fontWeight: 600,
+  },
 });
 
 function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
@@ -196,126 +217,129 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
   };
 
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ alignSelf: 'center', marginVertical: 20 }}>
-      {/* Líneas separadoras principales */}
-      <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
-      <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
+    <View style={styles.svgContainer}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Líneas separadoras principales */}
+        <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
+        <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
 
-      {/* Líneas diagonales */}
-      {[1, 3, 5, 7].map((index) => {
-        const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
-        const outer = polarToCartesian(angle, radius);
-        return (
-          <Line
-            key={`divider-${index}`}
-            x1={center}
-            y1={center}
-            x2={outer.x}
-            y2={outer.y}
-            stroke="#666"
-            strokeWidth="1"
-            strokeDasharray="4 4"
-          />
-        );
-      })}
+        {/* Líneas diagonales */}
+        {[1, 3, 5, 7].map((index) => {
+          const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
+          const outer = polarToCartesian(angle, radius);
+          return (
+            <Line
+              key={`divider-${index}`}
+              x1={center}
+              y1={center}
+              x2={outer.x}
+              y2={outer.y}
+              stroke="#666"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+            />
+          );
+        })}
 
-      {/* Secciones de talentos */}
+        {/* Secciones de talentos */}
+        {talents.map((talent, index) => {
+          const anglePerSection = (Math.PI * 2) / 8;
+          const startAngle = index * anglePerSection - Math.PI / 2;
+          const endAngle = startAngle + anglePerSection;
+          
+          return (
+            <G key={talent.id}>
+              {/* Área rellena con opacidad */}
+              <Path 
+                d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)} 
+                fill={talent.color}
+                fillOpacity={0.7}
+                stroke={talent.color} 
+                strokeWidth="1" 
+              />
+              
+              {/* Borde exterior completo */}
+              <Path 
+                d={createArcPath(startAngle, endAngle, radius, innerRadius)} 
+                fill="none" 
+                stroke={talent.color} 
+                strokeWidth="2" 
+                opacity="0.3" 
+              />
+            </G>
+          );
+        })}
+
+        <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
+      </Svg>
+
+      {/* Texto central usando Text de react-pdf */}
+      <Text
+        style={{
+          position: 'absolute',
+          left: center - 25,
+          top: center - 6,
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: '#666',
+          width: 50,
+          textAlign: 'center',
+        }}
+      >
+        Talentos
+      </Text>
+
+      {/* Etiquetas y porcentajes usando Text de react-pdf */}
       {talents.map((talent, index) => {
         const anglePerSection = (Math.PI * 2) / 8;
         const startAngle = index * anglePerSection - Math.PI / 2;
         const endAngle = startAngle + anglePerSection;
         const midAngle = (startAngle + endAngle) / 2;
-        const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
         const labelDistance = radius + 60;
+
+        const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
         const labelPos = polarToCartesian(midAngle, labelDistance);
         
         return (
-          <G key={talent.id}>
-            {/* Área rellena con opacidad */}
-            <Path 
-              d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)} 
-              fill={talent.color}
-              fillOpacity={0.7}
-              stroke={talent.color} 
-              strokeWidth="1" 
-            />
-            
-            {/* Borde exterior completo */}
-            <Path 
-              d={createArcPath(startAngle, endAngle, radius, innerRadius)} 
-              fill="none" 
-              stroke={talent.color} 
-              strokeWidth="2" 
-              opacity="0.3" 
-            />
-
-            {/* Porcentaje dentro de la sección (solo si es mayor a 15%) */}
+          <View key={`label-${talent.id}`}>
+            {/* Porcentaje dentro de la sección */}
             {talent.percentage > 15 && (
-              <text
-                x={percentPos.x}
-                y={percentPos.y}
-                textAnchor="middle"
-                fontSize={14}
-                fontWeight="bold"
-                fill="white"
+              <Text
+                style={{
+                  position: 'absolute',
+                  left: percentPos.x - 15,
+                  top: percentPos.y - 7,
+                  width: 30,
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  color: 'white',
+                }}
               >
                 {talent.percentage}%
-              </text>
+              </Text>
             )}
 
-            {/* Símbolo */}
-            <text
-              x={labelPos.x}
-              y={labelPos.y - 14}
-              textAnchor="middle"
-              fontSize={16}
-              fontWeight="bold"
-              fill={talent.color}
+            {/* Símbolo y nombre del talento */}
+            <View
+              style={{
+                ...styles.labelContainer,
+                left: labelPos.x - 40,
+                top: labelPos.y - 20,
+              }}
             >
-              {talent.symbol}
-            </text>
-
-            {/* Nombre del talento - Línea 1 */}
-            <text
-              x={labelPos.x}
-              y={labelPos.y}
-              textAnchor="middle"
-              fontSize={8}
-              fontWeight="600"
-              fill="#333"
-            >
-              {talent.titleLine1}
-            </text>
-
-            {/* Nombre del talento - Línea 2 */}
-            {talent.titleLine2 && (
-              <text
-                x={labelPos.x}
-                y={labelPos.y + 10}
-                textAnchor="middle"
-                fontSize={8}
-                fontWeight="600"
-                fill="#333"
-              >
-                {talent.titleLine2}
-              </text>
-            )}
-          </G>
+              <Text style={{ ...styles.labelSymbol, color: talent.color }}>
+                {talent.symbol}
+              </Text>
+              <Text style={styles.labelTitle}>{talent.titleLine1}</Text>
+              {talent.titleLine2 && (
+                <Text style={styles.labelTitle}>{talent.titleLine2}</Text>
+              )}
+            </View>
+          </View>
         );
       })}
-
-      <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
-      <text
-        x={center}
-        y={center}
-        textAnchor="middle"
-        fontSize={12}
-        fontWeight="bold"
-        fill="#666"
-      >
-        Talentos
-      </text>
-    </Svg>
+    </View>
   );
 }
 
