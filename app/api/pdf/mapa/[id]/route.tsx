@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G, Defs, RadialGradient, Stop } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G } from "@react-pdf/renderer";
 import { TALENTS } from "@/lib/talents";
 
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
@@ -121,16 +121,6 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
 
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ alignSelf: 'center', marginVertical: 20 }}>
-      <Defs>
-        {talents.map((talent) => (
-          <RadialGradient key={`grad-${talent.id}`} id={`gradient-${talent.id}`}>
-            <Stop offset="0%" stopColor={talent.color} stopOpacity={Math.min(talent.fillPercentage * 1.2, 1)} />
-            <Stop offset={`${talent.fillPercentage * 100}%`} stopColor={talent.color} stopOpacity={0.6} />
-            <Stop offset="100%" stopColor={talent.color} stopOpacity={0.1} />
-          </RadialGradient>
-        ))}
-      </Defs>
-
       {/* Líneas separadoras principales */}
       <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
       <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
@@ -163,10 +153,11 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
         
         return (
           <G key={talent.id}>
-            {/* Área sombreada con gradiente */}
+            {/* Área rellena con opacidad */}
             <Path 
               d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)} 
-              fill={`url(#gradient-${talent.id})`}
+              fill={talent.color}
+              fillOpacity={0.7}
               stroke={talent.color} 
               strokeWidth="1" 
             />
