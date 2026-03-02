@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Image } from "@react-pdf/renderer";
 import { TALENTS } from "@/lib/talents";
 
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
@@ -39,33 +39,6 @@ function getAxisForTalent(id: number): string {
     8: "Desempeño",
   };
   return axisMap[id] || "";
-}
-
-function splitTalentTitle(title: string): [string, string] {
-  if (title.includes(' y ')) {
-    const parts = title.split(' y ');
-    if (parts.length === 2) {
-      return [parts[0] + ' y', parts[1]];
-    }
-  }
-  
-  if (title.includes(' e ')) {
-    const parts = title.split(' e ');
-    if (parts.length === 2) {
-      return [parts[0] + ' e', parts[1]];
-    }
-  }
-  
-  const words = title.split(' ');
-  if (words.length <= 2) {
-    return [title, ''];
-  }
-  
-  const midPoint = Math.ceil(words.length / 2);
-  return [
-    words.slice(0, midPoint).join(' '),
-    words.slice(midPoint).join(' '),
-  ];
 }
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
@@ -113,174 +86,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  chartImage: {
+    width: 400,
+    height: 400,
+    alignSelf: 'center',
+    marginVertical: 20,
+  },
 });
 
-function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
-  const size = 400;
-  const center = size / 2;
-  const radius = 150;
-  const innerRadius = 50;
-
-  const talents = TALENT_ORDER.map((talentId) => {
-    const scoreData = scores.find((s) => s.talentId === talentId);
-    const config = TALENT_CONFIG[talentId];
-    const score = scoreData?.score ?? 0;
-    const maxScore = scoreData?.max ?? 15;
-    const fillPercentage = maxScore > 0 ? score / maxScore : 0;
-    const percentage = Math.round(fillPercentage * 100);
-    const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
-    const [line1, line2] = splitTalentTitle(config.reportTitle);
-    return { 
-      id: talentId, 
-      symbol: config.symbol, 
-      color: config.color, 
-      fillRadius, 
-      fillPercentage, 
-      percentage,
-      titleLine1: line1,
-      titleLine2: line2,
-    };
-  });
-
-  const polarToCartesian = (angle: number, r: number) => ({
-    x: center + r * Math.cos(angle),
-    y: center + r * Math.sin(angle),
-  });
-
-  const createArcPath = (startAngle: number, endAngle: number, outerR: number, innerR: number) => {
-    const start = polarToCartesian(startAngle, outerR);
-    const end = polarToCartesian(endAngle, outerR);
-    const innerStart = polarToCartesian(startAngle, innerR);
-    const innerEnd = polarToCartesian(endAngle, innerR);
-    const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
-    return `M ${start.x} ${start.y} A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${end.x} ${end.y} L ${innerEnd.x} ${innerEnd.y} A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y} Z`;
-  };
-
-  return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ alignSelf: 'center', marginVertical: 20 }}>
-      {/* Líneas separadoras principales */}
-      <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
-      <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
-
-      {/* Líneas diagonales */}
-      {[1, 3, 5, 7].map((index) => {
-        const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
-        const outer = polarToCartesian(angle, radius);
-        return (
-          <Line
-            key={`divider-${index}`}
-            x1={center}
-            y1={center}
-            x2={outer.x}
-            y2={outer.y}
-            stroke="#666"
-            strokeWidth="1"
-            strokeDasharray="4 4"
-          />
-        );
-      })}
-
-      {/* Secciones de talentos */}
-      {talents.map((talent, index) => {
-        const anglePerSection = (Math.PI * 2) / 8;
-        const startAngle = index * anglePerSection - Math.PI / 2;
-        const endAngle = startAngle + anglePerSection;
-        const midAngle = (startAngle + endAngle) / 2;
-        const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
-        const labelDistance = radius + 60;
-        const labelPos = polarToCartesian(midAngle, labelDistance);
-        
-        return (
-          <G key={talent.id}>
-            {/* Área rellena con opacidad */}
-            <Path 
-              d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)} 
-              fill={talent.color}
-              fillOpacity={0.7}
-              stroke={talent.color} 
-              strokeWidth="1" 
-            />
-            
-            {/* Borde exterior completo */}
-            <Path 
-              d={createArcPath(startAngle, endAngle, radius, innerRadius)} 
-              fill="none" 
-              stroke={talent.color} 
-              strokeWidth="2" 
-              opacity="0.3" 
-            />
-
-            {/* Porcentaje dentro de la sección (solo si es mayor a 15%) */}
-            {talent.percentage > 15 && (
-              <text
-                x={percentPos.x}
-                y={percentPos.y}
-                textAnchor="middle"
-                fontSize={14}
-                fontWeight="bold"
-                fill="white"
-              >
-                {talent.percentage}%
-              </text>
-            )}
-
-            {/* Símbolo */}
-            <text
-              x={labelPos.x}
-              y={labelPos.y - 14}
-              textAnchor="middle"
-              fontSize={16}
-              fontWeight="bold"
-              fill={talent.color}
-            >
-              {talent.symbol}
-            </text>
-
-            {/* Nombre del talento - Línea 1 */}
-            <text
-              x={labelPos.x}
-              y={labelPos.y}
-              textAnchor="middle"
-              fontSize={8}
-              fontWeight="600"
-              fill="#333"
-            >
-              {talent.titleLine1}
-            </text>
-
-            {/* Nombre del talento - Línea 2 */}
-            {talent.titleLine2 && (
-              <text
-                x={labelPos.x}
-                y={labelPos.y + 10}
-                textAnchor="middle"
-                fontSize={8}
-                fontWeight="600"
-                fill="#333"
-              >
-                {talent.titleLine2}
-              </text>
-            )}
-          </G>
-        );
-      })}
-
-      <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
-      <text
-        x={center}
-        y={center}
-        textAnchor="middle"
-        fontSize={12}
-        fontWeight="bold"
-        fill="#666"
-      >
-        Talentos
-      </text>
-    </Svg>
-  );
-}
-
-function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
+function MapPDFDocument({ nombre, apellido, fecha, scores, chartImageData }: any) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -288,7 +102,9 @@ function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
         <Text style={styles.title}>{nombre} {apellido}</Text>
         <Text style={styles.muted}>{fecha}</Text>
         
-        <TalentWheelSVG scores={scores} />
+        {chartImageData && (
+          <Image src={chartImageData} style={styles.chartImage} />
+        )}
 
         {/* Detalle por talento */}
         <View style={{ marginTop: 20 }}>
@@ -319,6 +135,31 @@ function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
   );
 }
 
+async function generateChartImage(scores: Array<{ talentId: number; score: number; max: number }>) {
+  try {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    
+    const response = await fetch(`${baseUrl}/api/chart/talent-wheel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scores }),
+    });
+
+    if (!response.ok) {
+      console.error('Error generando imagen del diagrama:', await response.text());
+      return null;
+    }
+
+    const buffer = await response.arrayBuffer();
+    return `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`;
+  } catch (error) {
+    console.error('Error llamando al endpoint de imagen:', error);
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -345,11 +186,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           .filter((x: any) => Number.isFinite(x.talentId))
       : [];
 
+    // Generar imagen del diagrama
+    const chartImageData = await generateChartImage(scores);
+
     const doc = MapPDFDocument({
       nombre: person.nombre,
       apellido: person.apellido,
       fecha: new Date(person.createdAt).toLocaleDateString('es-ES'),
       scores,
+      chartImageData,
     });
 
     const pdfBlob = await pdf(doc).toBlob();
