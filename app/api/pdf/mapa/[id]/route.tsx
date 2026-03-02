@@ -1,8 +1,8 @@
-import React from "react";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Document, Page, Text, View, StyleSheet, pdf, Svg, Circle, Line, Rect } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Image } from "@react-pdf/renderer";
 import { TALENTS } from "@/lib/talents";
+import { createCanvas } from "canvas";
 
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
   acc[t.id] = {
@@ -31,14 +31,8 @@ function getAxisForTalent(id: number): string {
 }
 
 function splitTalentTitle(title: string): [string, string] {
-  if (title.includes(' y ')) {
-    const parts = title.split(' y ');
-    if (parts.length === 2) return [parts[0] + ' y', parts[1]];
-  }
-  if (title.includes(' e ')) {
-    const parts = title.split(' e ');
-    if (parts.length === 2) return [parts[0] + ' e', parts[1]];
-  }
+  if (title.includes(' y ')) { const parts = title.split(' y '); if (parts.length === 2) return [parts[0] + ' y', parts[1]]; }
+  if (title.includes(' e ')) { const parts = title.split(' e '); if (parts.length === 2) return [parts[0] + ' e', parts[1]]; }
   const words = title.split(' ');
   if (words.length <= 2) return [title, ''];
   const midPoint = Math.ceil(words.length / 2);
@@ -54,18 +48,22 @@ const styles = StyleSheet.create({
   muted: { color: "#64748b", fontSize: 10, marginBottom: 20, textAlign: "center" },
   h3: { fontSize: 12, fontFamily: "Helvetica-Bold", marginBottom: 8, marginTop: 20 },
   talentDetailCard: { border: "1px solid #e5e7eb", borderRadius: 8, padding: 10, marginBottom: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  svgContainer: { position: "relative", width: 500, height: 500, alignSelf: "center", marginVertical: 20 },
-  labelContainer: { position: "absolute", width: 90, textAlign: "center" },
-  labelSymbol: { fontSize: 18, fontFamily: "Helvetica-Bold", marginBottom: 2 },
-  labelTitle: { fontSize: 9, fontFamily: "Helvetica-Bold" },
+  wheelImage: { width: 400, height: 400, alignSelf: "center", marginVertical: 20 },
 });
 
-function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
-  const size = 500;
+function generateTalentWheelImage(scores: Array<{ talentId: number; score: number; max: number }>): string {
+  const size = 800;
   const center = size / 2;
-  const radius = 140;
-  const innerRadius = 60;
-
+  const radius = 280;
+  const innerRadius = 100;
+  
+  const canvas = createCanvas(size, size);
+  const ctx = canvas.getContext('2d');
+  
+  // Fondo blanco
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, size, size);
+  
   const talents = TALENT_ORDER.map((talentId) => {
     const scoreData = scores.find((s) => s.talentId === talentId);
     const config = TALENT_CONFIG[talentId];
@@ -75,96 +73,125 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
     const percentage = Math.round(fillPercentage * 100);
     const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
     const [line1, line2] = splitTalentTitle(config.reportTitle);
-    return { id: talentId, symbol: config.symbol, color: config.color, fillRadius, fillPercentage, percentage, titleLine1: line1, titleLine2: line2 };
+    return { id: talentId, symbol: config.symbol, color: config.color, fillRadius, percentage, titleLine1: line1, titleLine2: line2 };
   });
-
-  const polarToCartesian = (angle: number, r: number) => ({
-    x: center + r * Math.cos(angle),
-    y: center + r * Math.sin(angle),
+  
+  // Dibujar secciones de talentos
+  talents.forEach((talent, index) => {
+    const anglePerSection = (Math.PI * 2) / 8;
+    const startAngle = index * anglePerSection - Math.PI / 2;
+    const endAngle = startAngle + anglePerSection;
+    
+    // Área rellena
+    ctx.beginPath();
+    ctx.arc(center, center, talent.fillRadius, startAngle, endAngle);
+    ctx.lineTo(center, center);
+    ctx.closePath();
+    ctx.fillStyle = talent.color;
+    ctx.globalAlpha = 0.7;
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+    
+    // Borde exterior completo
+    ctx.beginPath();
+    ctx.arc(center, center, radius, startAngle, endAngle);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = talent.color;
+    ctx.globalAlpha = 0.3;
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
   });
-
-  return (
-    <View style={styles.svgContainer}>
-      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {/* Barras de colores para cada talento */}
-        {talents.map((talent, index) => {
-          const anglePerSection = 360 / 8;
-          const startAngle = index * anglePerSection - 90;
-          const barWidth = (talent.fillRadius - innerRadius);
-          const barX = innerRadius + barWidth / 2;
-          
-          return (
-            <Rect
-              key={`bar-${talent.id}`}
-              x={center - 3}
-              y={center - barX - barWidth / 2}
-              width={6}
-              height={barWidth}
-              fill={talent.color}
-              opacity={0.7}
-              transform={`rotate(${startAngle + anglePerSection / 2} ${center} ${center})`}
-            />
-          );
-        })}
-
-        {/* Líneas separadoras principales */}
-        <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
-        <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
-
-        {/* Líneas diagonales */}
-        {[1, 3, 5, 7].map((index) => {
-          const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
-          const outer = polarToCartesian(angle, radius);
-          return <Line key={`divider-${index}`} x1={center} y1={center} x2={outer.x} y2={outer.y} stroke="#666" strokeWidth="1" strokeDasharray="4 4" />;
-        })}
-
-        {/* Círculos de contorno */}
-        <Circle cx={center} cy={center} r={radius} fill="none" stroke="#999" strokeWidth="1" opacity="0.3" />
-        <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
-      </Svg>
-
-      {/* Texto central */}
-      <Text style={{ position: 'absolute', left: center - 30, top: center - 8, fontSize: 14, fontFamily: 'Helvetica-Bold', color: '#666', width: 60, textAlign: 'center' }}>
-        Talentos
-      </Text>
-
-      {/* Etiquetas y porcentajes */}
-      {talents.map((talent, index) => {
-        const anglePerSection = (Math.PI * 2) / 8;
-        const startAngle = index * anglePerSection - Math.PI / 2;
-        const endAngle = startAngle + anglePerSection;
-        const midAngle = (startAngle + endAngle) / 2;
-        const labelDistance = radius + 60;
-        const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
-        const labelPos = polarToCartesian(midAngle, labelDistance);
-        
-        return (
-          <View key={`label-${talent.id}`}>
-            {talent.percentage > 15 && (
-              <Text style={{ position: 'absolute', left: percentPos.x - 18, top: percentPos.y - 9, width: 36, fontSize: 16, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#333' }}>
-                {talent.percentage}%
-              </Text>
-            )}
-            <View style={{ ...styles.labelContainer, left: labelPos.x - 45, top: labelPos.y - 25 }}>
-              <Text style={{ ...styles.labelSymbol, color: talent.color }}>{talent.symbol}</Text>
-              <Text style={styles.labelTitle}>{talent.titleLine1}</Text>
-              {talent.titleLine2 && <Text style={styles.labelTitle}>{talent.titleLine2}</Text>}
-            </View>
-          </View>
-        );
-      })}
-    </View>
-  );
+  
+  // Líneas separadoras principales
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(center, center - radius);
+  ctx.lineTo(center, center + radius);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(center - radius, center);
+  ctx.lineTo(center + radius, center);
+  ctx.stroke();
+  
+  // Líneas diagonales
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 8]);
+  [1, 3, 5, 7].forEach((index) => {
+    const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
+    const x = center + radius * Math.cos(angle);
+    const y = center + radius * Math.sin(angle);
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  
+  // Círculo central
+  ctx.beginPath();
+  ctx.arc(center, center, innerRadius, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  // Texto central
+  ctx.fillStyle = '#666';
+  ctx.font = 'bold 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Talentos', center, center);
+  
+  // Etiquetas y porcentajes
+  talents.forEach((talent, index) => {
+    const anglePerSection = (Math.PI * 2) / 8;
+    const startAngle = index * anglePerSection - Math.PI / 2;
+    const midAngle = startAngle + anglePerSection / 2;
+    
+    // Porcentaje
+    if (talent.percentage > 15) {
+      const percentDist = (talent.fillRadius + innerRadius) / 2;
+      const px = center + percentDist * Math.cos(midAngle);
+      const py = center + percentDist * Math.sin(midAngle);
+      ctx.fillStyle = '#333';
+      ctx.font = 'bold 32px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${talent.percentage}%`, px, py);
+    }
+    
+    // Símbolo y nombre
+    const labelDist = radius + 120;
+    const lx = center + labelDist * Math.cos(midAngle);
+    const ly = center + labelDist * Math.sin(midAngle);
+    
+    ctx.fillStyle = talent.color;
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(talent.symbol, lx, ly - 30);
+    
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(talent.titleLine1, lx, ly);
+    if (talent.titleLine2) {
+      ctx.fillText(talent.titleLine2, lx, ly + 20);
+    }
+  });
+  
+  return canvas.toDataURL();
 }
 
-function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
+function MapPDFDocument({ nombre, apellido, fecha, scores, wheelImageData }: any) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.pill}>MAPA DE TALENTOS</Text>
         <Text style={styles.title}>{nombre} {apellido}</Text>
         <Text style={styles.muted}>{fecha}</Text>
-        <TalentWheelSVG scores={scores} />
+        <Image src={wheelImageData} style={styles.wheelImage} />
         <View style={{ marginTop: 20 }}>
           <Text style={styles.h3}>Detalle por talento</Text>
           {TALENT_ORDER.map((tid) => {
@@ -199,7 +226,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
       ? assessment.scoresJson.map((x: any) => ({ talentId: Number(x?.talentId), score: Number(x?.score ?? 0), max: Number(x?.max ?? 0) })).filter((x: any) => Number.isFinite(x.talentId))
       : [];
-    const doc = MapPDFDocument({ nombre: person.nombre, apellido: person.apellido, fecha: new Date(person.createdAt).toLocaleDateString('es-ES'), scores });
+    
+    const wheelImageData = generateTalentWheelImage(scores);
+    const doc = MapPDFDocument({ nombre: person.nombre, apellido: person.apellido, fecha: new Date(person.createdAt).toLocaleDateString('es-ES'), scores, wheelImageData });
     const pdfBlob = await pdf(doc).toBlob();
     const buffer = await pdfBlob.arrayBuffer();
     return new NextResponse(buffer, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${person.nombre}-${person.apellido}-Mapa-Talentos.pdf"` } });
