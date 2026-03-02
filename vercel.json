@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "app/api/pdf/**/*": {
+      "maxDuration": 60
+    }
+  },
+  "build": {
+    "env": {
+      "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true"
+    }
+  }
+}
