@@ -32,10 +32,20 @@ function toSafeNumber(value: any, fallback: number = 0): number {
 }
 
 function splitTalentTitle(title: string): [string, string] {
+  // Intentar dividir por "y" primero
+  if (title.includes(' y ')) {
+    const parts = title.split(' y ');
+    if (parts.length === 2) {
+      return [parts[0] + ' y', parts[1]];
+    }
+  }
+  
+  // Si no hay "y", dividir por la mitad
   const words = title.split(' ');
   if (words.length <= 2) {
     return [title, ''];
   }
+  
   const midPoint = Math.ceil(words.length / 2);
   return [
     words.slice(0, midPoint).join(' '),
