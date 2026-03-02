@@ -198,7 +198,7 @@ export default function StartPage() {
   const STEP_RESULT = STEP_Q_END + 1;
   const STEP_POST_1 = STEP_RESULT + 1;
   const STEP_POST_2 = STEP_POST_1 + 1;
-  const STEP_POST_3 = STEP_POST_2 + 1;
+  const STEP_POST_3 = STEP_POST_2 + 1; // Campos profesionales ahora después de idea de carrera
   const STEP_DONE = STEP_POST_3 + 1;
 
   const totalSteps = STEP_DONE;
@@ -259,8 +259,11 @@ export default function StartPage() {
       }
     }
 
+    // STEP_POST_3: Campos profesionales - OBLIGATORIO
     if (step === STEP_POST_3) {
-      return "";
+      if (selectedCareers.length === 0) {
+        return "Selecciona al menos un campo profesional o marca 'Ninguna'.";
+      }
     }
 
     return "";
@@ -315,7 +318,20 @@ export default function StartPage() {
   }, [ranked]);
 
   function toggleCareer(career: string) {
-    setSelectedCareers((prev) => (prev.includes(career) ? prev.filter((c) => c !== career) : [...prev, career]));
+    // Si selecciona "Ninguna", deselecciona todo lo demás
+    if (career === "Ninguna") {
+      setSelectedCareers(["Ninguna"]);
+    } else {
+      // Si selecciona otra, quita "Ninguna" y toggle la seleccionada
+      setSelectedCareers((prev) => {
+        const withoutNone = prev.filter(c => c !== "Ninguna");
+        if (withoutNone.includes(career)) {
+          return withoutNone.filter((c) => c !== career);
+        } else {
+          return [...withoutNone, career];
+        }
+      });
+    }
   }
 
   async function saveAll() {
@@ -334,8 +350,8 @@ export default function StartPage() {
     setError("");
 
     try {
-      const identificaCampos = selectedCareers.length > 0 ? "Sí" : "No";
-      const campoIdentificado = selectedCareers.join(", ");
+      const identificaCampos = selectedCareers.length > 0 && !selectedCareers.includes("Ninguna") ? "Sí" : "No";
+      const campoIdentificado = selectedCareers.includes("Ninguna") ? null : selectedCareers.join(", ");
 
       const res = await fetch("/api/onboarding", {
         method: "POST",
@@ -354,7 +370,7 @@ export default function StartPage() {
           ideaCarreraFinal: post.ideaCarreraFinal || null,
           ideaCarreraTextoFinal: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
           identificaCampos,
-          campoIdentificado: selectedCareers.length > 0 ? campoIdentificado : null,
+          campoIdentificado,
           answers,
         }),
       });
@@ -380,7 +396,6 @@ export default function StartPage() {
     const content = document.getElementById('results-content');
     if (!content) return;
     
-    // Usar html2pdf si está disponible, sino window.print()
     if (typeof window !== 'undefined' && (window as any).html2pdf) {
       (window as any).html2pdf().from(content).save('mis-talentos.pdf');
     } else {
@@ -434,7 +449,6 @@ export default function StartPage() {
                       </div>
                     </div>
                     
-                    {/* Profesiones en columnas sin scroll */}
                     {t.exampleRoles && t.exampleRoles.length > 0 && (
                       <div className="mt-4 pt-4 border-t border-[var(--border)]">
                         <h4 className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Ámbitos profesionales</h4>
@@ -684,31 +698,12 @@ export default function StartPage() {
                 );
               const suggestedCareers = Array.from(new Set(allCareers));
 
-              if (suggestedCareers.length === 0) {
-                return (
-                  <div className="grid gap-5">
-                    <div>
-                      <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
-                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                        No hay sugerencias disponibles en este momento. Continúa para finalizar.
-                      </p>
-                    </div>
-
-                    <div className="pt-2">
-                      <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
-                        {saving ? "Guardando…" : "Guardar y finalizar"}
-                      </ButtonPrimary>
-                    </div>
-                  </div>
-                );
-              }
-
               return (
                 <div className="grid gap-5">
                   <div>
-                    <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+                    <h2 className="text-lg font-semibold text-[var(--foreground)]">De tus resultados, encajas en estos campos profesionales</h2>
                     <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                      Basado en tus talentos principales. Marca las opciones con las que te identificas:
+                      Basado en tus talentos principales. Selecciona con cuáles te identificas (obligatorio):
                     </p>
                   </div>
 
@@ -743,9 +738,38 @@ export default function StartPage() {
                         </div>
                       </button>
                     ))}
+                    
+                    {/* Opción "Ninguna" */}
+                    <button
+                      onClick={() => toggleCareer("Ninguna")}
+                      className={cx(
+                        "w-full p-3 rounded-lg border-2 text-left transition-all",
+                        selectedCareers.includes("Ninguna")
+                          ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
+                          : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cx(
+                            "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
+                            selectedCareers.includes("Ninguna")
+                              ? "border-[var(--background)] bg-[var(--background)]"
+                              : "border-[var(--muted-foreground)]"
+                          )}
+                        >
+                          {selectedCareers.includes("Ninguna") && (
+                            <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm font-semibold">Ninguna</span>
+                      </div>
+                    </button>
                   </div>
 
-                  {selectedCareers.length > 0 && (
+                  {selectedCareers.length > 0 && !selectedCareers.includes("Ninguna") && (
                     <div className="p-3 rounded-lg bg-green-50 border border-green-200">
                       <p className="text-sm text-green-800">✓ Has seleccionado {selectedCareers.length} opción(es)</p>
                     </div>
