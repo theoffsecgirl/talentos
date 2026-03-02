@@ -198,7 +198,7 @@ export default function StartPage() {
   const STEP_RESULT = STEP_Q_END + 1;
   const STEP_POST_1 = STEP_RESULT + 1;
   const STEP_POST_2 = STEP_POST_1 + 1;
-  const STEP_POST_3 = STEP_POST_2 + 1; // Campos profesionales ahora después de idea de carrera
+  const STEP_POST_3 = STEP_POST_2 + 1;
   const STEP_DONE = STEP_POST_3 + 1;
 
   const totalSteps = STEP_DONE;
@@ -259,7 +259,6 @@ export default function StartPage() {
       }
     }
 
-    // STEP_POST_3: Campos profesionales - OBLIGATORIO
     if (step === STEP_POST_3) {
       if (selectedCareers.length === 0) {
         return "Selecciona al menos un campo profesional o marca 'Ninguna'.";
@@ -318,11 +317,9 @@ export default function StartPage() {
   }, [ranked]);
 
   function toggleCareer(career: string) {
-    // Si selecciona "Ninguna", deselecciona todo lo demás
     if (career === "Ninguna") {
       setSelectedCareers(["Ninguna"]);
     } else {
-      // Si selecciona otra, quita "Ninguna" y toggle la seleccionada
       setSelectedCareers((prev) => {
         const withoutNone = prev.filter(c => c !== "Ninguna");
         if (withoutNone.includes(career)) {
@@ -399,7 +396,7 @@ export default function StartPage() {
     if (typeof window !== 'undefined' && (window as any).html2pdf) {
       const opt = {
         margin: 10,
-        filename: 'mis-talentos.pdf',
+        filename: `${pre.nombre.toLowerCase().replace(/\s+/g, '-')}-informe-talentos.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -412,6 +409,10 @@ export default function StartPage() {
 
   if (step === STEP_RESULT) {
     const top3 = ranked.slice(0, 3);
+    const allRecommendedCareers = top3
+      .filter((t) => Array.isArray(t.exampleRoles) && t.exampleRoles.length > 0)
+      .flatMap((t) => t.exampleRoles.filter((role): role is string => typeof role === "string" && role.trim().length > 0));
+    const uniqueRecommendedCareers = Array.from(new Set(allRecommendedCareers));
 
     return (
       <main className="min-h-screen bg-[var(--background)]">
@@ -455,25 +456,42 @@ export default function StartPage() {
                         <div className="text-3xl font-bold text-[var(--foreground)] print:text-black">{percentage}%</div>
                       </div>
                     </div>
-                    
-                    {t.exampleRoles && t.exampleRoles.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-[var(--border)] print:border-gray-300">
-                        <h4 className="text-xs font-semibold text-[var(--muted-foreground)] mb-2 print:text-gray-700">Ámbitos profesionales</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {t.exampleRoles.map((role, i) => (
-                            <div key={i} className="flex items-start gap-2 text-xs text-[var(--foreground)] print:text-black">
-                              <span className="text-[var(--accent)] mt-0.5 print:text-blue-600">•</span>
-                              <span>{role}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
           </div>
+
+          {/* Sección de profesiones y roles sugeridos */}
+          {uniqueRecommendedCareers.length > 0 && (
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
+              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 print:text-black">Profesiones y roles sugeridos</h2>
+              <p className="text-sm text-[var(--muted-foreground)] mb-4 print:text-gray-600">Basado en tus talentos principales:</p>
+              <div className="grid gap-2">
+                {uniqueRecommendedCareers.map((role, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)] print:text-black">
+                    <span className="text-[var(--accent)] mt-0.5 print:text-blue-600">•</span>
+                    <span>{role}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sección de campos con los que te identificas */}
+          {selectedCareers.length > 0 && !selectedCareers.includes("Ninguna") && (
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
+              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 print:text-black">Campos profesionales con los que te identificas</h2>
+              <div className="grid gap-2 mt-4">
+                {selectedCareers.map((career, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)] print:text-black">
+                    <span className="text-green-600 mt-0.5">✓</span>
+                    <span>{career}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-6 flex justify-between gap-3 no-print">
             <ButtonGhost type="button" onClick={back}>
@@ -746,7 +764,6 @@ export default function StartPage() {
                       </button>
                     ))}
                     
-                    {/* Opción "Ninguna" */}
                     <button
                       onClick={() => toggleCareer("Ninguna")}
                       className={cx(
