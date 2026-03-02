@@ -1,7 +1,7 @@
 import React from "react";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Document, Page, Text, View, StyleSheet, pdf, Svg, Circle, Line } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Svg, Circle, Line, Rect } from "@react-pdf/renderer";
 import { TALENTS } from "@/lib/talents";
 
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
@@ -63,8 +63,8 @@ const styles = StyleSheet.create({
 function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
   const size = 500;
   const center = size / 2;
-  const radius = 150;
-  const innerRadius = 50;
+  const radius = 140;
+  const innerRadius = 60;
 
   const talents = TALENT_ORDER.map((talentId) => {
     const scoreData = scores.find((s) => s.talentId === talentId);
@@ -83,14 +83,30 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
     y: center + r * Math.sin(angle),
   });
 
-  // Calculamos la circunferencia y el tamaño de cada sección (1/8)
-  const circumference = 2 * Math.PI * radius;
-  const sectionLength = circumference / 8;
-  const gapLength = 2; // Espacio entre secciones
-
   return (
     <View style={styles.svgContainer}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Barras de colores para cada talento */}
+        {talents.map((talent, index) => {
+          const anglePerSection = 360 / 8;
+          const startAngle = index * anglePerSection - 90;
+          const barWidth = (talent.fillRadius - innerRadius);
+          const barX = innerRadius + barWidth / 2;
+          
+          return (
+            <Rect
+              key={`bar-${talent.id}`}
+              x={center - 3}
+              y={center - barX - barWidth / 2}
+              width={6}
+              height={barWidth}
+              fill={talent.color}
+              opacity={0.7}
+              transform={`rotate(${startAngle + anglePerSection / 2} ${center} ${center})`}
+            />
+          );
+        })}
+
         {/* Líneas separadoras principales */}
         <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
         <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
@@ -102,56 +118,8 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
           return <Line key={`divider-${index}`} x1={center} y1={center} x2={outer.x} y2={outer.y} stroke="#666" strokeWidth="1" strokeDasharray="4 4" />;
         })}
 
-        {/* Círculos coloreados para cada talento usando strokeDasharray */}
-        {talents.map((talent, index) => {
-          const angleOffset = (index * circumference) / 8;
-          // Usamos múltiples círculos para crear el efecto de relleno
-          const steps = Math.max(1, Math.floor((talent.fillRadius - innerRadius) / 3));
-          return (
-            <React.Fragment key={talent.id}>
-              {Array.from({ length: steps }).map((_, step) => {
-                const currentRadius = innerRadius + ((talent.fillRadius - innerRadius) * (step + 1)) / steps;
-                const currentCircumference = 2 * Math.PI * currentRadius;
-                const currentSectionLength = currentCircumference / 8;
-                return (
-                  <Circle
-                    key={`${talent.id}-${step}`}
-                    cx={center}
-                    cy={center}
-                    r={currentRadius}
-                    fill="none"
-                    stroke={talent.color}
-                    strokeWidth="3"
-                    strokeDasharray={`${currentSectionLength - gapLength} ${currentCircumference - currentSectionLength + gapLength}`}
-                    strokeDashoffset={-angleOffset * (currentRadius / radius)}
-                    opacity={0.6}
-                  />
-                );
-              })}
-            </React.Fragment>
-          );
-        })}
-
-        {/* Bordes exteriores completos para cada sección */}
-        {talents.map((talent, index) => {
-          const angleOffset = (index * circumference) / 8;
-          return (
-            <Circle
-              key={`border-${talent.id}`}
-              cx={center}
-              cy={center}
-              r={radius}
-              fill="none"
-              stroke={talent.color}
-              strokeWidth="2"
-              strokeDasharray={`${sectionLength - gapLength} ${circumference - sectionLength + gapLength}`}
-              strokeDashoffset={-angleOffset}
-              opacity="0.3"
-            />
-          );
-        })}
-
-        {/* Círculo central */}
+        {/* Círculos de contorno */}
+        <Circle cx={center} cy={center} r={radius} fill="none" stroke="#999" strokeWidth="1" opacity="0.3" />
         <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
       </Svg>
 
@@ -166,14 +134,14 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
         const startAngle = index * anglePerSection - Math.PI / 2;
         const endAngle = startAngle + anglePerSection;
         const midAngle = (startAngle + endAngle) / 2;
-        const labelDistance = radius + 70;
+        const labelDistance = radius + 60;
         const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
         const labelPos = polarToCartesian(midAngle, labelDistance);
         
         return (
           <View key={`label-${talent.id}`}>
             {talent.percentage > 15 && (
-              <Text style={{ position: 'absolute', left: percentPos.x - 18, top: percentPos.y - 9, width: 36, fontSize: 16, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: 'white' }}>
+              <Text style={{ position: 'absolute', left: percentPos.x - 18, top: percentPos.y - 9, width: 36, fontSize: 16, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: '#333' }}>
                 {talent.percentage}%
               </Text>
             )}
