@@ -397,7 +397,14 @@ export default function StartPage() {
     if (!content) return;
     
     if (typeof window !== 'undefined' && (window as any).html2pdf) {
-      (window as any).html2pdf().from(content).save('mis-talentos.pdf');
+      const opt = {
+        margin: 10,
+        filename: 'mis-talentos.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      (window as any).html2pdf().set(opt).from(content).save();
     } else {
       window.print();
     }
@@ -411,10 +418,10 @@ export default function StartPage() {
         <div className="max-w-4xl mx-auto px-4 py-12" id="results-content">
           <header className="flex items-end justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-[var(--foreground)]">Tus Resultados</h1>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)]">Mapa visual de tus talentos basado en neurociencia aplicada</p>
+              <h1 className="text-3xl font-bold text-[var(--foreground)] print:text-black">Tus Resultados</h1>
+              <p className="mt-2 text-sm text-[var(--muted-foreground)] print:text-gray-600">Mapa visual de tus talentos basado en neurociencia aplicada</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 no-print">
               <ButtonGhost type="button" onClick={exportToPDF} className="text-xs">
                 <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -429,33 +436,33 @@ export default function StartPage() {
             <TalentWheel scores={wheelScores} />
           </div>
 
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
-            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">Tus 3 talentos más destacados</h2>
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
+            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4 print:text-black">Tus 3 talentos más destacados</h2>
             <div className="space-y-4">
               {top3.map((t, idx) => {
                 const percentage = t.max > 0 ? Math.round((t.score / t.max) * 100) : 0;
                 return (
-                  <div key={t.id} className="p-5 rounded-xl border border-[var(--border)] bg-[var(--background)]">
+                  <div key={t.id} className="p-5 rounded-xl border border-[var(--border)] bg-[var(--background)] print:border-gray-300 print:bg-white talent-card">
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl font-bold text-[var(--muted-foreground)]">#{idx + 1}</span>
+                        <span className="text-3xl font-bold text-[var(--muted-foreground)] print:text-gray-500">#{idx + 1}</span>
                         <div>
-                          <h3 className="font-bold text-lg text-[var(--foreground)]">{t.reportTitle || t.quizTitle}</h3>
-                          <p className="text-xs text-[var(--muted-foreground)] mt-1">{t.reportSummary}</p>
+                          <h3 className="font-bold text-lg text-[var(--foreground)] print:text-black">{t.reportTitle || t.quizTitle}</h3>
+                          <p className="text-xs text-[var(--muted-foreground)] mt-1 print:text-gray-600">{t.reportSummary}</p>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className="text-3xl font-bold text-[var(--foreground)]">{percentage}%</div>
+                        <div className="text-3xl font-bold text-[var(--foreground)] print:text-black">{percentage}%</div>
                       </div>
                     </div>
                     
                     {t.exampleRoles && t.exampleRoles.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                        <h4 className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Ámbitos profesionales</h4>
+                      <div className="mt-4 pt-4 border-t border-[var(--border)] print:border-gray-300">
+                        <h4 className="text-xs font-semibold text-[var(--muted-foreground)] mb-2 print:text-gray-700">Ámbitos profesionales</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {t.exampleRoles.map((role, i) => (
-                            <div key={i} className="flex items-start gap-2 text-xs text-[var(--foreground)]">
-                              <span className="text-[var(--accent)] mt-0.5">•</span>
+                            <div key={i} className="flex items-start gap-2 text-xs text-[var(--foreground)] print:text-black">
+                              <span className="text-[var(--accent)] mt-0.5 print:text-blue-600">•</span>
                               <span>{role}</span>
                             </div>
                           ))}
@@ -468,7 +475,7 @@ export default function StartPage() {
             </div>
           </div>
 
-          <div className="mt-6 flex justify-between gap-3">
+          <div className="mt-6 flex justify-between gap-3 no-print">
             <ButtonGhost type="button" onClick={back}>
               Atrás
             </ButtonGhost>
