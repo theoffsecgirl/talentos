@@ -20,11 +20,15 @@ export type Talent = {
   // Contenido para informe (del PDF adaptado a neurociencia)
   reportTitle?: string;
   reportSummary?: string;
-  axis?: string; // Eje neurocognitivo: PRAGMÁTICO / GENERADOR / VÍNCULO
-  group?: string; // Agrupación secundaria: ACCIÓN Y RESULTADOS, CREATIVIDAD Y VÍNCULO, PROFUNDIDAD Y SENSIBILIDAD
+  axis?: string; // Eje neurocognitivo
+  group?: string; // Agrupación secundaria
   fields?: string[]; // Campos profesionales
   competencies?: string[]; // Competencias personales
-  exampleRoles?: string[]; // Profesiones
+  exampleRoles?: string[]; // Profesiones específicas (sin ámbitos genéricos)
+  
+  // Nuevos campos para el mapa visual
+  wheelCategory?: string; // Categoría principal en el mapa
+  wheelLabel?: string; // Label secundario
 };
 
 export const TALENTS: Talent[] = [
@@ -47,7 +51,9 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Estrategia y comunicación",
     reportSummary:
-      "Perfil con facilidad para la estrategia y el arte de la palabra, así como su divulgación. Capacidad para vender, convencer y negociar. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil profesional con facilidad para la estrategia y el arte de la palabra, así como su divulgación. Capacidad para vender, convencer y negociar. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+    wheelCategory: "Resultados",
+    wheelLabel: "DELTA (Δ) ESTRATEGIA",
     fields: [
       "Estrategia y venta",
       "Divulgación y comunicación",
@@ -60,11 +66,13 @@ export const TALENTS: Talent[] = [
       "Lideran desde su habilidad comunicativa y generando conexión",
     ],
     exampleRoles: [
-      "Todas las del mundo de la venta y la negociación",
-      "Marketing, comunicación audiovisual",
-      "Técnicos en imagen o sonido, director-realizador de medios audiovisuales",
-      "Relaciones laborales, ciencias del trabajo",
-      "Política, derecho, diplomacia, divulgación técnica, periodismo",
+      "Ventas y negociación comercial",
+      "Marketing digital y comunicación audiovisual",
+      "Técnico en imagen y sonido",
+      "Director-realizador audiovisual",
+      "Relaciones laborales",
+      "Política y diplomacia",
+      "Periodismo y divulgación",
     ],
   },
   {
@@ -86,7 +94,9 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Analítico y riguroso",
     reportSummary:
-      "Perfil que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que genere ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental.",
+      "Perfil profesional que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que genere ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental.",
+    wheelCategory: "Ciencia aplicada",
+    wheelLabel: "PI (Π) SABER",
     fields: [
       "Investigación científica",
       "Sanitaria",
@@ -99,11 +109,16 @@ export const TALENTS: Talent[] = [
       "Lideran desde el saber, la autoridad científica",
     ],
     exampleRoles: [
-      "Todas las profesiones que requieran un buen nivel de conocimientos, curiosidad científica y deseo de saber",
-      "Geología, biología, astronomía, química, ciencias ambientales, ciencias del deporte, física",
-      "Medicina, fisioterapia, odontología, dietética, oftalmología, medicina especialista (cardiología, pediatría, etc.)",
-      "Ingenierías: telecomunicación, aeronáutica, electrónica, informática",
-      "T.S. desarrollo aplicaciones informáticas, administración de sistemas informáticos, especialista en telemática",
+      "Geología y ciencias ambientales",
+      "Biología y biotecnología",
+      "Astronomía y física",
+      "Química aplicada",
+      "Medicina y especialidades médicas",
+      "Fisioterapia y odontología",
+      "Ingeniería de telecomunicaciones",
+      "Ingeniería aeronáutica",
+      "Ingeniería informática",
+      "Desarrollo de software",
     ],
   },
   {
@@ -125,7 +140,9 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Acompañamiento y docencia",
     reportSummary:
-      "Perfil con pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica. Este perfil se ubica en el eje generador, relacionado con la conexión humana, el equilibrio entre emoción y razón, y las capacidades creativas aplicadas.",
+      "Perfil profesional con pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica. Este perfil se ubica en el eje generador, relacionado con la conexión humana, el equilibrio entre emoción y razón, y las capacidades creativas aplicadas.",
+    wheelCategory: "Conocimiento",
+    wheelLabel: "PSI (Ψ) INSTRUIR",
     fields: [
       "Humanidades",
       "Docencia, coaching",
@@ -138,10 +155,14 @@ export const TALENTS: Talent[] = [
       "Lideran desde el comportamiento y son un ejemplo enriquecedor",
     ],
     exampleRoles: [
-      "Docencia, pedagogía, sociología, educación social",
-      "Técnicos en educación de todas las etapas educativas, educación especial, docencia vocacional",
-      "Psicología y técnicos especializados en el acompañamiento de personas para mejorar su bienestar, coaching",
-      "Área de personas de las organizaciones: selección, contratación, reclutamiento, planes de carrera, salud corporativa",
+      "Docencia y pedagogía",
+      "Educación social",
+      "Sociología aplicada",
+      "Educación especial",
+      "Psicología clínica",
+      "Coaching personal y ejecutivo",
+      "Gestión de personas y talento",
+      "Selección y desarrollo RRHH",
     ],
   },
   {
@@ -163,7 +184,9 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Gestión y organización",
     reportSummary:
-      "Perfil que muestra capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental en la forma de funcionar.",
+      "Perfil profesional que muestra capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental en la forma de funcionar.",
+    wheelCategory: "Acción",
+    wheelLabel: "ALFA (Α) CONTROL",
     fields: [
       "Empresarial",
       "Administrativo",
@@ -177,11 +200,14 @@ export const TALENTS: Talent[] = [
       "Lideran desde la jerarquía, les cuesta delegar y pueden ser inflexibles",
     ],
     exampleRoles: [
-      "Economía, ciencias actuariales y financieras, abogacía",
-      "Administración de recursos y personas",
-      "Agentes de la propiedad inmobiliaria, gestión administrativa",
-      "Emprendimiento, iniciativa empresarial. Saben conseguir que los objetivos se cumplan. Solucionan los problemas cuando se presentan",
-      "Cuerpos de seguridad del Estado, principalmente con responsabilidades y nivel de mando",
+      "Economía y finanzas",
+      "Ciencias actuariales",
+      "Derecho y abogacía",
+      "Administración de empresas",
+      "Gestión inmobiliaria",
+      "Emprendimiento empresarial",
+      "Cuerpos de seguridad del Estado",
+      "Gestión de equipos",
     ],
   },
   {
@@ -201,9 +227,11 @@ export const TALENTS: Talent[] = [
 
     axis: "VÍNCULO",
     group: "PROFUNDIDAD Y SENSIBILIDAD",
-    reportTitle: "Empático y compasivo",
+    reportTitle: "Vocación de servicio",
     reportSummary:
-      "Perfil que prioriza el bienestar de las personas, acompañarlas es una prioridad. Se caracteriza por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Este perfil pertenece al eje de vínculo, relacionado con la intuición, la capacidad de relación con los demás y con uno mismo.",
+      "Perfil profesional que prioriza el bienestar de las personas, acompañarlas es una prioridad. Se caracteriza por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Este perfil pertenece al eje de vínculo, relacionado con la intuición, la capacidad de relación con los demás y con uno mismo.",
+    wheelCategory: "Entrega",
+    wheelLabel: "OMEGA (Ω) TRASCENDER",
     fields: [
       "Relacionados con las personas y la entrega personal y profesional",
     ],
@@ -214,10 +242,14 @@ export const TALENTS: Talent[] = [
       "Lideran siendo un referente, sabiendo escuchar, con el ejemplo",
     ],
     exampleRoles: [
-      "Pedagogía, psicología escolar, educadores y trabajadores sociales y todo lo que signifique acompañar y ayudar a niños y niñas en su crecimiento y evolución madurativa",
-      "Medicina centrada en la persona y su recuperación, especialistas en pediatría, psiquiatría, etc.",
-      "Personas especializadas en servicios sociales y salud, entidades sin ánimo de lucro",
-      "Entrega personal y profesional de forma vocacional",
+      "Pedagogía terapéutica",
+      "Psicología escolar",
+      "Educación social",
+      "Trabajo social",
+      "Medicina familiar",
+      "Pediatría y psiquiatría",
+      "Servicios sociales",
+      "ONGs y tercer sector",
     ],
   },
   {
@@ -228,7 +260,7 @@ export const TALENTS: Talent[] = [
     quizTitle: "Creatividad e innovación",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
-      { id: "6.1", text: "Puedo aplicar mis ideas y creatividad sin demasiadas limitaciones." },
+      { id: "6.1", text: "Me interesa la práctica deportiva de élite profesional." },
       { id: "6.2", text: "Puedo vivir de una creatividad práctica, innovadora y en constante cambio." },
       { id: "6.3", text: "Expreso mi sensibilidad a través del arte, la imaginación o lo visual." },
       { id: "6.4", text: "Me gusta formar parte de equipos creativos con retos estimulantes." },
@@ -239,7 +271,9 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Imaginación y creatividad",
     reportSummary:
-      "Perfil que se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil profesional que se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+    wheelCategory: "Imaginación",
+    wheelLabel: "FI (Φ) CREATIVIDAD",
     fields: [
       "Capacidades artísticas",
       "Creatividad aplicada a todos los ámbitos profesionales y personales",
@@ -252,9 +286,16 @@ export const TALENTS: Talent[] = [
       "Lideran desde el contagio para conseguir nuevos objetivos",
     ],
     exampleRoles: [
-      "Creatividad aplicada a la actividad profesional: arquitectura, ingenierías, venta, política, RRHH, medicina, etc.",
-      "Ideas sin límite para innovar y solucionar todo tipo de problemas",
-      "Habilidades deportivas y artísticas en todas las expresiones",
+      "Arquitectura y diseño",
+      "Diseño gráfico y UX/UI",
+      "Bellas artes y escultura",
+      "Fotografía y video",
+      "Ilustración digital",
+      "Animación 3D",
+      "Diseño de moda",
+      "Diseño de interiores",
+      "Publicidad creativa",
+      "Deporte de élite profesional",
     ],
   },
   {
@@ -269,14 +310,16 @@ export const TALENTS: Talent[] = [
       { id: "7.2", text: "Se tratan temas difíciles como el dolor, el trauma, la enfermedad o la muerte." },
       { id: "7.3", text: "Puedo investigar fraudes, engaños o comportamientos ocultos." },
       { id: "7.4", text: "Me atrae explorar lo oculto, el misterio, el crimen o lo no evidente." },
-      { id: "7.5", text: "Expreso sensibilidad hacia aquello que no es visible a simple vista." },
+      { id: "7.5", text: "Me interesa el arte neo-gótico, gore, la estética dark y los tatuajes." },
     ],
 
     axis: "VÍNCULO",
     group: "PROFUNDIDAD Y SENSIBILIDAD",
     reportTitle: "Profundo e introspectivo",
     reportSummary:
-      "Perfil que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
+      "Perfil profesional que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual, así como expresiones artísticas alternativas. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
+    wheelCategory: "Arte",
+    wheelLabel: "THETA (Θ) INTROSPECCIÓN",
     fields: [
       "Sanitario",
       "Jurídico-social",
@@ -289,10 +332,15 @@ export const TALENTS: Talent[] = [
       "Lideran desde la generación de estilos que cautivan a seguidores",
     ],
     exampleRoles: [
-      "Todos los ámbitos profesionales donde sea necesaria una sensibilidad especial para detectar lo que no es evidente, requiere investigar, intuir, descubrir",
-      "Salud en psiquiatría, psicología, oncología, forense, y técnicos especializados en el mundo de la muerte o el trauma",
-      "Criminología, y técnicos especializados en la investigación y el descubrimiento de lo oculto",
-      "Investigación en el mundo de la empresa: forensic, actuarial, fraudes, inspecciones, etc.",
+      "Psiquiatría y psicología forense",
+      "Oncología médica",
+      "Medicina forense",
+      "Criminología aplicada",
+      "Investigación criminal",
+      "Auditoría forense",
+      "Inspección de fraudes",
+      "Tanatología",
+      "Arte alternativo y tatuaje profesional",
     ],
   },
   {
@@ -314,7 +362,9 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Aplicado y cooperador",
     reportSummary:
-      "Perfil que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y la ejecución práctica.",
+      "Perfil profesional que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y la ejecución práctica.",
+    wheelCategory: "Servicio",
+    wheelLabel: "MEANDRO (▭) HACER",
     fields: [
       "Educación",
       "Administración",
@@ -330,12 +380,15 @@ export const TALENTS: Talent[] = [
       "Lideran desde el hacer, son un modelo y ejemplo de cumplimiento",
     ],
     exampleRoles: [
-      "Educación básica, funcionariado, trabajos que impliquen seguridad, repetición, compromiso y responsabilidad",
-      "Técnicos en gestión administrativa y comercial",
-      "Técnicos en trabajos forestales y conservación del medio ambiente",
-      "Mantenimiento de instalaciones y transporte",
-      "Técnicos en turismo y restauración, tripulante de cabina o auxiliar de barco",
-      "Fuerzas de seguridad del estado y la vigilancia",
+      "Docencia de educación básica",
+      "Funcionariado público",
+      "Gestión administrativa",
+      "Técnico forestal",
+      "Conservación ambiental",
+      "Turismo y hostelería",
+      "Auxiliar de vuelo",
+      "Mantenimiento industrial",
+      "Vigilancia y seguridad privada",
     ],
   },
 ];
@@ -365,9 +418,10 @@ export const AXES = {
   },
 };
 
-// Función helper para generar indicador visual de puntuación
-export function scoreIndicator(score: number, max: number): string {
-  if (max === 0) return "0 de 0";
-  const normalized = Math.round((score / max) * 5); // Escala a /5 para visual
-  return `${normalized} de 5`;
+// Orden del mapa circular según el diagrama (sentido horario desde arriba)
+export const WHEEL_ORDER = [4, 1, 6, 7, 5, 8, 3, 2];
+
+// Función helper para obtener talento por ID
+export function getTalentById(id: number): Talent | undefined {
+  return TALENTS.find(t => t.id === id);
 }

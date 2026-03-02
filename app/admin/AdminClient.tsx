@@ -209,7 +209,6 @@ function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   );
 }
 
-// Componente Accordion
 function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -703,12 +702,14 @@ function ReportHtml({
   return cover + resumenPage + profesionesPage + detailPages + cierre;
 }
 
-export default function AdminClient({ rows, exportHref, talents, filters }: any) {
+export default function AdminClient({ rows, exportHref, downloadAllHref, statsHref, talents, filters }: any) {
   const router = useRouter();
   const pathname = usePathname();
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [tab, setTab] = useState<"resultados" | "mapa" | "informe">("resultados");
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<any>(null);
 
   const [form, setForm] = useState<FilterState>({
     q: filters?.q ?? "",
@@ -747,6 +748,18 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     router.push(pathname);
   }
 
+  async function fetchStats() {
+    try {
+      const response = await fetch(statsHref);
+      const data = await response.json();
+      setStats(data);
+      setShowStats(true);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      alert("Error al cargar estadísticas");
+    }
+  }
+
   const QUESTION_MAP = useMemo(() => {
     const map: Record<string, { text: string; talentQuizTitle: string; talentId: number; idxInTalent: number }> = {};
     for (const t of talents) {
@@ -768,22 +781,12 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     return a && typeof a === "object" ? (a as Record<string, number>) : {};
   }, [assessment?.answersJson]);
 
-  // Agrupar preguntas por talento para acordeones
   const questionsByTalent = useMemo(() => {
     const map = new Map<number, Array<{ itemId: string; text: string; answer: number }>>();
     
-    // DEBUG: Ver qué claves tenemos
-    console.log("🔍 DEBUG answers keys (primeras 10):", Object.keys(answers).slice(0, 10));
-    console.log("🔍 DEBUG QUESTION_MAP keys (primeras 10):", Object.keys(QUESTION_MAP).slice(0, 10));
-    console.log("🔍 DEBUG Total answers:", Object.keys(answers).length);
-    console.log("🔍 DEBUG Total QUESTION_MAP:", Object.keys(QUESTION_MAP).length);
-    
     Object.entries(answers).forEach(([itemId, answer]) => {
       const meta = QUESTION_MAP[itemId];
-      if (!meta) {
-        console.warn(`⚠️ No se encontró metadata para itemId: "${itemId}"`);
-        return;
-      }
+      if (!meta) return;
       
       if (!map.has(meta.talentId)) {
         map.set(meta.talentId, []);
@@ -798,8 +801,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
       }
     });
     
-    console.log("✅ questionsByTalent construido:", map);
-    console.log("📊 Talentos con preguntas:", Array.from(map.keys()));
     return map;
   }, [answers, QUESTION_MAP]);
 
@@ -918,7 +919,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     window.open(`/api/pdf/mapa/${selected.id}`, "_blank");
   }
 
-  // Ranked talents para mostrar en orden de puntuación
   const rankedTalents = useMemo(() => {
     return talents
       .slice()
@@ -935,17 +935,25 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10 bg-[var(--background)] text-[var(--foreground)]">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-[var(--foreground)]">Admin</h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Mostrando {rows.length} resultados (máx. 200). Exporta Excel con los filtros actuales.
+            Mostrando {rows.length} resultados (máx. 200). Usa los filtros y exporta.
           </p>
         </div>
 
-        <a href={exportHref}>
-          <ButtonPrimary type="button">Exportar Excel (.xlsx)</ButtonPrimary>
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <a href={exportHref}>
+            <ButtonPrimary type="button">📊 Excel</ButtonPrimary>
+          </a>
+          <a href={downloadAllHref}>
+            <ButtonPrimary type="button">📦 ZIP PDFs</ButtonPrimary>
+          </a>
+          <ButtonGhost type="button" onClick={fetchStats}>
+            📈 Estadísticas
+          </ButtonGhost>
+        </div>
       </div>
 
       <form className="mt-6 grid gap-3 md:grid-cols-6" onSubmit={onSubmit}>
@@ -981,12 +989,74 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
             onChange={(e) => update("idea", e.target.value)}
           />
           <ButtonGhost type="submit">Aplicar filtros</ButtonGhost>
-
           <ButtonGhost type="button" onClick={onClear}>
             Limpiar
           </ButtonGhost>
         </div>
       </form>
+
+      {showStats && stats && (
+        <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Estadísticas</h2>
+            <ButtonGhost type="button" onClick={() => setShowStats(false)} className="text-xs px-3 py-1">
+              Cerrar
+            </ButtonGhost>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
+            <div className="rounded-xl border border-[var(--border)] p-4 bg-[var(--background)]">
+              <div className="text-sm text-[var(--muted-foreground)]">Total estudiantes</div>
+              <div className="text-3xl font-bold mt-1">{stats.total}</div>
+            </div>
+            <div className="rounded-xl border border-[var(--border)] p-4 bg-[var(--background)]">
+              <div className="text-sm text-[var(--muted-foreground)]">Con assessment</div>
+              <div className="text-3xl font-bold mt-1 text-green-600">{stats.conAssessment}</div>
+            </div>
+            <div className="rounded-xl border border-[var(--border)] p-4 bg-[var(--background)]">
+              <div className="text-sm text-[var(--muted-foreground)]">Sin assessment</div>
+              <div className="text-3xl font-bold mt-1 text-orange-600">{stats.sinAssessment}</div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-[var(--border)] p-4 bg-[var(--background)]">
+              <div className="text-sm font-semibold mb-3">Por género</div>
+              {Object.entries(stats.byGenero).map(([gen, count]: any) => (
+                <div key={gen} className="flex justify-between py-1">
+                  <span>{gen}</span>
+                  <span className="font-bold">{count}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="rounded-xl border border-[var(--border)] p-4 bg-[var(--background)]">
+              <div className="text-sm font-semibold mb-3">Por curso</div>
+              {Object.entries(stats.byCurso).map(([curso, count]: any) => (
+                <div key={curso} className="flex justify-between py-1">
+                  <span>{curso}</span>
+                  <span className="font-bold">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-[var(--border)] p-4 bg-[var(--background)]">
+            <div className="text-sm font-semibold mb-3">Talentos dominantes</div>
+            <div className="space-y-2">
+              {stats.talentDistribution.slice(0, 8).map((t: any) => (
+                <div key={t.talentId} className="flex justify-between items-center">
+                  <div>
+                    <span className="font-semibold">{t.code}</span>
+                    <span className="text-[var(--muted-foreground)] text-sm ml-2">{t.name}</span>
+                  </div>
+                  <span className="font-bold">{t.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
         <div className="grid grid-cols-12 gap-0 px-3 py-2 text-xs font-semibold text-[var(--muted-foreground)] border-b border-[var(--border)] bg-[var(--card)]">
@@ -1056,7 +1126,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
 
               <div className="flex flex-wrap items-center gap-2">
                 <ButtonPrimary type="button" className="text-xs px-3 py-2" onClick={downloadPdfReport}>
-                  📄 PDF Informe Completo
+                  📄 PDF Informe
                 </ButtonPrimary>
                 <ButtonPrimary type="button" className="text-xs px-3 py-2" onClick={downloadPdfMap}>
                   🎓 PDF Mapa
@@ -1067,11 +1137,11 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                 <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={() => downloadTabHtml(tab)}>
                   HTML
                 </ButtonGhost>
-                {tab === "mapa" ? (
+                {tab === "mapa" && (
                   <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadMapSvgPng}>
                     SVG/PNG
                   </ButtonGhost>
-                ) : null}
+                )}
                 <ButtonGhost type="button" onClick={() => setOpenId(null)}>
                   Cerrar
                 </ButtonGhost>
@@ -1179,7 +1249,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                     </div>
                   </div>
 
-                  {/* NUEVO: Acordeones con respuestas detalladas por talento */}
                   <div className="mt-4 rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
                     <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">Detalle de respuestas por talento</div>
                     <div className="space-y-2">
@@ -1228,17 +1297,17 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                 <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                   <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe completo</div>
                   <div className="text-sm text-[var(--muted-foreground)]">
-                    Haz clic en <b>"📄 PDF Informe Completo"</b> arriba para descargar el informe completo en PDF con todas las secciones.
+                    Haz clic en <b>"📄 PDF Informe"</b> arriba para descargar el informe completo en PDF.
                   </div>
                   <div className="mt-3 rounded-xl border border-[var(--border)] p-3 bg-[var(--background)]">
                     <div className="text-sm font-bold">El PDF incluye:</div>
                     <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)] mt-2">
-                      <li>Portada con mapa circular y leyenda de categorías</li>
-                      <li>Top 3 talentos con símbolos y descripciones completas</li>
+                      <li>Portada con mapa circular y leyenda</li>
+                      <li>Top 3 talentos destacados</li>
                       <li>Tabla completa con todos los talentos</li>
                       <li>Profesiones y roles sugeridos</li>
-                      <li><b>Página individual por cada talento</b> (ámbitos, competencias, roles)</li>
-                      <li>Detalle de respuestas (0–3)</li>
+                      <li>Página individual por cada talento</li>
+                      <li>Detalle completo de respuestas</li>
                     </ul>
                   </div>
                 </div>

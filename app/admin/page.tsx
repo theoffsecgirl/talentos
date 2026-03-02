@@ -1,49 +1,26 @@
 import { prisma } from "@/lib/prisma";
-import AdminClient from "./AdminClient";
 import { TALENTS } from "@/lib/talents";
-import type { ReadonlyURLSearchParams } from "next/navigation";
+import AdminClient from "./AdminClient";
+
+type SearchParams = {
+  q?: string;
+  genero?: string;
+  centro?: string;
+  curso?: string;
+  modalidad?: string;
+  idea?: string;
+};
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
-async function unwrapSearchParams(
-  searchParams: unknown
-): Promise<ReadonlyURLSearchParams | Record<string, string | string[] | undefined>> {
-  // Next 16 puede pasarlo como Promise
-  if (searchParams && typeof (searchParams as any).then === "function") {
-    return await (searchParams as Promise<any>);
-  }
-  return searchParams as any;
-}
-
-function getParam(
-  sp: ReadonlyURLSearchParams | Record<string, string | string[] | undefined>,
-  key: string
-) {
-  // URLSearchParams-like
-  if (sp && typeof (sp as any).get === "function") {
-    return ((sp as any).get(key) ?? "").toString();
-  }
-  // Record fallback
-  const v = (sp as any)?.[key];
-  if (typeof v === "string") return v;
-  if (Array.isArray(v)) return v[0] ?? "";
-  return "";
-}
-
-export default async function AdminPage({
-  searchParams,
-}: {
-  // ✅ Next 16: puede venir como Promise o como URLSearchParams
-  searchParams: unknown;
-}) {
-  const sp = await unwrapSearchParams(searchParams);
-
-  const q = getParam(sp, "q").trim();
-  const genero = getParam(sp, "genero").trim();
-  const centro = getParam(sp, "centro").trim();
-  const curso = getParam(sp, "curso").trim();
-  const modalidad = getParam(sp, "modalidad").trim();
-  const idea = getParam(sp, "idea").trim();
+export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
+  const q = searchParams.q ?? "";
+  const genero = searchParams.genero ?? "";
+  const centro = searchParams.centro ?? "";
+  const curso = searchParams.curso ?? "";
+  const modalidad = searchParams.modalidad ?? "";
+  const idea = searchParams.idea ?? "";
 
   const where: any = {};
 
@@ -86,6 +63,20 @@ export default async function AdminPage({
     },
   });
 
+  const serialized = rows.map((r) => ({
+    ...r,
+    createdAt: r.createdAt.toISOString(),
+    fechaNacimiento: r.fechaNacimiento.toISOString(),
+    user: {
+      ...r.user,
+      createdAt: r.user.createdAt.toISOString(),
+    },
+    assessments: r.assessments.map((a) => ({
+      ...a,
+      createdAt: a.createdAt.toISOString(),
+    })),
+  }));
+
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (genero) params.set("genero", genero);
@@ -95,13 +86,17 @@ export default async function AdminPage({
   if (idea) params.set("idea", idea);
 
   const exportHref = `/api/admin/export?${params.toString()}`;
+  const downloadAllHref = `/api/admin/download-all?${params.toString()}`;
+  const statsHref = `/api/admin/stats?${params.toString()}`;
 
   return (
     <AdminClient
-      rows={rows}
+      rows={serialized}
+      exportHref={exportHref}
+      downloadAllHref={downloadAllHref}
+      statsHref={statsHref}
       talents={TALENTS}
       filters={{ q, genero, centro, curso, modalidad, idea }}
-      exportHref={exportHref}
     />
   );
 }
