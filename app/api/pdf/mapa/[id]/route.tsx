@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 4,
     textAlign: "center",
   },
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   h3: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 8,
     marginTop: 20,
   },
@@ -136,12 +136,12 @@ const styles = StyleSheet.create({
   },
   labelSymbol: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 2,
   },
   labelTitle: {
     fontSize: 8,
-    fontWeight: 600,
+    fontFamily: "Helvetica-Bold",
   },
 });
 
@@ -280,7 +280,7 @@ function TalentWheelSVG({
           left: center - 25,
           top: center - 6,
           fontSize: 12,
-          fontWeight: "bold",
+          fontFamily: "Helvetica-Bold",
           color: "#666",
           width: 50,
           textAlign: "center",
@@ -314,7 +314,7 @@ function TalentWheelSVG({
                   top: percentPos.y - 7,
                   width: 30,
                   fontSize: 14,
-                  fontWeight: "bold",
+                  fontFamily: "Helvetica-Bold",
                   textAlign: "center",
                   color: "white",
                 }}
@@ -381,7 +381,7 @@ function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
                     {config.symbol}
                   </Text>
                   <View>
-                    <Text style={{ fontSize: 10, fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
                       {config.reportTitle}
                     </Text>
                     <Text style={{ fontSize: 8, color: "#64748b" }}>
@@ -392,7 +392,7 @@ function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
                 <Text
                   style={{
                     fontSize: 14,
-                    fontWeight: "bold",
+                    fontFamily: "Helvetica-Bold",
                     color: config.color,
                   }}
                 >
