@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { TALENTS } from '@/lib/talents';
 
 // Tipos
@@ -41,7 +41,9 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 30,
-    borderBottom: '2 solid #3b82f6',
+    borderBottomWidth: 2,
+    borderBottomColor: '#3b82f6',
+    borderBottomStyle: 'solid',
     paddingBottom: 15,
   },
   title: {
@@ -63,7 +65,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1e40af',
     marginBottom: 10,
-    borderBottom: '1 solid #e5e7eb',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    borderBottomStyle: 'solid',
     paddingBottom: 5,
   },
   infoRow: {
@@ -84,7 +88,9 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#f9fafb',
     borderRadius: 8,
-    border: '1 solid #e5e7eb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderStyle: 'solid',
   },
   talentHeader: {
     flexDirection: 'row',
@@ -117,7 +123,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5e7eb',
     borderRadius: 4,
     marginTop: 6,
-    overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
@@ -128,7 +133,9 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: '#f0f9ff',
     borderRadius: 8,
-    border: '1 solid #bfdbfe',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderStyle: 'solid',
   },
   wheelTitle: {
     fontSize: 12,
@@ -148,7 +155,9 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: '#ffffff',
     borderRadius: 4,
-    border: '1 solid #e5e7eb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderStyle: 'solid',
   },
   wheelLabel: {
     fontSize: 8,
@@ -179,7 +188,9 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#fef3c7',
     borderRadius: 6,
-    border: '1 solid #fbbf24',
+    borderWidth: 1,
+    borderColor: '#fbbf24',
+    borderStyle: 'solid',
   },
   customLabel: {
     fontSize: 10,
@@ -200,7 +211,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 8,
     color: '#9ca3af',
-    borderTop: '1 solid #e5e7eb',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    borderTopStyle: 'solid',
     paddingTop: 10,
   },
   pageNumber: {
