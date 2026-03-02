@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import ExcelJS from "exceljs";
 
+export const dynamic = "force-dynamic";
+
 function toStr(v: unknown) {
   return typeof v === "string" ? v : "";
 }
@@ -92,7 +94,6 @@ export async function GET(req: Request) {
     { header: "ideaCarreraTextoFinal", key: "ideaCarreraTextoFinal", width: 30 },
     { header: "identificaCampos", key: "identificaCampos", width: 18 },
     { header: "campoIdentificado", key: "campoIdentificado", width: 20 },
-    // Columnas de talentos (T1-T8 en porcentaje)
     { header: "T1_Delta_%", key: "t1", width: 10 },
     { header: "T2_Pi_%", key: "t2", width: 10 },
     { header: "T3_Psi_%", key: "t3", width: 10 },
@@ -106,7 +107,6 @@ export async function GET(req: Request) {
     { header: "top3_talent", key: "top3", width: 16 },
   ];
 
-  // Cabecera en negrita y con autofiltro
   ws.getRow(1).font = { bold: true };
   ws.autoFilter = {
     from: { row: 1, column: 1 },
@@ -118,7 +118,6 @@ export async function GET(req: Request) {
     const scoresJson = assessment?.scoresJson;
     const scores = Array.isArray(scoresJson) ? scoresJson : [];
 
-    // Calcular porcentajes por talento
     const talentMap: Record<number, number> = {};
     for (const s of scores) {
       const tid = Number(s?.talentId);
@@ -129,7 +128,6 @@ export async function GET(req: Request) {
       }
     }
 
-    // Top 3 talentos
     const sortedTalents = scores
       .slice()
       .sort((a: any, b: any) => (b.score ?? 0) - (a.score ?? 0))
@@ -169,7 +167,6 @@ export async function GET(req: Request) {
     });
   }
 
-  // Congela la primera fila (cabecera)
   ws.views = [{ state: "frozen", ySplit: 1 }];
 
   const buffer = await wb.xlsx.writeBuffer();
