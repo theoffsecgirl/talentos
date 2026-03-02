@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import React from 'react';
 import { renderToStream } from '@react-pdf/renderer';
 import PDFReport from '@/components/PDFReport';
 import { TALENTS } from '@/lib/talents';
@@ -61,21 +62,21 @@ export async function POST(request: NextRequest) {
 
     // Generar PDF
     const pdfStream = await renderToStream(
-      PDFReport({
-        nombre,
-        apellido,
-        email,
-        fechaNacimiento,
-        genero,
-        curso,
-        modalidad,
-        centroEducativo: centroEducativo || '',
-        top3Talents,
-        allTalents,
-        selectedCareers: selectedCareers || [],
-        customCareers: customCareers || '',
-        ideaCarreraTexto: ideaCarreraTexto || '',
-      })
+      <PDFReport
+        nombre={nombre}
+        apellido={apellido}
+        email={email}
+        fechaNacimiento={fechaNacimiento}
+        genero={genero}
+        curso={curso}
+        modalidad={modalidad}
+        centroEducativo={centroEducativo || ''}
+        top3Talents={top3Talents}
+        allTalents={allTalents}
+        selectedCareers={selectedCareers || []}
+        customCareers={customCareers || ''}
+        ideaCarreraTexto={ideaCarreraTexto || ''}
+      />
     );
 
     // Convertir stream a buffer
