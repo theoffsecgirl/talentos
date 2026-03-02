@@ -212,32 +212,32 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
 
             {/* Porcentaje dentro de la sección (solo si es mayor a 15%) */}
             {talent.percentage > 15 && (
-              <Text
+              <text
                 x={percentPos.x}
                 y={percentPos.y}
                 textAnchor="middle"
-                fontSize="14"
+                fontSize={14}
                 fontWeight="bold"
                 fill="white"
               >
                 {talent.percentage}%
-              </Text>
+              </text>
             )}
           </G>
         );
       })}
 
       <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
-      <Text
+      <text
         x={center}
         y={center}
         textAnchor="middle"
-        fontSize="12"
+        fontSize={12}
         fontWeight="bold"
         fill="#666"
       >
         Talentos
-      </Text>
+      </text>
     </Svg>
   );
 }
