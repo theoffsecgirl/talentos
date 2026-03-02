@@ -48,6 +48,33 @@ function getAxisForTalent(id: number): string {
   return axisMap[id] || "";
 }
 
+function splitTalentTitle(title: string): [string, string] {
+  if (title.includes(' y ')) {
+    const parts = title.split(' y ');
+    if (parts.length === 2) {
+      return [parts[0] + ' y', parts[1]];
+    }
+  }
+  
+  if (title.includes(' e ')) {
+    const parts = title.split(' e ');
+    if (parts.length === 2) {
+      return [parts[0] + ' e', parts[1]];
+    }
+  }
+  
+  const words = title.split(' ');
+  if (words.length <= 2) {
+    return [title, ''];
+  }
+  
+  const midPoint = Math.ceil(words.length / 2);
+  return [
+    words.slice(0, midPoint).join(' '),
+    words.slice(midPoint).join(' '),
+  ];
+}
+
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
 
 const styles = StyleSheet.create({
@@ -130,8 +157,8 @@ const styles = StyleSheet.create({
 function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
   const size = 400;
   const center = size / 2;
-  const radius = 160;
-  const innerRadius = 40;
+  const radius = 150;
+  const innerRadius = 50;
 
   const talents = TALENT_ORDER.map((talentId) => {
     const scoreData = scores.find((s) => s.talentId === talentId);
@@ -141,7 +168,17 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
     const fillPercentage = maxScore > 0 ? score / maxScore : 0;
     const percentage = Math.round(fillPercentage * 100);
     const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
-    return { id: talentId, symbol: config.symbol, color: config.color, fillRadius, fillPercentage, percentage };
+    const [line1, line2] = splitTalentTitle(config.reportTitle);
+    return { 
+      id: talentId, 
+      symbol: config.symbol, 
+      color: config.color, 
+      fillRadius, 
+      fillPercentage, 
+      percentage,
+      titleLine1: line1,
+      titleLine2: line2,
+    };
   });
 
   const polarToCartesian = (angle: number, r: number) => ({
@@ -189,6 +226,8 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
         const endAngle = startAngle + anglePerSection;
         const midAngle = (startAngle + endAngle) / 2;
         const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
+        const labelDistance = radius + 60;
+        const labelPos = polarToCartesian(midAngle, labelDistance);
         
         return (
           <G key={talent.id}>
@@ -221,6 +260,44 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
                 fill="white"
               >
                 {talent.percentage}%
+              </text>
+            )}
+
+            {/* Símbolo */}
+            <text
+              x={labelPos.x}
+              y={labelPos.y - 14}
+              textAnchor="middle"
+              fontSize={16}
+              fontWeight="bold"
+              fill={talent.color}
+            >
+              {talent.symbol}
+            </text>
+
+            {/* Nombre del talento - Línea 1 */}
+            <text
+              x={labelPos.x}
+              y={labelPos.y}
+              textAnchor="middle"
+              fontSize={8}
+              fontWeight="600"
+              fill="#333"
+            >
+              {talent.titleLine1}
+            </text>
+
+            {/* Nombre del talento - Línea 2 */}
+            {talent.titleLine2 && (
+              <text
+                x={labelPos.x}
+                y={labelPos.y + 10}
+                textAnchor="middle"
+                fontSize={8}
+                fontWeight="600"
+                fill="#333"
+              >
+                {talent.titleLine2}
               </text>
             )}
           </G>
