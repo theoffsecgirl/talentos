@@ -207,6 +207,7 @@ function PDFDocument({
         <Text style={styles.h2}>Tus 3 talentos más destacados</Text>
         {top3.map((t: any, idx: number) => {
           const config = TALENT_CONFIG[t.talentId];
+          const percentage = t.max > 0 ? Math.round((t.score / t.max) * 100) : 0;
           return (
             <View key={t.talentId} style={styles.top3Card}>
               <Text style={{ fontSize: 24, color: config?.color || '#000' }}>{config?.symbol}</Text>
@@ -217,7 +218,7 @@ function PDFDocument({
                 </View>
                 <Text style={{ ...styles.muted, lineHeight: 1.4 }}>{t.reportSummary}</Text>
                 <Text style={{ fontSize: 14, fontWeight: 'bold', textAlign: 'right', marginTop: 6 }}>
-                  {t.score} <Text style={{ ...styles.muted, fontSize: 9 }}>/ {t.max}</Text>
+                  {percentage}%
                 </Text>
               </View>
             </View>
@@ -230,13 +231,14 @@ function PDFDocument({
           {TALENT_ORDER.map((tid) => {
             const s = scores.find((x: any) => x.talentId === tid);
             const config = TALENT_CONFIG[tid];
+            const percentage = s && s.max > 0 ? Math.round((s.score / s.max) * 100) : 0;
             return (
               <View key={tid} style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottom: '1px solid #e5e7eb', paddingVertical: 4 }}>
                 <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                   <Text style={{ fontSize: 14, color: config.color }}>{config.symbol}</Text>
                   <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{config.reportTitle}</Text>
                 </View>
-                <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{s?.score ?? 0} / {s?.max ?? 15}</Text>
+                <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{percentage}%</Text>
               </View>
             );
           })}
@@ -261,6 +263,7 @@ function PDFDocument({
       {TALENTS.sort((a, b) => a.id - b.id).map((talent) => {
         const s = scores.find((x: any) => x.talentId === talent.id);
         const config = TALENT_CONFIG[talent.id];
+        const percentage = s && s.max > 0 ? Math.round((s.score / s.max) * 100) : 0;
         
         return (
           <Page key={talent.id} size="A4" style={styles.page}>
@@ -273,8 +276,7 @@ function PDFDocument({
               </View>
               <View style={{ textAlign: 'right' }}>
                 <Text style={{ ...styles.muted, fontWeight: 'bold' }}>Puntuación</Text>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', color: config.color }}>{s?.score ?? 0}</Text>
-                <Text style={styles.muted}>/ {s?.max ?? 15}</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: config.color }}>{percentage}%</Text>
               </View>
             </View>
 
