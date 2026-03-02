@@ -1,6 +1,4 @@
-import { db } from "@/db";
-import { onboardings } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import TalentWheel from "@/components/TalentWheel";
 import { TALENTS } from "@/lib/talents";
@@ -11,46 +9,45 @@ type Props = {
 
 export default async function MapaPage({ params }: Props) {
   const { id } = await params;
-  const recordId = parseInt(id, 10);
 
-  if (isNaN(recordId)) {
+  const person = await prisma.submission.findUnique({
+    where: { id },
+    include: {
+      user: true,
+      assessments: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
+  });
+
+  if (!person || !person.assessments[0]) {
     notFound();
   }
 
-  const record = await db
-    .select()
-    .from(onboardings)
-    .where(eq(onboardings.id, recordId))
-    .limit(1)
-    .then((rows) => rows[0]);
+  const assessment = person.assessments[0];
 
-  if (!record || !record.answers) {
-    notFound();
-  }
+  // Extraer puntuaciones
+  const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
+    ? assessment.scoresJson
+        .map((x: any) => ({ 
+          talentId: Number(x?.talentId), 
+          score: Number(x?.score ?? 0), 
+          max: Number(x?.max ?? 0) 
+        }))
+        .filter((x: any) => Number.isFinite(x.talentId))
+    : [];
 
-  const answers = typeof record.answers === "string" ? JSON.parse(record.answers) : record.answers;
-
-  // Calcular puntuaciones
-  const scoreMap = new Map<number, number>();
-  for (const talent of TALENTS) {
-    for (const item of talent.items) {
-      const value = answers[item.id];
-      if (typeof value === "number") {
-        scoreMap.set(talent.id, (scoreMap.get(talent.id) ?? 0) + value);
-      }
-    }
-  }
-
-  const wheelScores = TALENTS.map((t) => ({
-    talentId: t.id,
-    score: scoreMap.get(t.id) ?? 0,
-    max: t.items.length * 3,
+  const wheelScores = scores.map((s) => ({
+    talentId: s.talentId,
+    score: s.score,
+    max: s.max,
   }));
 
   return (
     <html lang="es">
       <head>
-        <title>Mapa de Talentos - {record.nombre} {record.apellido}</title>
+        <title>Mapa de Talentos - {person.nombre} {person.apellido}</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>{`
@@ -112,8 +109,8 @@ export default async function MapaPage({ params }: Props) {
       <body>
         <div className="header">
           <h1>MAPA DE TALENTOS</h1>
-          <div className="name">{record.nombre} {record.apellido}</div>
-          <div className="date">{new Date(record.createdAt).toLocaleDateString("es-ES")}</div>
+          <div className="name">{person.nombre} {person.apellido}</div>
+          <div className="date">{new Date(person.createdAt).toLocaleDateString("es-ES")}</div>
         </div>
         
         <div className="diagram-container">
