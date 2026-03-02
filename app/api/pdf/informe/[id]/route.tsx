@@ -95,19 +95,19 @@ const styles = StyleSheet.create({
   },
   h1: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 4,
     letterSpacing: -0.5,
   },
   h2: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 10,
     marginTop: 10,
   },
   h3: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 8,
     marginTop: 12,
   },
@@ -166,12 +166,12 @@ const styles = StyleSheet.create({
   },
   labelSymbol: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Helvetica-Bold',
     marginBottom: 2,
   },
   labelTitle: {
     fontSize: 8,
-    fontWeight: 600,
+    fontFamily: 'Helvetica-Bold',
   },
 });
 
@@ -219,29 +219,17 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
   return (
     <View style={styles.svgContainer}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {/* Líneas separadoras principales */}
         <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
         <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
 
-        {/* Líneas diagonales */}
         {[1, 3, 5, 7].map((index) => {
           const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
           const outer = polarToCartesian(angle, radius);
           return (
-            <Line
-              key={`divider-${index}`}
-              x1={center}
-              y1={center}
-              x2={outer.x}
-              y2={outer.y}
-              stroke="#666"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-            />
+            <Line key={`divider-${index}`} x1={center} y1={center} x2={outer.x} y2={outer.y} stroke="#666" strokeWidth="1" strokeDasharray="4 4" />
           );
         })}
 
-        {/* Secciones de talentos */}
         {talents.map((talent, index) => {
           const anglePerSection = (Math.PI * 2) / 8;
           const startAngle = index * anglePerSection - Math.PI / 2;
@@ -249,23 +237,8 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
           
           return (
             <G key={talent.id}>
-              {/* Área rellena con opacidad */}
-              <Path 
-                d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)} 
-                fill={talent.color}
-                fillOpacity={0.7}
-                stroke={talent.color} 
-                strokeWidth="1" 
-              />
-              
-              {/* Borde exterior completo */}
-              <Path 
-                d={createArcPath(startAngle, endAngle, radius, innerRadius)} 
-                fill="none" 
-                stroke={talent.color} 
-                strokeWidth="2" 
-                opacity="0.3" 
-              />
+              <Path d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)} fill={talent.color} fillOpacity={0.7} stroke={talent.color} strokeWidth="1" />
+              <Path d={createArcPath(startAngle, endAngle, radius, innerRadius)} fill="none" stroke={talent.color} strokeWidth="2" opacity="0.3" />
             </G>
           );
         })}
@@ -273,68 +246,30 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
         <Circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
       </Svg>
 
-      {/* Texto central usando Text de react-pdf */}
-      <Text
-        style={{
-          position: 'absolute',
-          left: center - 25,
-          top: center - 6,
-          fontSize: 12,
-          fontWeight: 'bold',
-          color: '#666',
-          width: 50,
-          textAlign: 'center',
-        }}
-      >
+      <Text style={{ position: 'absolute', left: center - 25, top: center - 6, fontSize: 12, fontFamily: 'Helvetica-Bold', color: '#666', width: 50, textAlign: 'center' }}>
         Talentos
       </Text>
 
-      {/* Etiquetas y porcentajes usando Text de react-pdf */}
       {talents.map((talent, index) => {
         const anglePerSection = (Math.PI * 2) / 8;
         const startAngle = index * anglePerSection - Math.PI / 2;
         const endAngle = startAngle + anglePerSection;
         const midAngle = (startAngle + endAngle) / 2;
         const labelDistance = radius + 60;
-
         const percentPos = polarToCartesian(midAngle, (talent.fillRadius + innerRadius) / 2);
         const labelPos = polarToCartesian(midAngle, labelDistance);
         
         return (
           <View key={`label-${talent.id}`}>
-            {/* Porcentaje dentro de la sección */}
             {talent.percentage > 15 && (
-              <Text
-                style={{
-                  position: 'absolute',
-                  left: percentPos.x - 15,
-                  top: percentPos.y - 7,
-                  width: 30,
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                  color: 'white',
-                }}
-              >
+              <Text style={{ position: 'absolute', left: percentPos.x - 15, top: percentPos.y - 7, width: 30, fontSize: 14, fontFamily: 'Helvetica-Bold', textAlign: 'center', color: 'white' }}>
                 {talent.percentage}%
               </Text>
             )}
-
-            {/* Símbolo y nombre del talento */}
-            <View
-              style={{
-                ...styles.labelContainer,
-                left: labelPos.x - 40,
-                top: labelPos.y - 20,
-              }}
-            >
-              <Text style={{ ...styles.labelSymbol, color: talent.color }}>
-                {talent.symbol}
-              </Text>
+            <View style={{ ...styles.labelContainer, left: labelPos.x - 40, top: labelPos.y - 20 }}>
+              <Text style={{ ...styles.labelSymbol, color: talent.color }}>{talent.symbol}</Text>
               <Text style={styles.labelTitle}>{talent.titleLine1}</Text>
-              {talent.titleLine2 && (
-                <Text style={styles.labelTitle}>{talent.titleLine2}</Text>
-              )}
+              {talent.titleLine2 && <Text style={styles.labelTitle}>{talent.titleLine2}</Text>}
             </View>
           </View>
         );
@@ -343,52 +278,40 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
   );
 }
 
-function PDFDocument({
-  nombre,
-  apellido,
-  fecha,
-  scores,
-  top3,
-}: any) {
+function PDFDocument({ nombre, apellido, fecha, scores, top3 }: any) {
   return (
     <Document>
-      {/* Portada con mapa */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.pill}>NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</Text>
         <Text style={styles.h1}>TU INFORME DE TALENTOS</Text>
         <Text style={styles.muted}>Mapa visual basado en neurociencia aplicada</Text>
-        <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 12 }}>{nombre} {apellido}</Text>
+        <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold', marginTop: 12 }}>{nombre} {apellido}</Text>
         <Text style={styles.muted}>{fecha}</Text>
 
         <TalentWheelSVG scores={scores} />
 
-        {/* Detalle por talento */}
         <View style={{ marginTop: 20 }}>
           <Text style={styles.h3}>Detalle por talento</Text>
           {TALENT_ORDER.map((tid) => {
             const s = scores.find((x: any) => x.talentId === tid);
             const config = TALENT_CONFIG[tid];
             const percentage = s && s.max > 0 ? Math.round((s.score / s.max) * 100) : 0;
-            
             return (
               <View key={tid} style={styles.talentDetailCard}>
                 <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', flex: 1 }}>
                   <Text style={{ fontSize: 18, color: config.color }}>{config.symbol}</Text>
                   <View>
-                    <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{config.reportTitle}</Text>
+                    <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold' }}>{config.reportTitle}</Text>
                     <Text style={{ fontSize: 8, color: '#64748b' }}>{config.axis}</Text>
                   </View>
                 </View>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', color: config.color }}>
-                  {percentage}%
-                </Text>
+                <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold', color: config.color }}>{percentage}%</Text>
               </View>
             );
           })}
         </View>
       </Page>
 
-      {/* Top 3 talentos */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>Tus 3 talentos más destacados</Text>
         {top3.map((t: any, idx: number) => {
@@ -399,21 +322,18 @@ function PDFDocument({
               <Text style={{ fontSize: 24, color: config?.color || '#000' }}>{config?.symbol}</Text>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', gap: 6, marginBottom: 4 }}>
-                  <Text style={{ fontSize: 9, fontWeight: 'bold', color: '#64748b' }}>#{idx + 1}</Text>
-                  <Text style={{ fontWeight: 'bold', fontSize: 12 }}>{t.reportTitle || t.quizTitle}</Text>
+                  <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: '#64748b' }}>#{idx + 1}</Text>
+                  <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 12 }}>{t.reportTitle || t.quizTitle}</Text>
                 </View>
                 <Text style={{ ...styles.muted, lineHeight: 1.4 }}>{t.reportSummary}</Text>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', textAlign: 'right', marginTop: 6 }}>
-                  {percentage}%
-                </Text>
+                <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold', textAlign: 'right', marginTop: 6 }}>{percentage}%</Text>
               </View>
             </View>
           );
         })}
 
-        {/* Tabla completa de talentos */}
         <View style={{ ...styles.card, marginTop: 10 }}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 8, fontSize: 11 }}>Todos los talentos</Text>
+          <Text style={{ fontFamily: 'Helvetica-Bold', marginBottom: 8, fontSize: 11 }}>Todos los talentos</Text>
           {TALENT_ORDER.map((tid) => {
             const s = scores.find((x: any) => x.talentId === tid);
             const config = TALENT_CONFIG[tid];
@@ -422,16 +342,15 @@ function PDFDocument({
               <View key={tid} style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottom: '1px solid #e5e7eb', paddingVertical: 4 }}>
                 <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                   <Text style={{ fontSize: 14, color: config.color }}>{config.symbol}</Text>
-                  <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{config.reportTitle}</Text>
+                  <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{config.reportTitle}</Text>
                 </View>
-                <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{percentage}%</Text>
+                <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{percentage}%</Text>
               </View>
             );
           })}
         </View>
       </Page>
 
-      {/* Profesiones y roles sugeridos */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.h2}>Profesiones y roles sugeridos</Text>
         <Text style={styles.muted}>Basado en tus talentos principales:</Text>
@@ -445,52 +364,43 @@ function PDFDocument({
         </View>
       </Page>
 
-      {/* Páginas individuales por talento */}
       {TALENTS.sort((a, b) => a.id - b.id).map((talent) => {
         const s = scores.find((x: any) => x.talentId === talent.id);
         const config = TALENT_CONFIG[talent.id];
         const percentage = s && s.max > 0 ? Math.round((s.score / s.max) * 100) : 0;
-        
         return (
           <Page key={talent.id} size="A4" style={styles.page}>
             <Text style={styles.pill}>{talent.code} · {config.symbol} · {talent.titleGenotype}</Text>
-            
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.h2}>{talent.reportTitle || talent.quizTitle}</Text>
                 <Text style={styles.muted}>{talent.group || talent.quizTitle}</Text>
               </View>
               <View style={{ textAlign: 'right' }}>
-                <Text style={{ ...styles.muted, fontWeight: 'bold' }}>Puntuación</Text>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', color: config.color }}>{percentage}%</Text>
+                <Text style={{ ...styles.muted, fontFamily: 'Helvetica-Bold' }}>Puntuación</Text>
+                <Text style={{ fontSize: 24, fontFamily: 'Helvetica-Bold', color: config.color }}>{percentage}%</Text>
               </View>
             </View>
-
-            {/* Resumen neurocognitivo */}
             <View style={{ ...styles.card, marginTop: 10 }}>
-              <Text style={{ fontWeight: 'bold', marginBottom: 6 }}>Resumen neurocognitivo</Text>
+              <Text style={{ fontFamily: 'Helvetica-Bold', marginBottom: 6 }}>Resumen neurocognitivo</Text>
               <Text style={{ fontSize: 9, lineHeight: 1.4 }}>{talent.reportSummary}</Text>
             </View>
-
-            {/* Ámbitos profesionales y Competencias personales */}
             <View style={styles.grid2}>
               <View style={{ ...styles.card, flex: 1 }}>
-                <Text style={{ fontWeight: 'bold', marginBottom: 6, fontSize: 9 }}>Ámbitos profesionales</Text>
+                <Text style={{ fontFamily: 'Helvetica-Bold', marginBottom: 6, fontSize: 9 }}>Ámbitos profesionales</Text>
                 {(talent.fields || []).map((field, idx) => (
                   <Text key={idx} style={{ fontSize: 8, marginBottom: 3 }}>• {field}</Text>
                 ))}
               </View>
               <View style={{ ...styles.card, flex: 1 }}>
-                <Text style={{ fontWeight: 'bold', marginBottom: 6, fontSize: 9 }}>Competencias personales</Text>
+                <Text style={{ fontFamily: 'Helvetica-Bold', marginBottom: 6, fontSize: 9 }}>Competencias personales</Text>
                 {(talent.competencies || []).map((comp, idx) => (
                   <Text key={idx} style={{ fontSize: 8, marginBottom: 3 }}>• {comp}</Text>
                 ))}
               </View>
             </View>
-
-            {/* Roles y profesiones de ejemplo */}
             <View style={{ ...styles.card, marginTop: 10 }}>
-              <Text style={{ fontWeight: 'bold', marginBottom: 6 }}>Roles y profesiones de ejemplo</Text>
+              <Text style={{ fontFamily: 'Helvetica-Bold', marginBottom: 6 }}>Roles y profesiones de ejemplo</Text>
               {(talent.exampleRoles || []).map((role, idx) => (
                 <Text key={idx} style={{ fontSize: 9, marginBottom: 3 }}>• {role}</Text>
               ))}
@@ -505,16 +415,9 @@ function PDFDocument({
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-
     const person = await prisma.submission.findUnique({
       where: { id },
-      include: {
-        user: true,
-        assessments: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
-      },
+      include: { user: true, assessments: { orderBy: { createdAt: 'desc' }, take: 1 } },
     });
 
     if (!person || !person.assessments[0]) {
@@ -522,49 +425,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const assessment = person.assessments[0];
-
     const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
-      ? assessment.scoresJson
-          .map((x: any) => ({ talentId: Number(x?.talentId), score: Number(x?.score ?? 0), max: Number(x?.max ?? 0) }))
-          .filter((x: any) => Number.isFinite(x.talentId))
+      ? assessment.scoresJson.map((x: any) => ({ talentId: Number(x?.talentId), score: Number(x?.score ?? 0), max: Number(x?.max ?? 0) })).filter((x: any) => Number.isFinite(x.talentId))
       : [];
 
-    const top3 = scores
-      .slice()
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-      .map((s) => {
-        const t = TALENT_CONFIG[s.talentId];
-        return {
-          talentId: s.talentId,
-          code: t?.code ?? `T${s.talentId}`,
-          quizTitle: t?.quizTitle ?? '',
-          reportTitle: t?.reportTitle ?? '',
-          reportSummary: t?.reportSummary ?? '',
-          fields: t?.fields ?? [],
-          competencies: t?.competencies ?? [],
-          exampleRoles: t?.exampleRoles ?? [],
-          score: s.score,
-          max: s.max,
-        };
-      });
-
-    const doc = PDFDocument({
-      nombre: person.nombre,
-      apellido: person.apellido,
-      fecha: new Date(person.createdAt).toLocaleDateString('es-ES'),
-      scores,
-      top3,
+    const top3 = scores.slice().sort((a, b) => b.score - a.score).slice(0, 3).map((s) => {
+      const t = TALENT_CONFIG[s.talentId];
+      return { talentId: s.talentId, code: t?.code ?? `T${s.talentId}`, quizTitle: t?.quizTitle ?? '', reportTitle: t?.reportTitle ?? '', reportSummary: t?.reportSummary ?? '', fields: t?.fields ?? [], competencies: t?.competencies ?? [], exampleRoles: t?.exampleRoles ?? [], score: s.score, max: s.max };
     });
 
+    const doc = PDFDocument({ nombre: person.nombre, apellido: person.apellido, fecha: new Date(person.createdAt).toLocaleDateString('es-ES'), scores, top3 });
     const pdfBlob = await pdf(doc).toBlob();
     const buffer = await pdfBlob.arrayBuffer();
 
     return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${person.nombre}-${person.apellido}-Informe-Talentos.pdf"`,
-      },
+      headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${person.nombre}-${person.apellido}-Informe-Talentos.pdf"` },
     });
   } catch (error) {
     console.error('Error generando PDF:', error);
