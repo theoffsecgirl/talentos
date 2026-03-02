@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Image } from "@react-pdf/renderer";
 import { TALENTS } from "@/lib/talents";
 
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
@@ -38,49 +38,17 @@ const styles = StyleSheet.create({
   muted: { color: "#64748b", fontSize: 10, marginBottom: 20, textAlign: "center" },
   h3: { fontSize: 12, fontFamily: "Helvetica-Bold", marginBottom: 8, marginTop: 20 },
   talentDetailCard: { border: "1px solid #e5e7eb", borderRadius: 8, padding: 10, marginBottom: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  visualGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginVertical: 20, justifyContent: "center" },
-  talentBox: { width: 120, alignItems: "center", padding: 12, border: "2px solid", borderRadius: 8 },
-  talentSymbol: { fontSize: 32, fontFamily: "Helvetica-Bold", marginBottom: 6 },
-  talentName: { fontSize: 9, textAlign: "center", marginBottom: 6 },
-  percentageBar: { width: 100, height: 12, backgroundColor: "#e5e7eb", borderRadius: 6, marginTop: 4, overflow: "hidden" },
-  percentageFill: { height: 12, borderRadius: 6 },
-  percentageText: { fontSize: 14, fontFamily: "Helvetica-Bold", marginTop: 4 },
+  diagramImage: { width: 400, height: 400, alignSelf: "center", marginVertical: 20 },
 });
 
-function TalentVisualGrid({ scores }: { scores: Array<{ talentId: number; score: number; max: number }> }) {
-  const talents = TALENT_ORDER.map((talentId) => {
-    const scoreData = scores.find((s) => s.talentId === talentId);
-    const config = TALENT_CONFIG[talentId];
-    const score = scoreData?.score ?? 0;
-    const maxScore = scoreData?.max ?? 15;
-    const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-    return { id: talentId, symbol: config.symbol, color: config.color, reportTitle: config.reportTitle, percentage };
-  });
-
-  return (
-    <View style={styles.visualGrid}>
-      {talents.map((talent) => (
-        <View key={talent.id} style={{ ...styles.talentBox, borderColor: talent.color }}>
-          <Text style={{ ...styles.talentSymbol, color: talent.color }}>{talent.symbol}</Text>
-          <Text style={styles.talentName}>{talent.reportTitle}</Text>
-          <View style={styles.percentageBar}>
-            <View style={{ ...styles.percentageFill, width: `${talent.percentage}%`, backgroundColor: talent.color }} />
-          </View>
-          <Text style={{ ...styles.percentageText, color: talent.color }}>{talent.percentage}%</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function MapPDFDocument({ nombre, apellido, fecha, scores }: any) {
+function MapPDFDocument({ nombre, apellido, fecha, scores, diagramUrl }: any) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.pill}>MAPA DE TALENTOS</Text>
         <Text style={styles.title}>{nombre} {apellido}</Text>
         <Text style={styles.muted}>{fecha}</Text>
-        <TalentVisualGrid scores={scores} />
+        <Image src={diagramUrl} style={styles.diagramImage} />
         <View style={{ marginTop: 20 }}>
           <Text style={styles.h3}>Detalle por talento</Text>
           {TALENT_ORDER.map((tid) => {
@@ -115,7 +83,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const scores: Array<{ talentId: number; score: number; max: number }> = Array.isArray(assessment.scoresJson)
       ? assessment.scoresJson.map((x: any) => ({ talentId: Number(x?.talentId), score: Number(x?.score ?? 0), max: Number(x?.max ?? 0) })).filter((x: any) => Number.isFinite(x.talentId))
       : [];
-    const doc = MapPDFDocument({ nombre: person.nombre, apellido: person.apellido, fecha: new Date(person.createdAt).toLocaleDateString('es-ES'), scores });
+    
+    const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+    const diagramUrl = `${baseUrl}/api/diagram/${id}`;
+    
+    const doc = MapPDFDocument({ nombre: person.nombre, apellido: person.apellido, fecha: new Date(person.createdAt).toLocaleDateString('es-ES'), scores, diagramUrl });
     const pdfBlob = await pdf(doc).toBlob();
     const buffer = await pdfBlob.arrayBuffer();
     return new NextResponse(buffer, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${person.nombre}-${person.apellido}-Mapa-Talentos.pdf"` } });
