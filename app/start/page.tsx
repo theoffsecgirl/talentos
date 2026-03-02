@@ -11,17 +11,13 @@ type PreData = {
 
 type PostData = {
   apellido: string;
-  fechaNacimiento: string; // YYYY-MM-DD
+  fechaNacimiento: string;
   genero: "Femenino" | "Masculino" | "";
   curso: string;
   modalidad: string;
   centroEducativo: string;
-
-  // idea de carrera (antes de "te identificas con alguno")
   ideaCarreraFinal: "Sí" | "No" | "";
   ideaCarreraTextoFinal: string;
-
-  // "te identificas con alguno"
   identificaCampos: "Sí" | "No" | "";
   campoIdentificado: string;
 };
@@ -48,15 +44,12 @@ const initialPost: PostData = {
   curso: "",
   modalidad: "",
   centroEducativo: "",
-
   ideaCarreraFinal: "",
   ideaCarreraTextoFinal: "",
-
   identificaCampos: "",
   campoIdentificado: "",
 };
 
-// Enunciado fijo: las frases de cada ítem continúan este inicio.
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
 function normalizeItemText(s: any): string {
@@ -87,7 +80,6 @@ function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-// Helper: safe render for numbers (prevent React #310)
 function safeNum(value: any): string {
   if (typeof value === "number" && !isNaN(value)) return String(value);
   if (typeof value === "string") return value;
@@ -106,24 +98,6 @@ function ProgressRing({ value }: { value: number }) {
         <div className="w-full h-full rounded-full bg-[var(--card)] flex items-center justify-center border border-[var(--border)]">
           <span className="text-[11px] font-semibold text-[var(--foreground)]">{pct}%</span>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function DonutMeter({ score, max }: { score: number; max: number }) {
-  const pct = max > 0 ? clamp(Math.round((score / max) * 100), 0, 100) : 0;
-  const color = pct >= 65 ? "var(--danger)" : "var(--foreground)";
-  const style = {
-    background: `conic-gradient(${color} ${pct}%, rgba(148,163,184,0.35) ${pct}% 100%)`,
-  } as React.CSSProperties;
-
-  return (
-    <div className="w-11 h-11 rounded-full p-[3px]" style={style} aria-label={`${pct}%`}>
-      <div className="w-full h-full rounded-full bg-[var(--card)] flex items-center justify-center border border-[var(--border)]">
-        <span className="text-[11px] font-semibold" style={{ color }}>
-          {pct}%
-        </span>
       </div>
     </div>
   );
@@ -199,46 +173,6 @@ const SCALE = [
   { n: 3, label: "Totalmente" },
 ] as const;
 
-// Componente Accordion para mostrar respuestas por talento
-function Accordion({
-  title,
-  children,
-  defaultOpen = false,
-}: {
-  title: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="border border-[var(--border)] rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between bg-[var(--background)] hover:bg-black/5 dark:hover:bg-white/5 transition"
-      >
-        <span className="font-semibold text-sm text-[var(--foreground)]">{title}</span>
-        <svg
-          className={cx("w-5 h-5 text-[var(--muted-foreground)] transition-transform", isOpen && "rotate-180")}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {isOpen && <div className="px-4 py-3 bg-[var(--card)] border-t border-[var(--border)]">{children}</div>}
-    </div>
-  );
-}
-
-type QuestionItem = {
-  itemId: string;
-  text: string;
-  answer: number;
-};
-
 export default function StartPage() {
   const questions = useMemo<Question[]>(() => {
     const shuffledTalents = shuffle(TALENTS).map((t) => ({
@@ -255,24 +189,16 @@ export default function StartPage() {
         talentQuizTitle: t.quizTitle,
       }))
     );
-  }, []); // CRITICAL: Empty deps para no re-shuffle
+  }, []);
 
-  // pasos:
-  // 1) pre (nombre+email)
-  // 2..(1+N) preguntas
-  // luego: resultado
-  // luego: post-1 (datos básicos)
-  // luego: post-2 (idea carrera final)
-  // luego: post-3 (identificaCampos - AHORA CON CLICABLES)
-  // luego: pantalla final (ok)
   const N = questions.length;
   const STEP_PRE = 1;
   const STEP_Q_START = 2;
   const STEP_Q_END = STEP_Q_START + N - 1;
   const STEP_RESULT = STEP_Q_END + 1;
-  const STEP_POST_1 = STEP_RESULT + 1; // apellidos + nacimiento + sexo + curso + modalidad + centro
-  const STEP_POST_2 = STEP_POST_1 + 1; // idea carrera final
-  const STEP_POST_3 = STEP_POST_2 + 1; // identificaCampos - CAMPOS CLICABLES
+  const STEP_POST_1 = STEP_RESULT + 1;
+  const STEP_POST_2 = STEP_POST_1 + 1;
+  const STEP_POST_3 = STEP_POST_2 + 1;
   const STEP_DONE = STEP_POST_3 + 1;
 
   const totalSteps = STEP_DONE;
@@ -290,7 +216,6 @@ export default function StartPage() {
 
   const isQuestionStep = step >= STEP_Q_START && step <= STEP_Q_END;
   const qIndex = isQuestionStep ? step - STEP_Q_START : -1;
-  // DEFENSIVE: bounds check
   const currentQ = isQuestionStep && qIndex >= 0 && qIndex < questions.length ? questions[qIndex] : null;
 
   const progress = Math.round((step / totalSteps) * 100);
@@ -335,7 +260,6 @@ export default function StartPage() {
     }
 
     if (step === STEP_POST_3) {
-      // Ya no es obligatorio seleccionar nada
       return "";
     }
 
@@ -354,7 +278,6 @@ export default function StartPage() {
     setStep((s) => clamp(s - 1, STEP_PRE, totalSteps));
   }
 
-  // Memoize properly
   const scores = useMemo(() => {
     const scoreMap = new Map<number, number>();
     for (const q of questions) {
@@ -383,22 +306,6 @@ export default function StartPage() {
 
   const winner = ranked[0];
 
-  // ✅ NO METER HOOKS dentro de if/loops: deben ejecutarse siempre
-  const questionsByTalent = useMemo(() => {
-    const map = new Map<number, QuestionItem[]>();
-
-    for (const q of questions) {
-      if (!map.has(q.talentId)) map.set(q.talentId, []);
-      map.get(q.talentId)!.push({
-        itemId: q.itemId,
-        text: q.text,
-        answer: answers[q.itemId] ?? 0,
-      });
-    }
-
-    return map;
-  }, [questions, answers]);
-
   const wheelScores = useMemo(() => {
     return ranked.map((t) => ({
       talentId: t.id,
@@ -416,7 +323,6 @@ export default function StartPage() {
     if (msg) return setError(msg);
     if (saving) return;
 
-    // asegura que estén todas las respuestas
     for (const q of questions) {
       if (answers[q.itemId] === undefined) {
         setError("Faltan respuestas del cuestionario.");
@@ -443,19 +349,12 @@ export default function StartPage() {
           curso: post.curso.trim(),
           modalidad: post.modalidad.trim(),
           centroEducativo: post.centroEducativo.trim() || null,
-
-          // "idea de carrera" original del modelo (para compatibilidad admin/filtros actuales)
-          // aquí la fijamos con la "final"
           tienesIdeaCarrera: post.ideaCarreraFinal || "No",
           ideaCarrera: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
-
-          // nuevos
           ideaCarreraFinal: post.ideaCarreraFinal || null,
           ideaCarreraTextoFinal: post.ideaCarreraFinal === "Sí" ? post.ideaCarreraTextoFinal.trim() : null,
-
           identificaCampos,
           campoIdentificado: selectedCareers.length > 0 ? campoIdentificado : null,
-
           answers,
         }),
       });
@@ -477,7 +376,7 @@ export default function StartPage() {
     }
   }
 
-  // Pantalla de resultados después del cuestionario
+  // Pantalla de resultados
   if (step === STEP_RESULT) {
     const top3 = ranked.slice(0, 3);
 
@@ -497,57 +396,35 @@ export default function StartPage() {
           </div>
 
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
-            <h2 className="text-xl font-semibold text-[var(--foreground)]">Tus 3 talentos más destacados</h2>
-            <ol className="mt-4 space-y-3">
-              {top3.map((t, idx) => (
-                <li key={t.id} className="p-4 rounded-lg border border-[var(--border)]">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-[var(--muted-foreground)]">#{idx + 1}</span>
-                        <span className="font-bold text-lg text-[var(--foreground)]">{t.reportTitle || t.quizTitle}</span>
-                      </div>
-                      <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t.reportSummary}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-[var(--foreground)]">{safeNum(t.score)}</div>
-                      <div className="text-xs text-[var(--muted-foreground)]">/ {safeNum(t.max)}</div>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/* NUEVO: Desplegables con respuestas por talento */}
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
-            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">Detalle de respuestas por talento</h2>
-            <div className="space-y-2">
-              {ranked.map((t) => {
-                const talentQuestions = questionsByTalent.get(t.id) || [];
+            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">Tus 3 talentos más destacados</h2>
+            <ol className="space-y-4">
+              {top3.map((t, idx) => {
+                const percentage = t.max > 0 ? Math.round((t.score / t.max) * 100) : 0;
                 return (
-                  <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${safeNum(t.score)}/${safeNum(t.max)})`}>
-                    <div className="space-y-3">
-                      {talentQuestions.map((item) => (
-                        <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="text-xs text-[var(--muted-foreground)] mb-1">{STEM}</div>
-                              <div className="text-sm text-[var(--foreground)]">{normalizeItemText(item.text)}</div>
-                            </div>
-                            <div className="flex-shrink-0">
-                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] text-sm font-bold">
-                                {safeNum(item.answer)}
-                              </span>
-                            </div>
-                          </div>
+                  <li key={t.id} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-bold text-[var(--muted-foreground)]">#{idx + 1}</span>
+                          <span className="font-bold text-lg text-[var(--foreground)]">{t.reportTitle || t.quizTitle}</span>
                         </div>
-                      ))}
+                        <p className="text-sm text-[var(--muted-foreground)]">{t.reportSummary}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-[var(--foreground)]">{percentage}%</div>
+                      </div>
                     </div>
-                  </Accordion>
+                    {/* Barra de progreso */}
+                    <div className="w-full h-2 bg-zinc-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           </div>
 
           <div className="mt-6 flex justify-between gap-3">
@@ -563,7 +440,6 @@ export default function StartPage() {
     );
   }
 
-  // FALLBACK: si currentQ es null, renderizar error placeholder
   if (isQuestionStep && !currentQ) {
     return (
       <main className="min-h-screen bg-[var(--background)] flex items-center justify-center">
@@ -599,7 +475,7 @@ export default function StartPage() {
             <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
           )}
 
-          {/* STEP 1: PRE (nombre + email) */}
+          {/* STEP 1: PRE */}
           {step === STEP_PRE && (
             <div className="grid gap-5">
               <div>
@@ -638,7 +514,7 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* QUESTIONS - FIX: Add explicit text validation */}
+          {/* QUESTIONS */}
           {isQuestionStep && currentQ && currentQ.text && (
             <>
               <div className="flex items-baseline justify-between gap-4">
@@ -741,7 +617,7 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* POST 2: idea carrera final */}
+          {/* POST 2 */}
           {step === STEP_POST_2 && (
             <div className="grid gap-5">
               <div>
@@ -775,83 +651,79 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* POST 3: identificaCampos - FIX: deduplicar careers */}
+          {/* POST 3: Profesiones sugeridas */}
           {step === STEP_POST_3 &&
             (() => {
               const top3 = ranked.slice(0, 3);
-              // FIX: filtrar undefined/null y deduplicar
-              const allCareers = top3
-                .filter((t) => Array.isArray(t.exampleRoles) && t.exampleRoles.length > 0)
-                .flatMap((t) =>
-                  t.exampleRoles.filter((role): role is string => typeof role === "string" && role.trim().length > 0)
-                );
-              const suggestedCareers = Array.from(new Set(allCareers)); // Deduplicar
-
-              if (suggestedCareers.length === 0) {
-                // Fallback: no hay carreras sugeridas
-                return (
-                  <div className="grid gap-5">
-                    <div>
-                      <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
-                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                        No hay sugerencias disponibles en este momento. Continúa para finalizar.
-                      </p>
-                    </div>
-
-                    <div className="pt-2">
-                      <ButtonPrimary type="button" onClick={saveAll} disabled={saving} className="w-full">
-                        {saving ? "Guardando…" : "Guardar y finalizar"}
-                      </ButtonPrimary>
-                    </div>
-                  </div>
-                );
-              }
 
               return (
-                <div className="grid gap-5">
+                <div className="grid gap-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-[var(--foreground)]">Profesiones y roles sugeridos</h2>
+                    <h2 className="text-xl font-semibold text-[var(--foreground)]">Profesiones sugeridas según tus talentos</h2>
                     <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                      Basado en tus talentos principales. Marca las opciones con las que te identificas:
+                      Selecciona las profesiones con las que te identificas:
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    {suggestedCareers.map((career) => (
-                      <button
-                        key={career}
-                        onClick={() => toggleCareer(career)}
-                        className={cx(
-                          "w-full p-3 rounded-lg border-2 text-left transition-all",
-                          selectedCareers.includes(career)
-                            ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
-                            : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={cx(
-                              "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
-                              selectedCareers.includes(career)
-                                ? "border-[var(--background)] bg-[var(--background)]"
-                                : "border-[var(--muted-foreground)]"
-                            )}
-                          >
-                            {selectedCareers.includes(career) && (
-                              <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
+                  {/* Columnas por talento */}
+                  <div className="grid gap-6 md:grid-cols-3">
+                    {top3.map((talent) => {
+                      const percentage = talent.max > 0 ? Math.round((talent.score / talent.max) * 100) : 0;
+                      const roles = talent.exampleRoles.filter(
+                        (role): role is string => typeof role === "string" && role.trim().length > 0
+                      );
+
+                      return (
+                        <div key={talent.id} className="rounded-xl border-2 border-[var(--border)] bg-[var(--card)] p-4">
+                          <div className="mb-4 text-center">
+                            <div className="text-2xl font-bold text-[var(--foreground)]">{talent.reportTitle || talent.quizTitle}</div>
+                            <div className="mt-1 text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                              {percentage}%
+                            </div>
                           </div>
-                          <span className="text-sm">{career}</span>
+
+                          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                            {roles.map((role) => (
+                              <button
+                                key={role}
+                                onClick={() => toggleCareer(role)}
+                                className={cx(
+                                  "w-full p-3 rounded-lg text-left text-sm transition-all border-2",
+                                  selectedCareers.includes(role)
+                                    ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)] font-semibold"
+                                    : "border-[var(--border)] bg-[var(--background)] hover:border-[var(--muted-foreground)]"
+                                )}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <div
+                                    className={cx(
+                                      "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5",
+                                      selectedCareers.includes(role)
+                                        ? "border-[var(--background)] bg-[var(--background)]"
+                                        : "border-[var(--muted-foreground)]"
+                                    )}
+                                  >
+                                    {selectedCareers.includes(role) && (
+                                      <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <span className="flex-1">{role}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {selectedCareers.length > 0 && (
-                    <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-                      <p className="text-sm text-green-800">✓ Has seleccionado {selectedCareers.length} opción(es)</p>
+                    <div className="p-4 rounded-lg bg-green-50 border-2 border-green-200">
+                      <p className="text-sm font-semibold text-green-800">
+                        ✓ Has seleccionado {selectedCareers.length} profesión{selectedCareers.length !== 1 ? "es" : ""}
+                      </p>
                     </div>
                   )}
 
@@ -890,7 +762,7 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* NAV (cuando no estás en DONE o RESULT) */}
+          {/* NAV */}
           {step !== STEP_DONE && step !== STEP_RESULT && (
             <div className="mt-6 flex items-center justify-between gap-3">
               <ButtonGhost type="button" onClick={back} disabled={step === STEP_PRE || saving}>
@@ -910,7 +782,6 @@ export default function StartPage() {
                   Siguiente
                 </ButtonPrimary>
               ) : (
-                // STEP_POST_3 tiene su propio botón Guardar
                 <div />
               )}
             </div>
