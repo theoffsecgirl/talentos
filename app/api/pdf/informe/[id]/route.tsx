@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G, Defs, RadialGradient, Stop } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, Line, G } from "@react-pdf/renderer";
 import { TALENTS } from "@/lib/talents";
 
-// Construir TALENT_CONFIG desde los datos reales
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
   acc[t.id] = {
     symbol: t.titleSymbolic.match(/\((.+?)\)/)?.[1] || t.code,
@@ -23,14 +22,14 @@ const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
 
 function getTalentColor(id: number): string {
   const colorMap: Record<number, string> = {
-    1: "#DC2626", // T1 - Δ - Rojo oscuro
-    2: "#8B5CF6", // T2 - Π - Violeta
-    3: "#7C3AED", // T3 - Ψ - Violeta oscuro
-    4: "#EF4444", // T4 - Α - Rojo
-    5: "#F59E0B", // T5 - Ω - Naranja
-    6: "#06B6D4", // T6 - Φ - Cian
-    7: "#10B981", // T7 - Θ - Verde
-    8: "#D97706", // T8 - ▭ - Naranja oscuro
+    1: "#DC2626",
+    2: "#8B5CF6",
+    3: "#7C3AED",
+    4: "#EF4444",
+    5: "#F59E0B",
+    6: "#06B6D4",
+    7: "#10B981",
+    8: "#D97706",
   };
   return colorMap[id] || "#64748b";
 }
@@ -161,16 +160,6 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
 
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ alignSelf: 'center', marginVertical: 20 }}>
-      <Defs>
-        {talents.map((talent) => (
-          <RadialGradient key={`grad-${talent.id}`} id={`gradient-${talent.id}`}>
-            <Stop offset="0%" stopColor={talent.color} stopOpacity={Math.min(talent.fillPercentage * 1.2, 1)} />
-            <Stop offset={`${talent.fillPercentage * 100}%`} stopColor={talent.color} stopOpacity={0.6} />
-            <Stop offset="100%" stopColor={talent.color} stopOpacity={0.1} />
-          </RadialGradient>
-        ))}
-      </Defs>
-
       {/* Líneas separadoras principales */}
       <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
       <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
@@ -203,10 +192,11 @@ function TalentWheelSVG({ scores }: { scores: Array<{ talentId: number; score: n
         
         return (
           <G key={talent.id}>
-            {/* Área sombreada con gradiente */}
+            {/* Área rellena con opacidad */}
             <Path 
               d={createArcPath(startAngle, endAngle, talent.fillRadius, innerRadius)} 
-              fill={`url(#gradient-${talent.id})`}
+              fill={talent.color}
+              fillOpacity={0.7}
               stroke={talent.color} 
               strokeWidth="1" 
             />
