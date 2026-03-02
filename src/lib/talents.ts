@@ -228,7 +228,7 @@ export const TALENTS: Talent[] = [
     quizTitle: "Creatividad e innovación",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
-      { id: "6.1", text: "Puedo aplicar mis ideas y creatividad sin demasiadas limitaciones." },
+      { id: "6.1", text: "Me interesa la práctica deportiva de élite profesional." },
       { id: "6.2", text: "Puedo vivir de una creatividad práctica, innovadora y en constante cambio." },
       { id: "6.3", text: "Expreso mi sensibilidad a través del arte, la imaginación o lo visual." },
       { id: "6.4", text: "Me gusta formar parte de equipos creativos con retos estimulantes." },
@@ -244,6 +244,7 @@ export const TALENTS: Talent[] = [
       "Capacidades artísticas",
       "Creatividad aplicada a todos los ámbitos profesionales y personales",
       "Arte",
+      "Deportes de élite",
     ],
     competencies: [
       "Crean constantemente en todas las facetas de la vida",
@@ -255,6 +256,7 @@ export const TALENTS: Talent[] = [
       "Creatividad aplicada a la actividad profesional: arquitectura, ingenierías, venta, política, RRHH, medicina, etc.",
       "Ideas sin límite para innovar y solucionar todo tipo de problemas",
       "Habilidades deportivas y artísticas en todas las expresiones",
+      "Deportes de élite: fútbol, baloncesto, gimnasia, tiro con arco, atletismo, natación, etc.",
     ],
   },
   {
@@ -269,18 +271,19 @@ export const TALENTS: Talent[] = [
       { id: "7.2", text: "Se tratan temas difíciles como el dolor, el trauma, la enfermedad o la muerte." },
       { id: "7.3", text: "Puedo investigar fraudes, engaños o comportamientos ocultos." },
       { id: "7.4", text: "Me atrae explorar lo oculto, el misterio, el crimen o lo no evidente." },
-      { id: "7.5", text: "Expreso sensibilidad hacia aquello que no es visible a simple vista." },
+      { id: "7.5", text: "Me interesa el arte neogótico, la estética dark, el gore o expresiones artísticas alternativas." },
     ],
 
     axis: "VÍNCULO",
     group: "PROFUNDIDAD Y SENSIBILIDAD",
     reportTitle: "Profundo e introspectivo",
     reportSummary:
-      "Perfil que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
+      "Perfil que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual, así como expresiones artísticas alternativas. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
     fields: [
       "Sanitario",
       "Jurídico-social",
       "Artístico, clima dark",
+      "Expresiones artísticas alternativas",
     ],
     competencies: [
       "Crean en zonas ocultas, profundas, a veces de difícil comprensión",
@@ -293,6 +296,7 @@ export const TALENTS: Talent[] = [
       "Salud en psiquiatría, psicología, oncología, forense, y técnicos especializados en el mundo de la muerte o el trauma",
       "Criminología, y técnicos especializados en la investigación y el descubrimiento de lo oculto",
       "Investigación en el mundo de la empresa: forensic, actuarial, fraudes, inspecciones, etc.",
+      "Arte alternativo, diseño dark, tatuajes, body art, expresiones artísticas no convencionales",
     ],
   },
   {
