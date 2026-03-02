@@ -1,19 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-
-type TalentScore = {
-  id: number;
-  code: string;
-  title: string;
-  symbol: string;
-  score: number;
-  maxScore: number;
-  color: string;
-  secondaryColor: string;
-  category: string;
-  categoryLabel: string;
-};
+import { TALENTS, WHEEL_ORDER } from "@/lib/talents";
 
 type Props = {
   scores: Array<{
@@ -24,43 +12,49 @@ type Props = {
 };
 
 // Configuración de talentos según el diagrama
-const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryColor: string; category: string; categoryLabel: string }> = {
-  2: { symbol: "Π", color: "#8B5CF6", secondaryColor: "#A78BFA", category: "Conocimiento", categoryLabel: "Ciencia aplicada" },
-  3: { symbol: "Ψ", color: "#7C3AED", secondaryColor: "#8B5CF6", category: "Conocimiento", categoryLabel: "Ciencia aplicada" },
-  5: { symbol: "Ω", color: "#F59E0B", secondaryColor: "#FBBF24", category: "Desempeño", categoryLabel: "Energía" },
-  7: { symbol: "Θ", color: "#10B981", secondaryColor: "#34D399", category: "Imaginación", categoryLabel: "Arte" },
-  4: { symbol: "Α", color: "#EF4444", secondaryColor: "#F87171", category: "Acción", categoryLabel: "Resultados" },
-  1: { symbol: "Δ", color: "#DC2626", secondaryColor: "#EF4444", category: "Acción", categoryLabel: "Resultados" },
-  6: { symbol: "Φ", color: "#06B6D4", secondaryColor: "#22D3EE", category: "Imaginación", categoryLabel: "Arte" },
-  8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", category: "Desempeño", categoryLabel: "Energía" },
+const TALENT_CONFIG: Record<
+  number,
+  { symbol: string; color: string; secondaryColor: string; position: string }
+> = {
+  4: { symbol: "Α", color: "#EF4444", secondaryColor: "#F87171", position: "Acción" }, // ALFA - Arriba
+  1: { symbol: "Δ", color: "#DC2626", secondaryColor: "#EF4444", position: "Resultados" }, // DELTA - Derecha arriba
+  6: { symbol: "Φ", color: "#06B6D4", secondaryColor: "#22D3EE", position: "Imaginación" }, // FI - Derecha abajo
+  7: { symbol: "Θ", color: "#10B981", secondaryColor: "#34D399", position: "Arte" }, // THETA - Abajo
+  5: { symbol: "Ω", color: "#F59E0B", secondaryColor: "#FBBF24", position: "Entrega" }, // OMEGA - Izquierda abajo
+  8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", position: "Servicio" }, // MEANDRO - Izquierda centro
+  3: { symbol: "Ψ", color: "#7C3AED", secondaryColor: "#8B5CF6", position: "Conocimiento" }, // PSI - Izquierda arriba
+  2: { symbol: "Π", color: "#8B5CF6", secondaryColor: "#A78BFA", position: "Ciencia aplicada" }, // PI - Arriba izquierda
 };
 
-// Orden exacto del diagrama (sentido horario desde arriba)
-const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
-
-// Helper: asegurar que score/max sean números válidos
 function toSafeNumber(value: any, fallback: number = 0): number {
-  if (typeof value === 'number' && !isNaN(value)) return value;
+  if (typeof value === "number" && !isNaN(value)) return value;
   return fallback;
+}
+
+function getTalentLabel(talentId: number): string {
+  const talent = TALENTS.find((t) => t.id === talentId);
+  return talent?.wheelLabel || "";
 }
 
 export default function TalentWheel({ scores }: Props) {
   const talents = useMemo(() => {
-    return TALENT_ORDER.map((talentId) => {
+    return WHEEL_ORDER.map((talentId) => {
       const scoreData = scores.find((s) => s.talentId === talentId);
       const config = TALENT_CONFIG[talentId];
-      
+      const score = toSafeNumber(scoreData?.score, 0);
+      const max = toSafeNumber(scoreData?.max, 15);
+      const percentage = max > 0 ? Math.round((score / max) * 100) : 0;
+
       return {
         id: talentId,
-        code: `T${talentId}`,
-        title: getTalentTitle(talentId),
+        label: getTalentLabel(talentId),
         symbol: config.symbol,
-        score: toSafeNumber(scoreData?.score, 0),
-        maxScore: toSafeNumber(scoreData?.max, 15),
+        score,
+        maxScore: max,
+        percentage,
         color: config.color,
         secondaryColor: config.secondaryColor,
-        category: config.category,
-        categoryLabel: config.categoryLabel,
+        position: config.position,
       };
     });
   }, [scores]);
@@ -77,7 +71,7 @@ export default function TalentWheel({ scores }: Props) {
     const endAngle = startAngle + anglePerSection;
 
     // Calcular porcentaje de sombreado (0-1)
-    const fillPercentage = talent.maxScore > 0 ? talent.score / talent.maxScore : 0;
+    const fillPercentage = talent.percentage / 100;
     const fillRadius = innerRadius + (radius - innerRadius) * fillPercentage;
 
     return {
@@ -96,7 +90,12 @@ export default function TalentWheel({ scores }: Props) {
     };
   };
 
-  const createArcPath = (startAngle: number, endAngle: number, outerR: number, innerR: number) => {
+  const createArcPath = (
+    startAngle: number,
+    endAngle: number,
+    outerR: number,
+    innerR: number
+  ) => {
     const start = polarToCartesian(startAngle, outerR);
     const end = polarToCartesian(endAngle, outerR);
     const innerStart = polarToCartesian(startAngle, innerR);
@@ -115,9 +114,14 @@ export default function TalentWheel({ scores }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-8">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto">
+      {/* Mapa circular */}
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="max-w-full h-auto"
+      >
         <defs>
-          {/* Gradientes radiales para cada talento */}
           {sections.map(({ talent, fillPercentage }) => (
             <radialGradient
               key={`gradient-${talent.id}`}
@@ -125,8 +129,16 @@ export default function TalentWheel({ scores }: Props) {
               cx="50%"
               cy="50%"
             >
-              <stop offset="0%" stopColor={talent.color} stopOpacity={Math.min(fillPercentage * 1.2, 1)} />
-              <stop offset={`${fillPercentage * 100}%`} stopColor={talent.color} stopOpacity={0.6} />
+              <stop
+                offset="0%"
+                stopColor={talent.color}
+                stopOpacity={Math.min(fillPercentage * 1.2, 1)}
+              />
+              <stop
+                offset={`${fillPercentage * 100}%`}
+                stopColor={talent.color}
+                stopOpacity={0.6}
+              />
               <stop offset="100%" stopColor={talent.color} stopOpacity={0.1} />
             </radialGradient>
           ))}
@@ -150,7 +162,7 @@ export default function TalentWheel({ scores }: Props) {
           strokeWidth="2"
         />
 
-        {/* Líneas separadoras secundarias (diagonales sutiles) */}
+        {/* Líneas separadoras secundarias (diagonales) */}
         {[1, 3, 5, 7].map((index) => {
           const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
           const outer = polarToCartesian(angle, radius);
@@ -171,7 +183,7 @@ export default function TalentWheel({ scores }: Props) {
         {/* Secciones de talentos */}
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelPos = polarToCartesian(midAngle, radius + 30);
+          const labelPos = polarToCartesian(midAngle, radius + 40);
 
           return (
             <g key={talent.id}>
@@ -183,7 +195,7 @@ export default function TalentWheel({ scores }: Props) {
                 strokeWidth="1"
               />
 
-              {/* Borde exterior COMPLETO (siempre visible hasta radius) */}
+              {/* Borde exterior completo */}
               <path
                 d={createArcPath(startAngle, endAngle, radius, innerRadius)}
                 fill="none"
@@ -192,89 +204,122 @@ export default function TalentWheel({ scores }: Props) {
                 opacity="0.3"
               />
 
-              {/* Etiqueta con símbolo y código */}
+              {/* Etiqueta con símbolo */}
               <text
                 x={labelPos.x}
-                y={labelPos.y}
+                y={labelPos.y - 8}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-sm font-bold"
+                className="text-lg font-bold"
                 fill={talent.color}
               >
                 {talent.symbol}
               </text>
+              {/* Porcentaje */}
               <text
                 x={labelPos.x}
-                y={labelPos.y + 16}
+                y={labelPos.y + 10}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-xs"
-                fill="#666"
+                className="text-xs font-semibold"
+                fill={talent.color}
               >
-                {talent.code}
+                {talent.percentage}%
               </text>
             </g>
           );
         })}
 
-        {/* Centro */}
-        <circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
+        {/* Centro con título */}
+        <circle
+          cx={center}
+          cy={center}
+          r={innerRadius}
+          fill="white"
+          stroke="#000"
+          strokeWidth="2"
+        />
+        <text
+          x={center}
+          y={center}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="text-xs font-semibold"
+          fill="#333"
+        >
+          Mapa de
+        </text>
+        <text
+          x={center}
+          y={center + 14}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="text-xs font-semibold"
+          fill="#333"
+        >
+          Talentos
+        </text>
       </svg>
 
-      {/* Leyenda de categorías */}
+      {/* Leyenda de áreas */}
       <div className="grid grid-cols-2 gap-4 text-sm">
         {[
-          { category: "Acción", label: "Resultados", color: "#EF4444" },
-          { category: "Conocimiento", label: "Ciencia aplicada", color: "#8B5CF6" },
-          { category: "Imaginación", label: "Arte", color: "#06B6D4" },
-          { category: "Desempeño", label: "Energía", color: "#F59E0B" },
+          { category: "Acción", color: "#EF4444" },
+          { category: "Resultados", color: "#DC2626" },
+          { category: "Imaginación", color: "#06B6D4" },
+          { category: "Arte", color: "#10B981" },
+          { category: "Entrega", color: "#F59E0B" },
+          { category: "Servicio", color: "#D97706" },
+          { category: "Conocimiento", color: "#7C3AED" },
+          { category: "Ciencia aplicada", color: "#8B5CF6" },
         ].map((cat) => (
           <div key={cat.category} className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: cat.color }} />
-            <div>
-              <div className="font-semibold">{cat.category}</div>
-              <div className="text-xs text-zinc-600">{cat.label}</div>
-            </div>
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: cat.color }}
+            />
+            <div className="font-medium text-xs">{cat.category}</div>
           </div>
         ))}
       </div>
 
-      {/* Lista de talentos con puntuaciones */}
-      <div className="w-full max-w-md space-y-2">
+      {/* Lista de talentos con barras de progreso */}
+      <div className="w-full max-w-2xl space-y-3">
+        <h3 className="text-lg font-semibold text-center mb-4">Puntuación por talento</h3>
         {talents.map((t) => (
-          <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-zinc-200">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl" style={{ color: t.color }}>
-                {t.symbol}
-              </span>
-              <div>
-                <div className="font-semibold text-sm">{t.title}</div>
-                <div className="text-xs text-zinc-500">{t.code}</div>
+          <div
+            key={t.id}
+            className="p-4 rounded-xl border border-zinc-200 bg-white shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl" style={{ color: t.color }}>
+                  {t.symbol}
+                </span>
+                <div>
+                  <div className="font-semibold text-sm">{t.label}</div>
+                  <div className="text-xs text-zinc-500">{t.position}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold" style={{ color: t.color }}>
+                  {t.percentage}%
+                </div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="font-bold" style={{ color: t.color }}>
-                {String(t.score)}
-              </div>
-              <div className="text-xs text-zinc-500">/ {String(t.maxScore)}</div>
+            {/* Barra de progreso */}
+            <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${t.percentage}%`,
+                  backgroundColor: t.color,
+                }}
+              />
             </div>
           </div>
         ))}
       </div>
     </div>
   );
-}
-
-function getTalentTitle(id: number): string {
-  const titles: Record<number, string> = {
-    1: "Estrategia",
-    2: "Saber",
-    3: "Instruir",
-    4: "Control",
-    5: "Trascender",
-    6: "Creatividad",
-    7: "Introspección",
-    8: "Hacer",
-  };
-  return titles[id] || "";
 }
