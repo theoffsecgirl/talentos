@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+  const zipBuffer = await zip.generateAsync({ type: "uint8array" });
 
   return new NextResponse(zipBuffer, {
     headers: {
