@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { TalentWheelMap } from "./TalentWheelMap";
+import TalentWheel from "@/components/TalentWheel";
+import { TALENTS } from "@/lib/talents";
 
 type TalentLike = {
   id: number;
@@ -206,9 +207,10 @@ export function TalentReport({
         </div>
       </div>
 
-      {/* Mapa */}
+      {/* Mapa con TalentWheel con nombres completos */}
       <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-        <TalentWheelMap talents={talents} answers={answers} title="Mapa (rueda)" />
+        <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-4">Mapa visual de talentos</div>
+        <TalentWheel scores={scores} showFullLabels={true} />
       </div>
 
       {/* NUEVO: Acordeones con respuestas por talento */}
@@ -216,8 +218,9 @@ export function TalentReport({
         <div className="text-xs font-semibold text-[var(--muted-foreground)]">Detalle de respuestas por talento</div>
         {rankedTalents.map((t) => {
           const talentQuestions = questionsByTalent.get(t.id) || [];
+          const percentage = t.max > 0 ? Math.round((t.score / t.max) * 100) : 0;
           return (
-            <Accordion key={t.id} title={`${t.code} · ${t.quizTitle} (${t.score}/${t.max})`}>
+            <Accordion key={t.id} title={`${t.code} · ${t.quizTitle} (${percentage}%)`}>
               <div className="space-y-3">
                 {talentQuestions.map((item) => (
                   <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
