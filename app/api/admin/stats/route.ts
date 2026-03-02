@@ -1,7 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { TALENTS } from "@/lib/talents";
 
 export const dynamic = "force-dynamic";
+
+type ScoreRow = { talentId: number; score: number; max: number };
+
+function getScores(scoresJson: any): ScoreRow[] {
+  return Array.isArray(scoresJson)
+    ? scoresJson
+        .map((x: any) => ({
+          talentId: Number(x?.talentId),
+          score: Number(x?.score ?? 0),
+          max: Number(x?.max ?? 0),
+        }))
+        .filter((x) => Number.isFinite(x.talentId))
+    : [];
+}
+
+function topTalent(scoresJson: any): number | null {
+  const scores = getScores(scoresJson);
+  if (scores.length === 0) return null;
+  const sorted = scores.slice().sort((a, b) => b.score - a.score);
+  return sorted[0]?.talentId ?? null;
+}
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -43,37 +65,65 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  const [total, byGenero, byCurso, byModalidad, byCentro] = await Promise.all([
-    prisma.submission.count({ where }),
-    prisma.submission.groupBy({
-      by: ["genero"],
-      where,
-      _count: true,
-    }),
-    prisma.submission.groupBy({
-      by: ["curso"],
-      where,
-      _count: true,
-    }),
-    prisma.submission.groupBy({
-      by: ["modalidad"],
-      where,
-      _count: true,
-    }),
-    prisma.submission.groupBy({
-      by: ["centroEducativo"],
-      where,
-      _count: true,
-    }),
-  ]);
+  const submissions = await prisma.submission.findMany({
+    where,
+    include: {
+      assessments: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+  });
+
+  // Estadísticas generales
+  const total = submissions.length;
+  const conAssessment = submissions.filter((s) => s.assessments.length > 0).length;
+
+  // Distribución por género
+  const byGenero = submissions.reduce((acc: Record<string, number>, s) => {
+    acc[s.genero] = (acc[s.genero] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Distribución por curso
+  const byCurso = submissions.reduce((acc: Record<string, number>, s) => {
+    acc[s.curso] = (acc[s.curso] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Distribución por modalidad
+  const byModalidad = submissions.reduce((acc: Record<string, number>, s) => {
+    acc[s.modalidad] = (acc[s.modalidad] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Distribución de talentos dominantes
+  const talentCounts: Record<number, number> = {};
+  for (const sub of submissions) {
+    const assessment = sub.assessments[0];
+    if (!assessment) continue;
+    const top = topTalent(assessment.scoresJson);
+    if (top !== null) {
+      talentCounts[top] = (talentCounts[top] || 0) + 1;
+    }
+  }
+
+  const talentDistribution = Object.entries(talentCounts)
+    .map(([talentId, count]) => {
+      const t = TALENTS.find((x) => x.id === Number(talentId));
+      return {
+        talentId: Number(talentId),
+        code: t?.code ?? `T${talentId}`,
+        name: t?.reportTitle || t?.quizTitle || `Talento ${talentId}`,
+        count,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
 
   return NextResponse.json({
     total,
-    byGenero: byGenero.map((x) => ({ genero: x.genero, count: x._count })),
-    byCurso: byCurso.map((x) => ({ curso: x.curso, count: x._count })),
-    byModalidad: byModalidad.map((x) => ({ modalidad: x.modalidad, count: x._count })),
-    byCentro: byCentro
-      .filter((x) => x.centroEducativo)
-      .map((x) => ({ centro: x.centroEducativo!, count: x._count })),
+    conAssessment,
+    sinAssessment: total - conAssessment,
+    byGenero,
+    byCurso,
+    byModalidad,
+    talentDistribution,
   });
 }
