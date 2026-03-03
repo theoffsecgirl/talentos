@@ -1,5 +1,5 @@
 # Vercel deployment trigger
-Deployment timestamp: 2026-03-03T16:46:50Z
+Deployment timestamp: 2026-03-03T16:52:40Z
 HTML-only download (client-side)
-Prisma config fixed for Vercel builds
-DIRECT_URL now optional with DATABASE_URL fallback
+Diagram endpoint changed to Node.js runtime (no 1MB limit)
+Ready for production
