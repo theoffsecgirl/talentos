@@ -302,8 +302,8 @@ function ReportHtml({
     <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
     <div style="display:flex;justify-content:space-between;gap:16px;margin-top:18px;align-items:flex-end">
       <div>
-        <h1 class="h1">TUS RESULTADOS</h1>
-        <div class="muted" style="font-size:14px;">Mapa visual de tus talentos basado en neurociencia aplicada</div>
+        <h1 class="h1">TU INFORME DE TALENTOS</h1>
+        <div class="muted" style="font-size:14px;">Mapa visual basado en neurociencia aplicada</div>
         <div style="margin-top:18px;font-size:16px;font-weight:800">${selected.nombre} ${selected.apellido}</div>
         <div class="muted" style="margin-top:4px">${toISODate(new Date(selected.createdAt))}</div>
       </div>
@@ -313,50 +313,31 @@ function ReportHtml({
       ${mapSvg}
     </div>
 
-    <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <div style="width:16px;height:16px;border-radius:4px;background:#EF4444"></div>
-          <div style="font-weight:900;font-size:13px">Acción</div>
-        </div>
-        <div class="muted" style="font-size:11px">Resultados</div>
-      </div>
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <div style="width:16px;height:16px;border-radius:4px;background:#8B5CF6"></div>
-          <div style="font-weight:900;font-size:13px">Conocimiento</div>
-        </div>
-        <div class="muted" style="font-size:11px">Ciencia aplicada</div>
-      </div>
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <div style="width:16px;height:16px;border-radius:4px;background:#06B6D4"></div>
-          <div style="font-weight:900;font-size:13px">Imaginación</div>
-        </div>
-        <div class="muted" style="font-size:11px">Arte</div>
-      </div>
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <div style="width:16px;height:16px;border-radius:4px;background:#F59E0B"></div>
-          <div style="font-weight:900;font-size:13px">Desempeño</div>
-        </div>
-        <div class="muted" style="font-size:11px">Energía</div>
+    <div style="margin-top:24px">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px">Detalle por talento</h3>
+      <div class="grid">
+        ${TALENT_ORDER.map((tid) => {
+          const s = byId.get(tid);
+          const config = TALENT_CONFIG[tid];
+          const t = talents.find((x: any) => x.id === tid);
+          const percentage = pct(s?.score ?? 0, s?.max ?? 0);
+          return `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:24px;color:${config.color}">${config.symbol}</span>
+                <div>
+                  <div style="font-weight:700;font-size:13px">${t?.reportTitle || t?.quizTitle || `T${tid}`}</div>
+                  <div class="muted" style="font-size:11px">${config.category}</div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:900;font-size:16px;color:${config.color}">${percentage}%</div>
+              </div>
+            </div>`;
+        }).join("\n")}
       </div>
     </div>
   </section>`;
-
-  const talentosTable = TALENT_ORDER.map((tid) => {
-    const s = byId.get(tid);
-    const config = TALENT_CONFIG[tid];
-    const t = talents.find((x: any) => x.id === tid);
-    return `
-      <tr>
-        <td style="text-align:center;font-size:20px;color:${config.color}">${config.symbol}</td>
-        <td style="font-weight:700">${t?.reportTitle || t?.quizTitle || `T${tid}`}</td>
-        <td style="text-align:center">T${tid}</td>
-        <td style="text-align:center;font-weight:700">${s?.score ?? 0} / ${s?.max ?? 15}</td>
-      </tr>`;
-  }).join("\n");
 
   const resumenPage = `
   <section class="page">
@@ -365,6 +346,7 @@ function ReportHtml({
       ${top3Rows
         .map((t, idx) => {
           const config = TALENT_CONFIG[t.talentId];
+          const percentage = pct(t.score, t.max);
           return `
             <div class="card">
               <div style="display:flex;gap:12px;align-items:flex-start">
@@ -376,8 +358,7 @@ function ReportHtml({
                   </div>
                   <div class="muted" style="font-size:13px;line-height:1.5">${t.reportSummary}</div>
                   <div style="margin-top:8px;text-align:right">
-                    <span style="font-size:20px;font-weight:900">${t.score}</span>
-                    <span class="muted" style="font-size:12px"> / ${t.max}</span>
+                    <span style="font-size:20px;font-weight:900;color:${config?.color}">${percentage}%</span>
                   </div>
                 </div>
               </div>
@@ -387,7 +368,7 @@ function ReportHtml({
     </div>
 
     <div style="margin-top:16px" class="card">
-      <div style="font-weight:900;margin-bottom:8px">Listado completo de talentos</div>
+      <div style="font-weight:900;margin-bottom:8px">Todos los talentos</div>
       <table>
         <thead>
           <tr>
@@ -398,7 +379,19 @@ function ReportHtml({
           </tr>
         </thead>
         <tbody>
-          ${talentosTable}
+          ${TALENT_ORDER.map((tid) => {
+            const s = byId.get(tid);
+            const config = TALENT_CONFIG[tid];
+            const t = talents.find((x: any) => x.id === tid);
+            const percentage = pct(s?.score ?? 0, s?.max ?? 0);
+            return `
+              <tr>
+                <td style="text-align:center;font-size:20px;color:${config.color}">${config.symbol}</td>
+                <td style="font-weight:700">${t?.reportTitle || t?.quizTitle || `T${tid}`}</td>
+                <td style="text-align:center">${t?.code}</td>
+                <td style="text-align:center;font-weight:700">${percentage}%</td>
+              </tr>`;
+          }).join("\n")}
         </tbody>
       </table>
     </div>
@@ -407,24 +400,21 @@ function ReportHtml({
   const profesionesPage = `
   <section class="page">
     <h2 class="h2">Profesiones y roles sugeridos</h2>
-    <div class="muted" style="font-size:13px;margin-bottom:12px">Basado en tus talentos principales. Marca las opciones con las que te identificas:</div>
+    <div class="muted" style="font-size:13px;margin-bottom:12px">Basado en tus talentos principales:</div>
     <div class="card">
-      ${top3Rows
-        .flatMap((t) => t.exampleRoles)
-        .map(
-          (role: string) => `
-          <div style="padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
-            <div style="width:18px;height:18px;border:2px solid var(--muted);border-radius:4px"></div>
-            <div style="font-size:13px">${role}</div>
-          </div>`
-        )
-        .join("\n")}
+      <ul style="margin:0;padding-left:20px;font-size:13px">
+        ${top3Rows
+          .flatMap((t) => t.exampleRoles)
+          .map((role: string) => `<li style="margin-bottom:8px">${role}</li>`)
+          .join("\n")}
+      </ul>
     </div>
   </section>`;
 
   const detailPages = ordered.map((t) => {
     const s = byId.get(t.id);
     const config = TALENT_CONFIG[t.id];
+    const percentage = pct(s?.score ?? 0, s?.max ?? 0);
     const fields = (t.fields ?? []).map((x: string) => `<li>${x}</li>`).join("");
     const comps = (t.competencies ?? []).map((x: string) => `<li>${x}</li>`).join("");
     const roles = (t.exampleRoles ?? []).map((x: string) => `<li>${x}</li>`).join("");
@@ -439,8 +429,7 @@ function ReportHtml({
         </div>
         <div style="text-align:right">
           <div class="muted" style="font-size:12px;font-weight:700">Puntuación</div>
-          <div style="font-size:28px;font-weight:900;color:${config?.color || "#000"}">${s?.score ?? 0}</div>
-          <div class="muted" style="font-size:12px">/ ${s?.max ?? 15}</div>
+          <div style="font-size:28px;font-weight:900;color:${config?.color || "#000"}">${percentage}%</div>
         </div>
       </div>
       <div class="card" style="margin-top:14px">
@@ -464,50 +453,7 @@ function ReportHtml({
     </section>`;
   }).join("\n");
 
-  const answerRows = Object.entries(answers)
-    .sort(([a], [b]) => a.localeCompare(b, "es"))
-    .map(([qid, v]) => {
-      const meta = questionMap[qid];
-      const text = meta?.text ? normalizeItemText(meta.text) : "(Pregunta no encontrada)";
-      const vv = Number(v);
-      const x = (n: number) => (vv === n ? "X" : "");
-      return `
-        <tr>
-          <td style="width:64px"><b>${qid}</b></td>
-          <td>${text}</td>
-          <td style="width:40px;text-align:center">${x(0)}</td>
-          <td style="width:40px;text-align:center">${x(1)}</td>
-          <td style="width:40px;text-align:center">${x(2)}</td>
-          <td style="width:40px;text-align:center">${x(3)}</td>
-        </tr>`;
-    })
-    .join("\n");
-
-  const cierre = `
-  <section class="page">
-    <h2 class="h2">Detalle de respuestas</h2>
-    <div class="muted" style="font-size:13px">Escala 0–3. Marca "X" en la columna correspondiente.</div>
-    <div class="card" style="margin-top:12px">
-      <div style="font-size:12px;font-weight:800;margin-bottom:8px">${STEM}</div>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Afirmación</th>
-            <th>0</th>
-            <th>1</th>
-            <th>2</th>
-            <th>3</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${answerRows}
-        </tbody>
-      </table>
-    </div>
-  </section>`;
-
-  return cover + resumenPage + profesionesPage + detailPages + cierre;
+  return cover + resumenPage + profesionesPage + detailPages;
 }
 
 export default function AdminClient({ rows, exportHref, talents, filters }: any) {
@@ -600,81 +546,89 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
 
   const svgRef = useRef<SVGSVGElement>(null);
 
-  function downloadTabHtml(which: "resultados" | "mapa" | "informe") {
+  function downloadMapaHtml() {
     if (!selected) return;
-    const title = `${selected.nombre} ${selected.apellido} · ${which}`;
+    const title = `${selected.nombre}-${selected.apellido}-Mapa-Talentos`;
 
-    const byId = new Map(scores.map((s) => [s.talentId, s]));
-    const ordered = talents.slice().sort((a: any, b: any) => a.id - b.id);
-
-    const mapSvg = (() => {
-      const node = svgRef.current;
-      if (!node) return "";
-      const svgText = new XMLSerializer().serializeToString(node);
-      return svgText;
-    })();
-
-    let body = "";
-
-    if (which === "mapa") {
-      body = `
-        <section class="page">
-          <div class="pill">Mapa de Talentos</div>
-          <h1 class="h1" style="margin-top:12px">${selected.nombre} ${selected.apellido}</h1>
-          <div class="muted">${toISODate(new Date(selected.createdAt))}</div>
-          <div class="card" style="margin-top:14px">${mapSvg}</div>
-        </section>`;
-    } else if (which === "resultados") {
-      const talentosTable = TALENT_ORDER.map((tid) => {
-        const s = byId.get(tid);
-        const config = TALENT_CONFIG[tid];
-        const t = talents.find((x: any) => x.id === tid);
-        return `
-          <tr>
-            <td style="text-align:center;font-size:20px;color:${config.color}">${config.symbol}</td>
-            <td style="font-weight:700">${t?.reportTitle || t?.quizTitle || `T${tid}`}</td>
-            <td style="text-align:center">T${tid}</td>
-            <td style="text-align:center;font-weight:700">${s?.score ?? 0} / ${s?.max ?? 15}</td>
-          </tr>`;
-      }).join("\n");
-
-      body = `
-        <section class="page">
-          <div class="pill">Resultados</div>
-          <h1 class="h1" style="margin-top:12px">${selected.nombre} ${selected.apellido}</h1>
-          <div class="muted">${toISODate(new Date(selected.createdAt))}</div>
-
-          <div class="card" style="margin-top:14px">
-            <table>
-              <thead>
-                <tr>
-                  <th>Símbolo</th>
-                  <th>Talento</th>
-                  <th>Código</th>
-                  <th>Puntuación</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${talentosTable}
-              </tbody>
-            </table>
-          </div>
-        </section>`;
-    } else {
-      const reportBody = ReportHtml({
-        selected,
-        talents,
-        scores,
-        top3Rows,
-        mapSvg,
-        answers,
-        questionMap: QUESTION_MAP,
-      });
-      body = reportBody;
+    // Capturar SVG del TalentWheel
+    const wheelContainer = document.querySelector('[data-talent-wheel]');
+    let mapSvg = "";
+    if (wheelContainer) {
+      const svgElement = wheelContainer.querySelector('svg');
+      if (svgElement) {
+        mapSvg = new XMLSerializer().serializeToString(svgElement);
+      }
     }
 
+    const byId = new Map(scores.map((s) => [s.talentId, s]));
+
+    const body = `
+      <section class="page">
+        <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
+        <h1 class="h1" style="margin-top:12px">MAPA DE TALENTOS</h1>
+        <div style="margin-top:8px;font-size:16px;font-weight:800">${selected.nombre} ${selected.apellido}</div>
+        <div class="muted">${toISODate(new Date(selected.createdAt))}</div>
+        
+        <div style="margin-top:24px;display:flex;justify-content:center">
+          ${mapSvg}
+        </div>
+
+        <div style="margin-top:24px">
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:12px">Detalle por talento</h3>
+          <div class="grid">
+            ${TALENT_ORDER.map((tid) => {
+              const s = byId.get(tid);
+              const config = TALENT_CONFIG[tid];
+              const t = talents.find((x: any) => x.id === tid);
+              const percentage = pct(s?.score ?? 0, s?.max ?? 0);
+              return `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:8px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:24px;color:${config.color}">${config.symbol}</span>
+                    <div>
+                      <div style="font-weight:700;font-size:13px">${t?.reportTitle || t?.quizTitle || `T${tid}`}</div>
+                      <div class="muted" style="font-size:11px">${config.category}</div>
+                    </div>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-weight:900;font-size:16px;color:${config.color}">${percentage}%</div>
+                  </div>
+                </div>`;
+            }).join("\n")}
+          </div>
+        </div>
+      </section>`;
+
     const html = buildHtmlDoc(title, body);
-    downloadTextFile(`${which}_${selected.id}.html`, html, "text/html;charset=utf-8");
+    downloadTextFile(`${title}.html`, html, "text/html;charset=utf-8");
+  }
+
+  function downloadInformeHtml() {
+    if (!selected) return;
+    const title = `${selected.nombre}-${selected.apellido}-Informe-Talentos`;
+
+    // Capturar SVG del TalentWheel
+    const wheelContainer = document.querySelector('[data-talent-wheel]');
+    let mapSvg = "";
+    if (wheelContainer) {
+      const svgElement = wheelContainer.querySelector('svg');
+      if (svgElement) {
+        mapSvg = new XMLSerializer().serializeToString(svgElement);
+      }
+    }
+
+    const reportBody = ReportHtml({
+      selected,
+      talents,
+      scores,
+      top3Rows,
+      mapSvg,
+      answers,
+      questionMap: QUESTION_MAP,
+    });
+
+    const html = buildHtmlDoc(title, reportBody);
+    downloadTextFile(`${title}.html`, html, "text/html;charset=utf-8");
   }
 
   const rankedTalents = useMemo(() => {
@@ -813,8 +767,11 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={() => downloadTabHtml(tab)}>
-                  Descargar HTML
+                <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadMapaHtml}>
+                  📊 Mapa HTML
+                </ButtonGhost>
+                <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadInformeHtml}>
+                  📄 Informe HTML
                 </ButtonGhost>
                 <ButtonGhost type="button" onClick={() => setOpenId(null)}>
                   Cerrar
@@ -960,7 +917,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   </div>
                 </div>
               ) : tab === "mapa" ? (
-                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
+                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]" data-talent-wheel>
                   <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Mapa</div>
                   <TalentWheel scores={scores} showFullLabels={true} />
                   <div className="mt-3 text-xs text-[var(--muted-foreground)]">
@@ -968,10 +925,16 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   </div>
                 </div>
               ) : (
+                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]" data-talent-wheel style={{display: 'none'}}>
+                  <TalentWheel scores={scores} showFullLabels={true} />
+                </div>
+              )}
+
+              {tab === "informe" && (
                 <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                   <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe completo</div>
                   <div className="text-sm text-[var(--muted-foreground)]">
-                    Descarga el HTML del informe completo usando el botón "Descargar HTML" de arriba.
+                    Descarga el HTML del informe completo usando el botón "📄 Informe HTML" de arriba.
                   </div>
                 </div>
               )}
