@@ -1,5 +1,5 @@
 # Vercel deployment trigger
-Deployment timestamp: 2026-03-03T16:43:30Z
+Deployment timestamp: 2026-03-03T16:46:50Z
 HTML-only download (client-side)
-All PDF endpoints and Puppeteer dependencies removed
-Clean build ready
+Prisma config fixed for Vercel builds
+DIRECT_URL now optional with DATABASE_URL fallback
