@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import TalentWheel from "@/components/TalentWheel";
 
@@ -267,6 +267,7 @@ function buildHtmlDoc(title: string, body: string, extraCss = "") {
     table{width:100%;border-collapse:collapse;font-size:12px}
     th,td{border:1px solid var(--border);padding:8px;vertical-align:top}
     th{background:#f8fafc;text-align:left}
+    svg{max-width:100%;height:auto}
     @media print{body{background:#fff}.page{padding:16mm}}
     ${extraCss}
   </style>
@@ -462,6 +463,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [tab, setTab] = useState<"resultados" | "mapa" | "informe">("resultados");
+  const [svgReady, setSvgReady] = useState(false);
 
   const [form, setForm] = useState<FilterState>({
     q: filters?.q ?? "",
@@ -544,22 +546,30 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     return map;
   }, [answers, QUESTION_MAP]);
 
-  const svgRef = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    if (selected) {
+      // Esperar a que React renderice el TalentWheel
+      const timer = setTimeout(() => setSvgReady(true), 300);
+      return () => clearTimeout(timer);
+    } else {
+      setSvgReady(false);
+    }
+  }, [selected]);
+
+  function captureSvg(): string {
+    const container = document.getElementById('hidden-talent-wheel');
+    if (!container) return "";
+    
+    const svg = container.querySelector('svg');
+    if (!svg) return "";
+    
+    return new XMLSerializer().serializeToString(svg);
+  }
 
   function downloadMapaHtml() {
-    if (!selected) return;
+    if (!selected || !svgReady) return;
     const title = `${selected.nombre}-${selected.apellido}-Mapa-Talentos`;
-
-    // Capturar SVG del TalentWheel
-    const wheelContainer = document.querySelector('[data-talent-wheel]');
-    let mapSvg = "";
-    if (wheelContainer) {
-      const svgElement = wheelContainer.querySelector('svg');
-      if (svgElement) {
-        mapSvg = new XMLSerializer().serializeToString(svgElement);
-      }
-    }
-
+    const mapSvg = captureSvg();
     const byId = new Map(scores.map((s) => [s.talentId, s]));
 
     const body = `
@@ -604,18 +614,9 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
   }
 
   function downloadInformeHtml() {
-    if (!selected) return;
+    if (!selected || !svgReady) return;
     const title = `${selected.nombre}-${selected.apellido}-Informe-Talentos`;
-
-    // Capturar SVG del TalentWheel
-    const wheelContainer = document.querySelector('[data-talent-wheel]');
-    let mapSvg = "";
-    if (wheelContainer) {
-      const svgElement = wheelContainer.querySelector('svg');
-      if (svgElement) {
-        mapSvg = new XMLSerializer().serializeToString(svgElement);
-      }
-    }
+    const mapSvg = captureSvg();
 
     const reportBody = ReportHtml({
       selected,
@@ -753,196 +754,207 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/45" onClick={() => setOpenId(null)} />
+        <>
+          {/* Hidden TalentWheel for SVG capture */}
+          <div id="hidden-talent-wheel" style={{ position: 'absolute', left: '-9999px', width: '600px', height: '600px' }}>
+            <TalentWheel scores={scores} showFullLabels={true} />
+          </div>
 
-          <div className="absolute right-0 top-0 h-full w-full max-w-3xl bg-[var(--card)] text-[var(--foreground)] shadow-2xl border-l border-[var(--border)] overflow-y-auto">
-            <div className="p-5 border-b border-[var(--border)] flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs text-[var(--muted-foreground)]">{toISODate(new Date(selected.createdAt))}</div>
-                <div className="text-lg font-bold text-[var(--foreground)]">
-                  {selected.nombre} {selected.apellido}
+          <div className="fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-black/45" onClick={() => setOpenId(null)} />
+
+            <div className="absolute right-0 top-0 h-full w-full max-w-3xl bg-[var(--card)] text-[var(--foreground)] shadow-2xl border-l border-[var(--border)] overflow-y-auto">
+              <div className="p-5 border-b border-[var(--border)] flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xs text-[var(--muted-foreground)]">{toISODate(new Date(selected.createdAt))}</div>
+                  <div className="text-lg font-bold text-[var(--foreground)]">
+                    {selected.nombre} {selected.apellido}
+                  </div>
+                  <div className="text-sm text-[var(--muted-foreground)]">{selected.user.email}</div>
                 </div>
-                <div className="text-sm text-[var(--muted-foreground)]">{selected.user.email}</div>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadMapaHtml}>
-                  📊 Mapa HTML
-                </ButtonGhost>
-                <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadInformeHtml}>
-                  📄 Informe HTML
-                </ButtonGhost>
-                <ButtonGhost type="button" onClick={() => setOpenId(null)}>
-                  Cerrar
-                </ButtonGhost>
-              </div>
-            </div>
-
-            <div className="px-5 pt-4">
-              <div className="inline-flex rounded-xl border border-[var(--border)] overflow-hidden">
-                {([
-                  ["resultados", "Resultados"],
-                  ["mapa", "Mapa"],
-                  ["informe", "Informe"],
-                ] as const).map(([k, label]) => (
-                  <button
-                    key={k}
-                    className={cx(
-                      "px-4 py-2 text-sm font-semibold",
-                      tab === k ? "bg-[var(--foreground)] text-[var(--background)]" : "bg-[var(--card)] text-[var(--foreground)]"
-                    )}
-                    onClick={() => setTab(k)}
-                    type="button"
+                <div className="flex flex-wrap items-center gap-2">
+                  <ButtonGhost 
+                    type="button" 
+                    className="text-xs px-3 py-2" 
+                    onClick={downloadMapaHtml}
+                    disabled={!svgReady}
                   >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-5 space-y-6">
-              <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-                <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Datos</div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-[var(--muted-foreground)]">Edad:</span> {ageFromBirthdate(new Date(selected.fechaNacimiento))}
-                  </div>
-                  <div>
-                    <span className="text-[var(--muted-foreground)]">Sexo:</span> {selected.genero}
-                  </div>
-                  <div>
-                    <span className="text-[var(--muted-foreground)]">Curso:</span> {selected.curso}
-                  </div>
-                  <div>
-                    <span className="text-[var(--muted-foreground)]">Modalidad:</span> {selected.modalidad}
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-[var(--muted-foreground)]">Centro:</span> {selected.centroEducativo ?? "—"}
-                  </div>
+                    📊 Mapa HTML
+                  </ButtonGhost>
+                  <ButtonGhost 
+                    type="button" 
+                    className="text-xs px-3 py-2" 
+                    onClick={downloadInformeHtml}
+                    disabled={!svgReady}
+                  >
+                    📄 Informe HTML
+                  </ButtonGhost>
+                  <ButtonGhost type="button" onClick={() => setOpenId(null)}>
+                    Cerrar
+                  </ButtonGhost>
                 </div>
               </div>
 
-              {!assessment ? (
-                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-                  <div className="text-sm text-[var(--muted-foreground)]">Sin assessment asociado.</div>
+              <div className="px-5 pt-4">
+                <div className="inline-flex rounded-xl border border-[var(--border)] overflow-hidden">
+                  {([
+                    ["resultados", "Resultados"],
+                    ["mapa", "Mapa"],
+                    ["informe", "Informe"],
+                  ] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      className={cx(
+                        "px-4 py-2 text-sm font-semibold",
+                        tab === k ? "bg-[var(--foreground)] text-[var(--background)]" : "bg-[var(--card)] text-[var(--foreground)]"
+                      )}
+                      onClick={() => setTab(k)}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-              ) : tab === "resultados" ? (
-                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-                  <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">Top 3</div>
-                  <div className="grid gap-3">
-                    {top3Rows.map((t: any) => {
-                      const p = pct(t.score, t.max);
-                      const indicator = scoreIndicator(t.score, t.max);
-                      return (
-                        <div key={String(t.talentId)} className="rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <div className="font-semibold text-[var(--foreground)]">
-                                {t.code} · {t.reportTitle || t.quizTitle}
-                              </div>
-                              <div className="text-xs text-[var(--muted-foreground)]">{t.quizTitle}</div>
-                            </div>
-                            <div className="flex flex-col items-end gap-1">
-                              <Donut value={p} />
-                              <Pill>{indicator}</Pill>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+              </div>
 
-                  <div className="mt-4 rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
-                    <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Todos los talentos</div>
-                    <div className="grid gap-2">
-                      {talents
-                        .slice()
-                        .sort((a: any, b: any) => a.id - b.id)
-                        .map((t: any) => {
-                          const s = scores.find((x) => x.talentId === t.id);
-                          const p = pct(s?.score ?? 0, s?.max ?? 0);
-                          const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
-                          const danger = p >= 65;
-                          return (
-                            <div key={t.id} className="flex items-center justify-between gap-3">
-                              <div className="text-sm">
-                                <span className="font-semibold">{t.code}</span>
-                                <span className="text-[var(--muted-foreground)]"> · {t.reportTitle || t.quizTitle}</span>
+              <div className="p-5 space-y-6">
+                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
+                  <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Datos</div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-[var(--muted-foreground)]">Edad:</span> {ageFromBirthdate(new Date(selected.fechaNacimiento))}
+                    </div>
+                    <div>
+                      <span className="text-[var(--muted-foreground)]">Sexo:</span> {selected.genero}
+                    </div>
+                    <div>
+                      <span className="text-[var(--muted-foreground)]">Curso:</span> {selected.curso}
+                    </div>
+                    <div>
+                      <span className="text-[var(--muted-foreground)]">Modalidad:</span> {selected.modalidad}
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-[var(--muted-foreground)]">Centro:</span> {selected.centroEducativo ?? "—"}
+                    </div>
+                  </div>
+                </div>
+
+                {!assessment ? (
+                  <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
+                    <div className="text-sm text-[var(--muted-foreground)]">Sin assessment asociado.</div>
+                  </div>
+                ) : tab === "resultados" ? (
+                  <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
+                    <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">Top 3</div>
+                    <div className="grid gap-3">
+                      {top3Rows.map((t: any) => {
+                        const p = pct(t.score, t.max);
+                        const indicator = scoreIndicator(t.score, t.max);
+                        return (
+                          <div key={String(t.talentId)} className="rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <div className="font-semibold text-[var(--foreground)]">
+                                  {t.code} · {t.reportTitle || t.quizTitle}
+                                </div>
+                                <div className="text-xs text-[var(--muted-foreground)]">{t.quizTitle}</div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <div className={cx("text-sm font-bold", danger ? "text-[var(--danger)]" : "text-[var(--foreground)]")}>{p}%</div>
+                              <div className="flex flex-col items-end gap-1">
+                                <Donut value={p} />
                                 <Pill>{indicator}</Pill>
                               </div>
                             </div>
-                          );
-                        })}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
-                    <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">Detalle de respuestas por talento</div>
-                    <div className="space-y-2">
-                      {rankedTalents.map((t: any) => {
-                        const talentQuestions = questionsByTalent.get(t.id) || [];
-                        if (talentQuestions.length === 0) return null;
-
-                        return (
-                          <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${t.score}/${t.max})`}>
-                            <div className="space-y-3">
-                              {talentQuestions.map((item) => (
-                                <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1">
-                                      <div className="text-xs text-[var(--muted-foreground)] mb-1">
-                                        {STEM}
-                                      </div>
-                                      <div className="text-sm text-[var(--foreground)]">
-                                        {normalizeItemText(item.text)}
-                                      </div>
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] text-sm font-bold">
-                                        {item.answer}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </Accordion>
+                          </div>
                         );
                       })}
                     </div>
-                  </div>
-                </div>
-              ) : tab === "mapa" ? (
-                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]" data-talent-wheel>
-                  <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Mapa</div>
-                  <TalentWheel scores={scores} showFullLabels={true} />
-                  <div className="mt-3 text-xs text-[var(--muted-foreground)]">
-                    Mapa visual de tus talentos basado en neurociencia aplicada.
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]" data-talent-wheel style={{display: 'none'}}>
-                  <TalentWheel scores={scores} showFullLabels={true} />
-                </div>
-              )}
 
-              {tab === "informe" && (
-                <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-                  <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe completo</div>
-                  <div className="text-sm text-[var(--muted-foreground)]">
-                    Descarga el HTML del informe completo usando el botón "📄 Informe HTML" de arriba.
-                  </div>
-                </div>
-              )}
+                    <div className="mt-4 rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
+                      <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Todos los talentos</div>
+                      <div className="grid gap-2">
+                        {talents
+                          .slice()
+                          .sort((a: any, b: any) => a.id - b.id)
+                          .map((t: any) => {
+                            const s = scores.find((x) => x.talentId === t.id);
+                            const p = pct(s?.score ?? 0, s?.max ?? 0);
+                            const indicator = scoreIndicator(s?.score ?? 0, s?.max ?? 0);
+                            const danger = p >= 65;
+                            return (
+                              <div key={t.id} className="flex items-center justify-between gap-3">
+                                <div className="text-sm">
+                                  <span className="font-semibold">{t.code}</span>
+                                  <span className="text-[var(--muted-foreground)]"> · {t.reportTitle || t.quizTitle}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className={cx("text-sm font-bold", danger ? "text-[var(--danger)]" : "text-[var(--foreground)]")}>{p}%</div>
+                                  <Pill>{indicator}</Pill>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
 
-              <div className="pb-10" />
+                    <div className="mt-4 rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
+                      <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">Detalle de respuestas por talento</div>
+                      <div className="space-y-2">
+                        {rankedTalents.map((t: any) => {
+                          const talentQuestions = questionsByTalent.get(t.id) || [];
+                          if (talentQuestions.length === 0) return null;
+
+                          return (
+                            <Accordion key={t.id} title={`${t.code} · ${t.reportTitle || t.quizTitle} (${t.score}/${t.max})`}>
+                              <div className="space-y-3">
+                                {talentQuestions.map((item) => (
+                                  <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1">
+                                        <div className="text-xs text-[var(--muted-foreground)] mb-1">
+                                          {STEM}
+                                        </div>
+                                        <div className="text-sm text-[var(--foreground)]">
+                                          {normalizeItemText(item.text)}
+                                        </div>
+                                      </div>
+                                      <div className="flex-shrink-0">
+                                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] text-sm font-bold">
+                                          {item.answer}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </Accordion>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : tab === "mapa" ? (
+                  <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
+                    <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Mapa</div>
+                    <TalentWheel scores={scores} showFullLabels={true} />
+                    <div className="mt-3 text-xs text-[var(--muted-foreground)]">
+                      Mapa visual de tus talentos basado en neurociencia aplicada.
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
+                    <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe completo</div>
+                    <div className="text-sm text-[var(--muted-foreground)]">
+                      Descarga el HTML del informe completo usando el botón "📄 Informe HTML" de arriba.
+                    </div>
+                  </div>
+                )}
+
+                <div className="pb-10" />
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </main>
   );
