@@ -1,5 +1,6 @@
 # Vercel deployment trigger
-Deployment timestamp: 2026-03-03T16:52:40Z
-HTML-only download (client-side)
-Diagram endpoint changed to Node.js runtime (no 1MB limit)
+Deployment timestamp: 2026-03-03T17:01:15Z
+Two separate HTML download buttons:
+- 📊 Mapa HTML (TalentWheel + details)
+- 📄 Informe HTML (full multi-page report)
 Ready for production
