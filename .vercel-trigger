@@ -1,4 +1,5 @@
 # Vercel deployment trigger
-Deployment timestamp: 2026-03-03T16:37:00Z
-HTML-only download button implemented
-Puppeteer backend ready but unused from frontend
+Deployment timestamp: 2026-03-03T16:43:30Z
+HTML-only download (client-side)
+All PDF endpoints and Puppeteer dependencies removed
+Clean build ready
