@@ -8,6 +8,7 @@ export default defineConfig({
   },
   datasource: {
     // Para CLI/migrations usa DIRECT (sin pooler)
-    url: env("DIRECT_URL"),
+    // Fallback a DATABASE_URL si no existe (para builds en Vercel)
+    url: env("DIRECT_URL") || env("DATABASE_URL"),
   },
 });
