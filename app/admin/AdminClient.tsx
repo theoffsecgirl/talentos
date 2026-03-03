@@ -71,46 +71,6 @@ function downloadTextFile(filename: string, content: string, mime = "text/plain;
   URL.revokeObjectURL(url);
 }
 
-function svgToPngDataUrl(svgText: string, width: number, height: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const svg = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svg);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) throw new Error("Canvas context null");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        const pngUrl = canvas.toDataURL("image/png");
-        URL.revokeObjectURL(url);
-        resolve(pngUrl);
-      } catch (e) {
-        URL.revokeObjectURL(url);
-        reject(e);
-      }
-    };
-    img.onerror = (e) => {
-      URL.revokeObjectURL(url);
-      reject(e);
-    };
-    img.src = url;
-  });
-}
-
-function downloadDataUrl(filename: string, dataUrl: string) {
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
 function donutStroke(p: number) {
   return p >= 65 ? "var(--danger)" : "var(--foreground)";
 }
@@ -615,22 +575,12 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     return a && typeof a === "object" ? (a as Record<string, number>) : {};
   }, [assessment?.answersJson]);
 
-  // Agrupar preguntas por talento para acordeones
   const questionsByTalent = useMemo(() => {
     const map = new Map<number, Array<{ itemId: string; text: string; answer: number }>>();
     
-    // DEBUG: Ver qué claves tenemos
-    console.log("🔍 DEBUG answers keys (primeras 10):", Object.keys(answers).slice(0, 10));
-    console.log("🔍 DEBUG QUESTION_MAP keys (primeras 10):", Object.keys(QUESTION_MAP).slice(0, 10));
-    console.log("🔍 DEBUG Total answers:", Object.keys(answers).length);
-    console.log("🔍 DEBUG Total QUESTION_MAP:", Object.keys(QUESTION_MAP).length);
-    
     Object.entries(answers).forEach(([itemId, answer]) => {
       const meta = QUESTION_MAP[itemId];
-      if (!meta) {
-        console.warn(`⚠️ No se encontró metadata para itemId: "${itemId}"`);
-        return;
-      }
+      if (!meta) return;
       
       if (!map.has(meta.talentId)) {
         map.set(meta.talentId, []);
@@ -645,38 +595,10 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
       }
     });
     
-    console.log("✅ questionsByTalent construido:", map);
-    console.log("📊 Talentos con preguntas:", Array.from(map.keys()));
     return map;
   }, [answers, QUESTION_MAP]);
 
   const svgRef = useRef<SVGSVGElement>(null);
-
-  function downloadJson() {
-    if (!selected) return;
-    const payload = {
-      alumno: {
-        id: selected.id,
-        nombre: selected.nombre,
-        apellido: selected.apellido,
-        email: selected.user?.email,
-        fecha: selected.createdAt,
-      },
-      scores,
-      answers,
-    };
-    downloadTextFile(`resultado_${selected.id}.json`, JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
-  }
-
-  async function downloadMapSvgPng() {
-    if (!selected) return;
-    const node = svgRef.current;
-    if (!node) return;
-    const svgText = new XMLSerializer().serializeToString(node);
-    downloadTextFile(`mapa_${selected.id}.svg`, svgText, "image/svg+xml;charset=utf-8");
-    const pngUrl = await svgToPngDataUrl(svgText, 1200, 1200);
-    downloadDataUrl(`mapa_${selected.id}.png`, pngUrl);
-  }
 
   function downloadTabHtml(which: "resultados" | "mapa" | "informe") {
     if (!selected) return;
@@ -755,17 +677,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     downloadTextFile(`${which}_${selected.id}.html`, html, "text/html;charset=utf-8");
   }
 
-  function downloadPdfReport() {
-    if (!selected) return;
-    window.open(`/api/pdf/informe/${selected.id}`, "_blank");
-  }
-
-  function downloadPdfMap() {
-    if (!selected) return;
-    window.open(`/api/pdf/mapa/${selected.id}`, "_blank");
-  }
-
-  // Ranked talents para mostrar en orden de puntuación
   const rankedTalents = useMemo(() => {
     return talents
       .slice()
@@ -902,23 +813,9 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <ButtonPrimary type="button" className="text-xs px-3 py-2" onClick={downloadPdfReport}>
-                  📄 PDF Informe Completo
-                </ButtonPrimary>
-                <ButtonPrimary type="button" className="text-xs px-3 py-2" onClick={downloadPdfMap}>
-                  🎓 PDF Mapa
-                </ButtonPrimary>
-                <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadJson}>
-                  JSON
-                </ButtonGhost>
                 <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={() => downloadTabHtml(tab)}>
-                  HTML
+                  Descargar HTML
                 </ButtonGhost>
-                {tab === "mapa" ? (
-                  <ButtonGhost type="button" className="text-xs px-3 py-2" onClick={downloadMapSvgPng}>
-                    SVG/PNG
-                  </ButtonGhost>
-                ) : null}
                 <ButtonGhost type="button" onClick={() => setOpenId(null)}>
                   Cerrar
                 </ButtonGhost>
@@ -1026,7 +923,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                     </div>
                   </div>
 
-                  {/* NUEVO: Acordeones con respuestas detalladas por talento */}
                   <div className="mt-4 rounded-xl border border-[var(--border)] p-3 bg-[var(--card)]">
                     <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">Detalle de respuestas por talento</div>
                     <div className="space-y-2">
@@ -1075,18 +971,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                 <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                   <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe completo</div>
                   <div className="text-sm text-[var(--muted-foreground)]">
-                    Haz clic en <b>"📄 PDF Informe Completo"</b> arriba para descargar el informe completo en PDF con todas las secciones.
-                  </div>
-                  <div className="mt-3 rounded-xl border border-[var(--border)] p-3 bg-[var(--background)]">
-                    <div className="text-sm font-bold">El PDF incluye:</div>
-                    <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)] mt-2">
-                      <li>Portada con mapa circular y leyenda de categorías</li>
-                      <li>Top 3 talentos con símbolos y descripciones completas</li>
-                      <li>Tabla completa con todos los talentos</li>
-                      <li>Profesiones y roles sugeridos</li>
-                      <li><b>Página individual por cada talento</b> (ámbitos, competencias, roles)</li>
-                      <li>Detalle de respuestas (0–3)</li>
-                    </ul>
+                    Descarga el HTML del informe completo usando el botón "Descargar HTML" de arriba.
                   </div>
                 </div>
               )}
