@@ -3,7 +3,8 @@ import { ImageResponse } from '@vercel/og';
 import { prisma } from '@/lib/prisma';
 import { TALENTS } from '@/lib/talents';
 
-export const runtime = 'edge';
+// Cambio a Node.js runtime para evitar límite de 1MB en Edge
+export const runtime = 'nodejs';
 
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
   acc[t.id] = {
