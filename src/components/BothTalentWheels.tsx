@@ -14,58 +14,16 @@ type Score = {
 type Props = {
   scores: Score[];
   userName?: string;
-  submissionId?: string;
-  initialGenotipoSummary?: string;
-  initialNeurotalentoSummary?: string;
 };
 
 export default function BothTalentWheels({ 
   scores, 
-  userName = "", 
-  submissionId,
-  initialGenotipoSummary = "",
-  initialNeurotalentoSummary = ""
+  userName = ""
 }: Props) {
   const [activeTab, setActiveTab] = useState<"genotipo" | "neurotalento">("genotipo");
-  const [genotipoSummary, setGenotipoSummary] = useState(initialGenotipoSummary);
-  const [neurotalentoSummary, setNeurotalentoSummary] = useState(initialNeurotalentoSummary);
+  const [genotipoSummary, setGenotipoSummary] = useState("");
+  const [neurotalentoSummary, setNeurotalentoSummary] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<string>("");
-
-  const handleSave = async () => {
-    if (!submissionId) {
-      setSaveStatus("❌ Sin submissionId");
-      return;
-    }
-    
-    setIsSaving(true);
-    setSaveStatus("");
-    
-    try {
-      const response = await fetch('/api/submissions/update-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submissionId,
-          genotipoSummary,
-          neurotalentoSummary,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      setSaveStatus("✓ Guardado " + new Date().toLocaleTimeString());
-      setTimeout(() => setSaveStatus(""), 3000);
-    } catch (err) {
-      console.error('Error saving:', err);
-      setSaveStatus("❌ Error al guardar");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -155,67 +113,39 @@ export default function BothTalentWheels({
         </div>
 
         {/* Export button */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button
-            onClick={handleExport}
-            disabled={isExporting}
-            style={{
-              padding: "8px 16px",
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "#fff",
-              background: isExporting ? "#9ca3af" : "#DC2626",
-              border: "none",
-              borderRadius: "6px",
-              cursor: isExporting ? "not-allowed" : "pointer",
-              transition: "all 0.2s",
-            }}
-          >
-            {isExporting ? "Exportando..." : `Exportar ${activeTab === "genotipo" ? "Genotipo" : "Neurotalento"}`}
-          </button>
-        </div>
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          style={{
+            padding: "8px 16px",
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#fff",
+            background: isExporting ? "#9ca3af" : "#DC2626",
+            border: "none",
+            borderRadius: "6px",
+            cursor: isExporting ? "not-allowed" : "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          {isExporting ? "Exportando..." : `Exportar ${activeTab === "genotipo" ? "Genotipo" : "Neurotalento"}`}
+        </button>
       </div>
 
       {/* Summary input field */}
       <div style={{ marginBottom: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <label
-            htmlFor={`summary-${activeTab}`}
-            style={{
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "#374151",
-            }}
-          >
-            {activeTab === "genotipo" ? "Resumen genotípico" : "Resumen neurocognitivo"} (opcional)
-          </label>
-          {submissionId && (
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              {saveStatus && (
-                <span style={{ fontSize: "12px", color: saveStatus.includes("✓") ? "#10b981" : "#ef4444" }}>
-                  {saveStatus}
-                </span>
-              )}
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                style={{
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#fff",
-                  background: isSaving ? "#9ca3af" : "#10b981",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: isSaving ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
-                }}
-              >
-                {isSaving ? "Guardando..." : "Guardar resumen"}
-              </button>
-            </div>
-          )}
-        </div>
+        <label
+          htmlFor={`summary-${activeTab}`}
+          style={{
+            display: "block",
+            fontSize: "14px",
+            fontWeight: "600",
+            marginBottom: "8px",
+            color: "#374151",
+          }}
+        >
+          {activeTab === "genotipo" ? "Resumen genotípico" : "Resumen neurocognitivo"} (opcional)
+        </label>
         <textarea
           id={`summary-${activeTab}`}
           value={activeTab === "genotipo" ? genotipoSummary : neurotalentoSummary}
@@ -226,7 +156,7 @@ export default function BothTalentWheels({
               setNeurotalentoSummary(e.target.value);
             }
           }}
-          placeholder={`Escribe el ${activeTab === "genotipo" ? "resumen genotípico" : "resumen neurocognitivo"} aquí...`}
+          placeholder={`Escribe el ${activeTab === "genotipo" ? "resumen genotípico" : "resumen neurocognitivo"} aquí. Solo se incluirá si exportas desde este botón.`}
           style={{
             width: "100%",
             minHeight: "80px",
@@ -239,6 +169,9 @@ export default function BothTalentWheels({
             fontFamily: "inherit",
           }}
         />
+        <div style={{ marginTop: "4px", fontSize: "11px", color: "#6b7280" }}>
+          💡 El resumen se incluirá solo al exportar desde el botón "Exportar {activeTab === "genotipo" ? "Genotipo" : "Neurotalento"}" de arriba.
+        </div>
       </div>
 
       {/* Content */}
