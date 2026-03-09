@@ -27,26 +27,25 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryCo
 };
 
 const GENOTIPO_SYMBOLS: Record<number, string> = {
-  1: "△", // Triángulo
-  2: "⬠", // Pentágono
-  3: "∞", // Infinito
-  4: "◇", // Rombo
-  5: "○", // Círculo
-  6: "⬭", // Elipse
-  7: "□", // Cuadrado
-  8: "▭", // Rectángulo
+  1: "△",
+  2: "⬠",
+  3: "∞",
+  4: "◇",
+  5: "○",
+  6: "⬭",
+  7: "□",
+  8: "▭",
 };
 
-// CORREGIDO según CSV proporcionado
 const NEUROTALENTO_SYMBOLS: Record<number, string> = {
-  1: "Σ", // Sigma (antes era Delta Δ)
-  2: "Π", // Pi
-  3: "Ψ", // Psi
-  4: "α", // Alfa minúscula (antes era mayúscula Α)
-  5: "Ω", // Omega
-  6: "Φ", // Fi
-  7: "Θ", // Theta
-  8: "Μ", // Mu/Meandro (antes era ▭)
+  1: "Σ",
+  2: "Π",
+  3: "Ψ",
+  4: "α",
+  5: "Ω",
+  6: "Φ",
+  7: "Θ",
+  8: "Μ",
 };
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
@@ -57,7 +56,6 @@ function toSafeNumber(value: any, fallback: number = 0): number {
 }
 
 function splitTalentTitle(title: string): [string, string] {
-  // Intentar dividir por "y" o "e" primero
   if (title.includes(' y ')) {
     const parts = title.split(' y ');
     if (parts.length === 2) {
@@ -72,7 +70,6 @@ function splitTalentTitle(title: string): [string, string] {
     }
   }
   
-  // Si no hay "y" o "e", dividir por la mitad
   const words = title.split(' ');
   if (words.length <= 2) {
     return [title, ''];
@@ -186,6 +183,8 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
     ].join(" ");
   };
 
+  const displayCenterText = centerText || (modelType === 'genotipo' ? 'Genotipo' : modelType === 'neurotalento' ? 'Neurotalento' : 'Talentos');
+
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[550px]">
@@ -204,11 +203,9 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           ))}
         </defs>
 
-        {/* Líneas separadoras principales */}
         <line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000" strokeWidth="2" />
         <line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000" strokeWidth="2" />
 
-        {/* Líneas diagonales */}
         {[1, 3, 5, 7].map((index) => {
           const angle = (index * Math.PI * 2) / 8 - Math.PI / 2;
           const outer = polarToCartesian(angle, radius);
@@ -226,53 +223,19 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           );
         })}
 
-        {/* Ejes en el exterior del círculo */}
-        {/* Arriba: Conocimiento */}
-        <text
-          x={center}
-          y={center - radius - 15}
-          textAnchor="middle"
-          fontSize="14"
-          fontWeight="bold"
-          fill="#8B5CF6"
-        >
+        <text x={center} y={center - radius - 15} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#8B5CF6">
           Conocimiento
         </text>
-        {/* Derecha: Imaginación */}
-        <text
-          x={center + radius + 15}
-          y={center + 5}
-          textAnchor="start"
-          fontSize="14"
-          fontWeight="bold"
-          fill="#06B6D4"
-        >
+        <text x={center + radius + 15} y={center + 5} textAnchor="start" fontSize="14" fontWeight="bold" fill="#06B6D4">
           Imaginación
         </text>
-        {/* Abajo: Acción */}
-        <text
-          x={center}
-          y={center + radius + 25}
-          textAnchor="middle"
-          fontSize="14"
-          fontWeight="bold"
-          fill="#DC2626"
-        >
+        <text x={center} y={center + radius + 25} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#DC2626">
           Acción
         </text>
-        {/* Izquierda: Entrega/Desempeño */}
-        <text
-          x={center - radius - 15}
-          y={center + 5}
-          textAnchor="end"
-          fontSize="14"
-          fontWeight="bold"
-          fill="#F59E0B"
-        >
+        <text x={center - radius - 15} y={center + 5} textAnchor="end" fontSize="14" fontWeight="bold" fill="#F59E0B">
           Desempeño
         </text>
 
-        {/* Secciones de talentos */}
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
           const labelDistance = showFullLabels ? radius + 100 : radius + 50;
@@ -281,7 +244,6 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
           return (
             <g key={talent.id}>
-              {/* Área sombreada según puntuación */}
               <path
                 d={createArcPath(startAngle, endAngle, fillRadius, innerRadius)}
                 fill={`url(#gradient-${talent.id})`}
@@ -289,7 +251,6 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 strokeWidth="1"
               />
 
-              {/* Borde exterior completo */}
               <path
                 d={createArcPath(startAngle, endAngle, radius, innerRadius)}
                 fill="none"
@@ -298,7 +259,6 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 opacity="0.3"
               />
 
-              {/* Porcentaje dentro de la sección SIN el símbolo % */}
               {talent.percentage > 15 && (
                 <text
                   x={percentPos.x}
@@ -314,14 +274,13 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 </text>
               )}
 
-              {/* Etiqueta con símbolo y nombre */}
               <text
                 x={labelPos.x}
                 y={labelPos.y - (showFullLabels ? 20 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize="24"
-                fontWeight="bold"
+                fontWeight="700"
                 fill={talent.color}
               >
                 {talent.symbol}
@@ -360,22 +319,20 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           );
         })}
 
-        {/* Centro */}
         <circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
         <text
           x={center}
           y={center}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={(centerText ?? 'Talentos').length > 8 ? "9" : "16"}
+          fontSize={displayCenterText.length > 10 ? "12" : "16"}
           fontWeight="600"
           fill="#666"
         >
-          {centerText ?? 'Talentos'}
+          {displayCenterText}
         </text>
       </svg>
 
-      {/* Perfil profesional */}
       {professionalProfile.length > 0 && (
         <div className="w-full max-w-2xl print:max-w-full mb-6">
           <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Perfil profesional</h3>
@@ -390,35 +347,50 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                   color: idx === 0 ? '#10B981' : '#6b7280',
                 }}
               >
-                {axis.axis} ({Math.round(axis.average)}%)
+                {axis.axis} ({Math.round(axis.average)})
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Siempre mostrar detalle de talentos abajo */}
       <div className="w-full max-w-2xl print:max-w-full">
         <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Detalle por talento</h3>
         <div className="grid gap-2 print:gap-1">
-          {talents.map((t) => (
-            <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] print:border-gray-300 print:bg-white print:p-2">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl print:text-xl" style={{ color: t.color }}>
-                  {t.symbol}
-                </span>
-                <div>
-                  <div className="font-semibold text-sm text-[var(--foreground)] print:text-black">{t.title}</div>
-                  <div className="text-xs text-[var(--muted-foreground)] print:text-gray-600">{t.axis}</div>
+          {talents.map((t) => {
+            const isDanger = t.percentage >= 67;
+            const textColor = isDanger ? '#DC2626' : '#000000';
+            
+            return (
+              <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] print:border-gray-300 print:bg-white print:p-2">
+                <div className="flex items-center gap-3 flex-1">
+                  <span className="text-2xl print:text-xl font-bold" style={{ color: t.color }}>
+                    {t.symbol}
+                  </span>
+                  <div className="flex-1">
+                    <div className="font-semibold text-sm mb-1" style={{ color: textColor }}>
+                      {t.title}
+                    </div>
+                    <div className="text-xs text-[var(--muted-foreground)] print:text-gray-600 mb-1">{t.axis}</div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${t.percentage}%`,
+                          backgroundColor: t.color,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right ml-3">
+                  <div className="font-bold text-lg print:text-base" style={{ color: textColor }}>
+                    {t.percentage}
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-lg print:text-base" style={{ color: t.color }}>
-                  {t.percentage}%
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
