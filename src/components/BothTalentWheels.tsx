@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import TalentWheel from "@/components/TalentWheel";
 import { exportTalentModelPDF, type RankedTalent } from "@/lib/generateTalentModelPDF";
 import { TALENTS } from "@/lib/talents";
-import { debounce } from "@/lib/utils";
 
 type Score = {
   talentId: number;
@@ -32,17 +31,16 @@ export default function BothTalentWheels({
   const [neurotalentoSummary, setNeurotalentoSummary] = useState(initialNeurotalentoSummary);
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<string>("");
 
-  // Save function
-  const saveSummary = async (genotipo: string, neurotalento: string) => {
+  const handleSave = async () => {
     if (!submissionId) {
-      console.log('[BothTalentWheels] No submissionId, skipping save');
+      setSaveStatus("❌ Sin submissionId");
       return;
     }
     
-    console.log('[BothTalentWheels] Saving summaries...', { submissionId, genotipo: genotipo.slice(0, 50), neurotalento: neurotalento.slice(0, 50) });
     setIsSaving(true);
+    setSaveStatus("");
     
     try {
       const response = await fetch('/api/submissions/update-summary', {
@@ -50,42 +48,24 @@ export default function BothTalentWheels({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           submissionId,
-          genotipoSummary: genotipo,
-          neurotalentoSummary: neurotalento,
+          genotipoSummary,
+          neurotalentoSummary,
         }),
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[BothTalentWheels] Save failed:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const result = await response.json();
-      console.log('[BothTalentWheels] Save successful:', result);
-      setLastSaved(new Date().toLocaleTimeString());
+      setSaveStatus("✓ Guardado " + new Date().toLocaleTimeString());
+      setTimeout(() => setSaveStatus(""), 3000);
     } catch (err) {
-      console.error('[BothTalentWheels] Error saving summary:', err);
+      console.error('Error saving:', err);
+      setSaveStatus("❌ Error al guardar");
     } finally {
       setIsSaving(false);
     }
   };
-
-  // Debounced version
-  const debouncedSave = useCallback(
-    debounce((genotipo: string, neurotalento: string) => {
-      saveSummary(genotipo, neurotalento);
-    }, 1500),
-    [submissionId]
-  );
-
-  // Auto-save when summaries change
-  useEffect(() => {
-    console.log('[BothTalentWheels] Summary changed, triggering debounced save');
-    if (submissionId) {
-      debouncedSave(genotipoSummary, neurotalentoSummary);
-    }
-  }, [genotipoSummary, neurotalentoSummary, debouncedSave, submissionId]);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -174,14 +154,8 @@ export default function BothTalentWheels({
           </button>
         </div>
 
-        {/* Export button + save indicator */}
+        {/* Export button */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {isSaving && (
-            <span style={{ fontSize: "12px", color: "#9ca3af" }}>Guardando...</span>
-          )}
-          {!isSaving && lastSaved && (
-            <span style={{ fontSize: "12px", color: "#10b981" }}>✓ Guardado {lastSaved}</span>
-          )}
           <button
             onClick={handleExport}
             disabled={isExporting}
@@ -204,23 +178,48 @@ export default function BothTalentWheels({
 
       {/* Summary input field */}
       <div style={{ marginBottom: "20px" }}>
-        <label
-          htmlFor={`summary-${activeTab}`}
-          style={{
-            display: "block",
-            fontSize: "14px",
-            fontWeight: "600",
-            marginBottom: "8px",
-            color: "#374151",
-          }}
-        >
-          {activeTab === "genotipo" ? "Resumen genotípico" : "Resumen neurocognitivo"} (opcional)
-        </label>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <label
+            htmlFor={`summary-${activeTab}`}
+            style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#374151",
+            }}
+          >
+            {activeTab === "genotipo" ? "Resumen genotípico" : "Resumen neurocognitivo"} (opcional)
+          </label>
+          {submissionId && (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {saveStatus && (
+                <span style={{ fontSize: "12px", color: saveStatus.includes("✓") ? "#10b981" : "#ef4444" }}>
+                  {saveStatus}
+                </span>
+              )}
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "#fff",
+                  background: isSaving ? "#9ca3af" : "#10b981",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: isSaving ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {isSaving ? "Guardando..." : "Guardar resumen"}
+              </button>
+            </div>
+          )}
+        </div>
         <textarea
           id={`summary-${activeTab}`}
           value={activeTab === "genotipo" ? genotipoSummary : neurotalentoSummary}
           onChange={(e) => {
-            console.log('[BothTalentWheels] Textarea changed:', e.target.value.slice(0, 50));
             if (activeTab === "genotipo") {
               setGenotipoSummary(e.target.value);
             } else {
@@ -240,11 +239,6 @@ export default function BothTalentWheels({
             fontFamily: "inherit",
           }}
         />
-        {submissionId && (
-          <div style={{ marginTop: "4px", fontSize: "11px", color: "#6b7280" }}>
-            ID: {submissionId}
-          </div>
-        )}
       </div>
 
       {/* Content */}
