@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import BothTalentWheels from "@/components/BothTalentWheels";
 import TalentWheel from "@/components/TalentWheel";
 import { exportTalentModelPDF, RankedTalent } from "@/lib/generateTalentModelPDF";
 import { TALENTS } from "@/lib/talents";
@@ -574,7 +575,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
 
   useEffect(() => {
     if (selected) {
-      // Esperar a que React renderice el TalentWheel
       const timer = setTimeout(() => setSvgReady(true), 300);
       return () => clearTimeout(timer);
     } else {
@@ -863,7 +863,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
 
       {selected && (
         <>
-          {/* Hidden TalentWheel for SVG capture */}
           <div id="hidden-talent-wheel" style={{ position: 'absolute', left: '-9999px', width: '600px', height: '600px' }}>
             <TalentWheel scores={scores} showFullLabels={true} />
           </div>
@@ -1043,11 +1042,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   </div>
                 ) : tab === "mapa" ? (
                   <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-                    <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Mapa</div>
-                    <TalentWheel scores={scores} showFullLabels={true} />
-                    <div className="mt-3 text-xs text-[var(--muted-foreground)]">
-                      Mapa visual de tus talentos basado en neurociencia aplicada.
-                    </div>
+                    <BothTalentWheels scores={scores} />
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
