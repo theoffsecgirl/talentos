@@ -27,25 +27,26 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryCo
 };
 
 const GENOTIPO_SYMBOLS: Record<number, string> = {
-  1: "△",
-  2: "⬠",
-  3: "∞",
-  4: "◇",
-  5: "○",
-  6: "⬭",
-  7: "□",
-  8: "▭",
+  1: "△", // Triángulo
+  2: "⬠", // Pentágono
+  3: "∞", // Infinito
+  4: "◇", // Rombo
+  5: "○", // Círculo
+  6: "⬭", // Elipse
+  7: "□", // Cuadrado
+  8: "▭", // Rectángulo
 };
 
+// CORREGIDO según CSV proporcionado
 const NEUROTALENTO_SYMBOLS: Record<number, string> = {
-  1: "Σ",
-  2: "Π",
-  3: "Ψ",
-  4: "α",
-  5: "Ω",
-  6: "Φ",
-  7: "Θ",
-  8: "Μ",
+  1: "Σ", // Sigma (antes era Delta Δ)
+  2: "Π", // Pi
+  3: "Ψ", // Psi
+  4: "α", // Alfa minúscula (antes era mayúscula Α)
+  5: "Ω", // Omega
+  6: "Φ", // Fi
+  7: "Θ", // Theta
+  8: "Μ", // Mu/Meandro (antes era ▭)
 };
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
