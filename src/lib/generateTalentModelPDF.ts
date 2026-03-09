@@ -319,17 +319,26 @@ export function exportTalentModelPDF(
   userName: string,
   zip?: JSZip
 ): Promise<void> {
+  console.log('🎯 exportTalentModelPDF called', { modelType, userName, hasZip: !!zip });
+  
   return new Promise((resolve) => {
-    if (typeof window === "undefined") { resolve(); return; }
+    if (typeof window === "undefined") { 
+      console.log('❌ Not in browser');
+      resolve(); 
+      return; 
+    }
 
     const html2pdf = (window as unknown as { html2pdf?: Html2PdfFn }).html2pdf;
     if (!html2pdf) {
+      console.log('❌ html2pdf not found');
       if (!zip) window.print();
       resolve();
       return;
     }
 
+    console.log('✅ html2pdf found, generating HTML...');
     const htmlContent = generatePDFHTML(ranked, modelType, userName);
+    console.log('✅ HTML generated, creating container...');
 
     const container = document.createElement("div");
     container.style.position = "fixed";
@@ -345,17 +354,26 @@ export function exportTalentModelPDF(
     container.appendChild(iframe);
 
     const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}neurotalentos-${modelType}.pdf`;
+    console.log('📄 Filename:', fileName);
 
     iframe.onload = () => {
+      console.log('✅ iframe loaded');
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) { document.body.removeChild(container); resolve(); return; }
+      if (!iframeDoc) { 
+        console.log('❌ iframe doc not found');
+        document.body.removeChild(container); 
+        resolve(); 
+        return; 
+      }
 
       iframeDoc.open();
       iframeDoc.write(htmlContent);
       iframeDoc.close();
+      console.log('✅ HTML written to iframe');
 
       const target = iframeDoc.body.firstElementChild as HTMLElement ?? iframeDoc.body;
 
+      console.log('🔧 Creating html2pdf instance...');
       const instance = html2pdf()
         .set({
           margin: 0,
@@ -367,25 +385,31 @@ export function exportTalentModelPDF(
         .from(target);
 
       if (zip) {
+        console.log('📦 Generating blob for ZIP...');
         instance
           .output("blob")
           .then((blob: Blob) => {
+            console.log('✅ Blob generated, adding to ZIP');
             zip.file(fileName, blob);
             document.body.removeChild(container);
             resolve();
           })
-          .catch(() => {
+          .catch((err) => {
+            console.error('❌ Error generating blob:', err);
             document.body.removeChild(container);
             resolve();
           });
       } else {
+        console.log('💾 Saving PDF directly...');
         instance
           .save()
           .then(() => {
+            console.log('✅ PDF saved successfully');
             document.body.removeChild(container);
             resolve();
           })
-          .catch(() => {
+          .catch((err) => {
+            console.error('❌ Error saving PDF:', err);
             document.body.removeChild(container);
             resolve();
           });
