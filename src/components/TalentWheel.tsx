@@ -13,6 +13,7 @@ type Props = {
   showFullLabels?: boolean;
   modelType?: 'genotipo' | 'neurotalento';
   centerText?: string;
+  summaryText?: string;
 };
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryColor: string; axis: string }> = {
@@ -100,7 +101,7 @@ function calculateProfessionalProfile(talents: Array<{ id: number; percentage: n
   return axisAverages;
 }
 
-export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText }: Props) {
+export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText, summaryText }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
       const scoreData = scores.find((s) => s.talentId === talentId);
@@ -332,6 +333,27 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           {displayCenterText}
         </text>
       </svg>
+
+      {/* Curved summary banner */}
+      {summaryText && summaryText.trim() && (
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '700px',
+            margin: '20px auto',
+            padding: '20px 30px',
+            background: '#000',
+            color: '#fff',
+            borderRadius: '60px',
+            fontSize: '14px',
+            lineHeight: '1.6',
+            textAlign: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          }}
+        >
+          {summaryText}
+        </div>
+      )}
 
       {professionalProfile.length > 0 && (
         <div className="w-full max-w-2xl print:max-w-full mb-6">
