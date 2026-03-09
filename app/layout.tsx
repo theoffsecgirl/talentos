@@ -28,7 +28,7 @@ export default function RootLayout({
       <head>
         <Script
           src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-          strategy="lazyOnload"
+          strategy="beforeInteractive"
         />
       </head>
       <body
