@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import TalentWheel from "@/components/TalentWheel";
+import BothTalentWheels from "@/components/BothTalentWheels";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -45,13 +45,13 @@ export default async function MapaPage({ params }: Props) {
   return (
     <html lang="es">
       <head>
-        <title>Mapa de Talentos - {person.nombre} {person.apellido}</title>
+        <title>Mapas de Talentos - {person.nombre} {person.apellido}</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>{`
           @page {
             margin: 1.5cm;
-            size: A4 portrait;
+            size: A4 landscape;
           }
           * {
             margin: 0;
@@ -63,7 +63,7 @@ export default async function MapaPage({ params }: Props) {
             background: white;
             color: #333;
             padding: 20px;
-            max-width: 1000px;
+            max-width: 100%;
             margin: 0 auto;
           }
           .header {
@@ -91,7 +91,7 @@ export default async function MapaPage({ params }: Props) {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 40px 0;
+            margin: 20px 0;
           }
           @media print {
             body {
@@ -102,20 +102,20 @@ export default async function MapaPage({ params }: Props) {
               font-size: 20px;
             }
             .diagram-container {
-              margin: 20px 0;
+              margin: 15px 0;
             }
           }
         `}</style>
       </head>
       <body>
         <div className="header">
-          <h1>MAPA DE TALENTOS</h1>
+          <h1>MAPAS DE TALENTOS</h1>
           <div className="name">{person.nombre} {person.apellido}</div>
           <div className="date">{new Date(person.createdAt).toLocaleDateString("es-ES")}</div>
         </div>
         
         <div className="diagram-container">
-          <TalentWheel scores={wheelScores} showFullLabels={true} />
+          <BothTalentWheels scores={wheelScores} />
         </div>
 
         <script dangerouslySetInnerHTML={{
