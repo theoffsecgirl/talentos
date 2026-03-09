@@ -32,38 +32,60 @@ export default function BothTalentWheels({
   const [neurotalentoSummary, setNeurotalentoSummary] = useState(initialNeurotalentoSummary);
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
 
-  // Debounced save function
-  const saveSummary = useCallback(
-    debounce(async (genotipo: string, neurotalento: string) => {
-      if (!submissionId) return;
+  // Save function
+  const saveSummary = async (genotipo: string, neurotalento: string) => {
+    if (!submissionId) {
+      console.log('[BothTalentWheels] No submissionId, skipping save');
+      return;
+    }
+    
+    console.log('[BothTalentWheels] Saving summaries...', { submissionId, genotipo: genotipo.slice(0, 50), neurotalento: neurotalento.slice(0, 50) });
+    setIsSaving(true);
+    
+    try {
+      const response = await fetch('/api/submissions/update-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submissionId,
+          genotipoSummary: genotipo,
+          neurotalentoSummary: neurotalento,
+        }),
+      });
       
-      setIsSaving(true);
-      try {
-        await fetch('/api/submissions/update-summary', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            submissionId,
-            genotipoSummary: genotipo,
-            neurotalentoSummary: neurotalento,
-          }),
-        });
-      } catch (err) {
-        console.error('Error saving summary:', err);
-      } finally {
-        setIsSaving(false);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[BothTalentWheels] Save failed:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    }, 1000),
+      
+      const result = await response.json();
+      console.log('[BothTalentWheels] Save successful:', result);
+      setLastSaved(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error('[BothTalentWheels] Error saving summary:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Debounced version
+  const debouncedSave = useCallback(
+    debounce((genotipo: string, neurotalento: string) => {
+      saveSummary(genotipo, neurotalento);
+    }, 1500),
     [submissionId]
   );
 
   // Auto-save when summaries change
   useEffect(() => {
+    console.log('[BothTalentWheels] Summary changed, triggering debounced save');
     if (submissionId) {
-      saveSummary(genotipoSummary, neurotalentoSummary);
+      debouncedSave(genotipoSummary, neurotalentoSummary);
     }
-  }, [genotipoSummary, neurotalentoSummary, saveSummary, submissionId]);
+  }, [genotipoSummary, neurotalentoSummary, debouncedSave, submissionId]);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -157,6 +179,9 @@ export default function BothTalentWheels({
           {isSaving && (
             <span style={{ fontSize: "12px", color: "#9ca3af" }}>Guardando...</span>
           )}
+          {!isSaving && lastSaved && (
+            <span style={{ fontSize: "12px", color: "#10b981" }}>✓ Guardado {lastSaved}</span>
+          )}
           <button
             onClick={handleExport}
             disabled={isExporting}
@@ -194,11 +219,14 @@ export default function BothTalentWheels({
         <textarea
           id={`summary-${activeTab}`}
           value={activeTab === "genotipo" ? genotipoSummary : neurotalentoSummary}
-          onChange={(e) =>
-            activeTab === "genotipo"
-              ? setGenotipoSummary(e.target.value)
-              : setNeurotalentoSummary(e.target.value)
-          }
+          onChange={(e) => {
+            console.log('[BothTalentWheels] Textarea changed:', e.target.value.slice(0, 50));
+            if (activeTab === "genotipo") {
+              setGenotipoSummary(e.target.value);
+            } else {
+              setNeurotalentoSummary(e.target.value);
+            }
+          }}
           placeholder={`Escribe el ${activeTab === "genotipo" ? "resumen genotípico" : "resumen neurocognitivo"} aquí...`}
           style={{
             width: "100%",
@@ -212,6 +240,11 @@ export default function BothTalentWheels({
             fontFamily: "inherit",
           }}
         />
+        {submissionId && (
+          <div style={{ marginTop: "4px", fontSize: "11px", color: "#6b7280" }}>
+            ID: {submissionId}
+          </div>
+        )}
       </div>
 
       {/* Content */}
