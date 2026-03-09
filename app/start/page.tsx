@@ -3,7 +3,6 @@
 import { useMemo, useRef, useState } from "react";
 import { TALENTS } from "@/lib/talents";
 import TalentWheel from "@/components/TalentWheel";
-import { exportTalentModelPDF } from "@/lib/generateTalentModelPDF";
 
 type PreData = {
   nombre: string;
@@ -497,23 +496,9 @@ export default function StartPage() {
             <ButtonGhost type="button" onClick={back}>
               Atrás
             </ButtonGhost>
-            <div className="flex flex-wrap gap-2 justify-end">
-              <ButtonGhost
-                type="button"
-                onClick={() => exportTalentModelPDF(ranked, "genotipo", pre.nombre)}
-              >
-                Exportar Modelo Genotipo
-              </ButtonGhost>
-              <ButtonGhost
-                type="button"
-                onClick={() => exportTalentModelPDF(ranked, "neurotalento", pre.nombre)}
-              >
-                Exportar Modelo Neurotalento
-              </ButtonGhost>
-              <ButtonPrimary type="button" onClick={next}>
-                Continuar con el registro
-              </ButtonPrimary>
-            </div>
+            <ButtonPrimary type="button" onClick={next}>
+              Continuar con el registro
+            </ButtonPrimary>
           </div>
         </div>
       </main>

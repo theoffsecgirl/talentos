@@ -1,9 +1,11 @@
 import { TALENTS } from "@/lib/talents";
+import type JSZip from "jszip";
 
 type Html2PdfInstance = {
   set(options: Record<string, unknown>): Html2PdfInstance;
   from(element: HTMLElement): Html2PdfInstance;
   save(): Promise<void>;
+  output(type: string): Promise<Blob>;
 };
 
 type Html2PdfFn = () => Html2PdfInstance;
@@ -314,58 +316,80 @@ function generatePDFHTML(
 export function exportTalentModelPDF(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
-  userName: string
-): void {
-  if (typeof window === "undefined") return;
+  userName: string,
+  zip?: JSZip
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") { resolve(); return; }
 
-  const html2pdf = (window as unknown as { html2pdf?: Html2PdfFn }).html2pdf;
-  if (!html2pdf) {
-    window.print();
-    return;
-  }
+    const html2pdf = (window as unknown as { html2pdf?: Html2PdfFn }).html2pdf;
+    if (!html2pdf) {
+      if (!zip) window.print();
+      resolve();
+      return;
+    }
 
-  const htmlContent = generatePDFHTML(ranked, modelType, userName);
+    const htmlContent = generatePDFHTML(ranked, modelType, userName);
 
-  const container = document.createElement("div");
-  container.style.position = "fixed";
-  container.style.top = "-9999px";
-  container.style.left = "-9999px";
-  container.style.width = "794px";
-  document.body.appendChild(container);
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.top = "-9999px";
+    container.style.left = "-9999px";
+    container.style.width = "794px";
+    document.body.appendChild(container);
 
-  const iframe = document.createElement("iframe");
-  iframe.style.width = "794px";
-  iframe.style.height = "600px";
-  iframe.style.border = "none";
-  container.appendChild(iframe);
+    const iframe = document.createElement("iframe");
+    iframe.style.width = "794px";
+    iframe.style.height = "600px";
+    iframe.style.border = "none";
+    container.appendChild(iframe);
 
-  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}neurotalentos-${modelType}.pdf`;
+    const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}neurotalentos-${modelType}.pdf`;
 
-  iframe.onload = () => {
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!iframeDoc) { document.body.removeChild(container); return; }
+    iframe.onload = () => {
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc) { document.body.removeChild(container); resolve(); return; }
 
-    iframeDoc.open();
-    iframeDoc.write(htmlContent);
-    iframeDoc.close();
+      iframeDoc.open();
+      iframeDoc.write(htmlContent);
+      iframeDoc.close();
 
-    const target = iframeDoc.body.firstElementChild as HTMLElement ?? iframeDoc.body;
+      const target = iframeDoc.body.firstElementChild as HTMLElement ?? iframeDoc.body;
 
-    html2pdf()
-      .set({
-        margin: 0,
-        filename: fileName,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-        jsPDF: { unit: "px", format: [794, 600], orientation: "landscape" },
-      })
-      .from(target)
-      .save()
-      .then(() => {
-        document.body.removeChild(container);
-      })
-      .catch(() => {
-        document.body.removeChild(container);
-      });
-  };
+      const instance = html2pdf()
+        .set({
+          margin: 0,
+          filename: fileName,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+          jsPDF: { unit: "px", format: [794, 600], orientation: "landscape" },
+        })
+        .from(target);
+
+      if (zip) {
+        instance
+          .output("blob")
+          .then((blob: Blob) => {
+            zip.file(fileName, blob);
+            document.body.removeChild(container);
+            resolve();
+          })
+          .catch(() => {
+            document.body.removeChild(container);
+            resolve();
+          });
+      } else {
+        instance
+          .save()
+          .then(() => {
+            document.body.removeChild(container);
+            resolve();
+          })
+          .catch(() => {
+            document.body.removeChild(container);
+            resolve();
+          });
+      }
+    };
+  });
 }
