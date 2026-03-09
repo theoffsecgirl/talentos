@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { TALENTS } from "@/lib/talents";
 import TalentWheel from "@/components/TalentWheel";
+import PDFDownloadView from "@/components/PDFDownloadView";
 
 type PreData = {
   nombre: string;
@@ -395,15 +396,15 @@ export default function StartPage() {
   }
 
   function exportToPDF() {
-    const content = document.getElementById('results-content');
+    const content = document.getElementById('pdf-download-content');
     if (!content) return;
     
     if (typeof window !== 'undefined' && (window as any).html2pdf) {
       const opt = {
-        margin: 10,
-        filename: `${pre.nombre.toLowerCase().replace(/\s+/g, '-')}-informe-talentos.pdf`,
+        margin: [10, 10, 10, 10],
+        filename: `${pre.nombre.toLowerCase().replace(/\s+/g, '-')}-${post.apellido.toLowerCase().replace(/\s+/g, '-')}-mapa-talentos.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       (window as any).html2pdf().set(opt).from(content).save();
@@ -425,6 +426,16 @@ export default function StartPage() {
 
     return (
       <main className="min-h-screen bg-[var(--background)]">
+        {/* Vista para descargar PDF (oculta) */}
+        <div className="hidden">
+          <PDFDownloadView 
+            scores={wheelScores} 
+            userName={pre.nombre} 
+            userLastName={post.apellido}
+          />
+        </div>
+
+        {/* Vista normal en pantalla */}
         <div className="max-w-4xl mx-auto px-4 py-12" id="results-content">
           <header className="flex items-end justify-between gap-4 mb-8">
             <div>
@@ -496,7 +507,7 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* Botones de descarga - NUEVO */}
+          {/* Botones de descarga */}
           <div className="mb-6 flex flex-wrap gap-3 no-print">
             <ButtonPrimary type="button" onClick={exportToPDF} className="flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
