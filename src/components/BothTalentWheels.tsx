@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import TalentWheel from "@/components/TalentWheel";
 
 type Score = {
@@ -13,59 +14,68 @@ type Props = {
 };
 
 export default function BothTalentWheels({ scores }: Props) {
+  const [activeTab, setActiveTab] = useState<"genotipo" | "neurotalento">("genotipo");
+
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "40px",
-        maxWidth: "1400px",
-        margin: "0 auto",
-        padding: "20px",
-      }}
-    >
-      {/* Mapa Genotipo */}
+    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      {/* Tabs */}
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "16px",
+          gap: "8px",
+          borderBottom: "2px solid #e5e7eb",
+          marginBottom: "30px",
         }}
       >
-        <h2
+        <button
+          onClick={() => setActiveTab("genotipo")}
           style={{
-            fontSize: "20px",
-            fontWeight: "700",
-            color: "#111",
-            textAlign: "center",
+            padding: "12px 24px",
+            fontSize: "15px",
+            fontWeight: "600",
+            color: activeTab === "genotipo" ? "#111" : "#666",
+            background: activeTab === "genotipo" ? "#1a1d29" : "transparent",
+            border: "none",
+            borderRadius: "8px 8px 0 0",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            ...(activeTab === "genotipo" && { color: "#fff" }),
           }}
         >
-          MAPA GENOTIPO
-        </h2>
-        <TalentWheel scores={scores} showFullLabels={true} modelType="genotipo" />
+          Mapa Genotipo
+        </button>
+        <button
+          onClick={() => setActiveTab("neurotalento")}
+          style={{
+            padding: "12px 24px",
+            fontSize: "15px",
+            fontWeight: "600",
+            color: activeTab === "neurotalento" ? "#111" : "#666",
+            background: activeTab === "neurotalento" ? "#1a1d29" : "transparent",
+            border: "none",
+            borderRadius: "8px 8px 0 0",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            ...(activeTab === "neurotalento" && { color: "#fff" }),
+          }}
+        >
+          Mapa Neurotalento
+        </button>
       </div>
 
-      {/* Mapa Neurotalento */}
+      {/* Content */}
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "16px",
+          justifyContent: "center",
+          padding: "20px",
         }}
       >
-        <h2
-          style={{
-            fontSize: "20px",
-            fontWeight: "700",
-            color: "#111",
-            textAlign: "center",
-          }}
-        >
-          MAPA NEUROTALENTO
-        </h2>
-        <TalentWheel scores={scores} showFullLabels={true} modelType="neurotalento" />
+        {activeTab === "genotipo" ? (
+          <TalentWheel scores={scores} showFullLabels={true} modelType="genotipo" />
+        ) : (
+          <TalentWheel scores={scores} showFullLabels={true} modelType="neurotalento" />
+        )}
       </div>
     </div>
   );
