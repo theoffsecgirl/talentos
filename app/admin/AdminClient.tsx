@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import TalentWheel from "@/components/TalentWheel";
+import { exportTalentModelPDF, RankedTalent } from "@/lib/generateTalentModelPDF";
+import { TALENTS } from "@/lib/talents";
+import JSZip from "jszip";
 
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
@@ -19,8 +22,32 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryCo
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
 
+function calculateRanked(answers: Record<string, number>): RankedTalent[] {
+  return TALENTS.map((t) => {
+    const score = t.items.reduce((sum, item) => sum + (answers[item.id] ?? 0), 0);
+    const max = t.items.length * 3;
+    return {
+      id: t.id,
+      code: t.code,
+      quizTitle: t.quizTitle,
+      titleSymbolic: t.titleSymbolic,
+      titleGenotype: t.titleGenotype,
+      reportTitle: t.reportTitle,
+      reportSummary: t.reportSummary,
+      exampleRoles: Array.isArray(t.exampleRoles) ? t.exampleRoles : [],
+      score,
+      max,
+    };
+  }).sort((a, b) => b.score - a.score);
+}
+
 function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
+}
+
+function getRowAnswers(row: any): Record<string, number> | null {
+  const ans = row.assessments?.[0]?.answersJson;
+  return ans && typeof ans === "object" ? (ans as Record<string, number>) : null;
 }
 
 function toISODate(d: Date) {
@@ -698,6 +725,54 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <ButtonGhost type="button" onClick={onClear}>
             Limpiar
           </ButtonGhost>
+
+          <ButtonGhost
+            type="button"
+            onClick={async () => {
+              const zip = new JSZip();
+              const fecha = new Date().toISOString().slice(0, 10);
+              for (const r of rows) {
+                const ans = getRowAnswers(r);
+                if (!ans) continue;
+                await exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre, zip);
+              }
+              const content = await zip.generateAsync({ type: "blob" });
+              const url = URL.createObjectURL(content);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `neurotalentos-genotipo-${fecha}.zip`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Exportar filtrados (Genotipo)
+          </ButtonGhost>
+
+          <ButtonGhost
+            type="button"
+            onClick={async () => {
+              const zip = new JSZip();
+              const fecha = new Date().toISOString().slice(0, 10);
+              for (const r of rows) {
+                const ans = getRowAnswers(r);
+                if (!ans) continue;
+                await exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre, zip);
+              }
+              const content = await zip.generateAsync({ type: "blob" });
+              const url = URL.createObjectURL(content);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `neurotalentos-neurotalento-${fecha}.zip`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Exportar filtrados (Neurotalento)
+          </ButtonGhost>
         </div>
       </form>
 
@@ -705,11 +780,11 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
         <div className="grid grid-cols-12 gap-0 px-3 py-2 text-xs font-semibold text-[var(--muted-foreground)] border-b border-[var(--border)] bg-[var(--card)]">
           <div className="col-span-2">Fecha</div>
           <div className="col-span-3">Nombre</div>
-          <div className="col-span-3">Email</div>
+          <div className="col-span-2">Email</div>
           <div className="col-span-1">Edad</div>
           <div className="col-span-1">Curso</div>
           <div className="col-span-1">Modalidad</div>
-          <div className="col-span-1 text-right">Ver</div>
+          <div className="col-span-2 text-right">Acciones</div>
         </div>
 
         <div className="divide-y divide-[var(--border)]">
@@ -727,7 +802,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                 <div className="text-xs text-[var(--muted-foreground)]">{r.genero} · {r.centroEducativo ?? "—"}</div>
               </div>
 
-              <div className="col-span-3 whitespace-nowrap text-[var(--foreground)]">{r.user.email}</div>
+              <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis text-[var(--foreground)]">{r.user.email}</div>
 
               <div className="col-span-1 whitespace-nowrap text-[var(--foreground)]">
                 {ageFromBirthdate(new Date(r.fechaNacimiento))}
@@ -736,10 +811,34 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               <div className="col-span-1 whitespace-nowrap text-[var(--foreground)]">{r.curso}</div>
               <div className="col-span-1 whitespace-nowrap text-[var(--foreground)]">{r.modalidad}</div>
 
-              <div className="col-span-1 text-right">
+              <div className="col-span-2 flex items-center justify-end gap-1">
                 <ButtonGhost
                   type="button"
-                  className="px-3 py-1.5 text-xs"
+                  className="px-2 py-1 text-xs font-bold"
+                  title="Exportar Modelo Genotipo"
+                  aria-label="Exportar Modelo Genotipo"
+                  onClick={() => {
+                    const ans = getRowAnswers(r);
+                    if (ans) exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre);
+                  }}
+                >
+                  G
+                </ButtonGhost>
+                <ButtonGhost
+                  type="button"
+                  className="px-2 py-1 text-xs font-bold"
+                  title="Exportar Modelo Neurotalento"
+                  aria-label="Exportar Modelo Neurotalento"
+                  onClick={() => {
+                    const ans = getRowAnswers(r);
+                    if (ans) exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre);
+                  }}
+                >
+                  N
+                </ButtonGhost>
+                <ButtonGhost
+                  type="button"
+                  className="px-2 py-1 text-xs"
                   onClick={() => {
                     setTab("resultados");
                     setOpenId(r.id);
