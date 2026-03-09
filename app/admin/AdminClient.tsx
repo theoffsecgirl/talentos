@@ -268,222 +268,6 @@ function topN(talents: any[], scoresJson: any, n: number) {
   });
 }
 
-function buildHtmlDoc(title: string, body: string, extraCss = "") {
-  return `<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${title}</title>
-  <style>
-    :root{--bg:#ffffff;--fg:#0b1220;--muted:#6b7280;--border:#e5e7eb;--accent:#0ea5e9;--danger:#ef4444;}
-    *{box-sizing:border-box} body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; color:var(--fg); background:var(--bg)}
-    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm 16mm;page-break-after:always}
-    .page:last-child{page-break-after:auto}
-    .h1{font-size:34px;line-height:1.05;margin:0 0 10px;font-weight:900;letter-spacing:-0.02em}
-    .h2{font-size:20px;margin:0 0 8px;font-weight:800}
-    .muted{color:var(--muted)}
-    .card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
-    .grid{display:grid;gap:12px}
-    .grid2{grid-template-columns:1fr 1fr}
-    .grid3{grid-template-columns:1fr 1fr 1fr}
-    .pill{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted)}
-    .bar{height:10px;border-radius:999px;background:var(--border);overflow:hidden}
-    .bar>span{display:block;height:100%;background:var(--fg)}
-    .bar.danger>span{background:var(--danger)}
-    table{width:100%;border-collapse:collapse;font-size:12px}
-    th,td{border:1px solid var(--border);padding:8px;vertical-align:top}
-    th{background:#f8fafc;text-align:left}
-    svg{max-width:100%;height:auto}
-    @media print{body{background:#fff}.page{padding:16mm}}
-    ${extraCss}
-  </style>
-</head>
-<body>
-${body}
-</body>
-</html>`;
-}
-
-function ReportHtml({
-  selected,
-  talents,
-  scores,
-  top3Rows,
-  mapSvg,
-  answers,
-  questionMap,
-}: {
-  selected: any;
-  talents: any[];
-  scores: ScoreRow[];
-  top3Rows: any[];
-  mapSvg: string;
-  answers: Record<string, number>;
-  questionMap: Record<string, { text: string; talentQuizTitle: string; talentId: number; idxInTalent: number }>;
-}) {
-  const byId = new Map(scores.map((s) => [s.talentId, s]));
-  const ordered = talents.slice().sort((a, b) => a.id - b.id);
-
-  const cover = `
-  <section class="page">
-    <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
-    <div style="display:flex;justify-content:space-between;gap:16px;margin-top:18px;align-items:flex-end">
-      <div>
-        <h1 class="h1">TU INFORME DE TALENTOS</h1>
-        <div class="muted" style="font-size:14px;">Mapa visual basado en neurociencia aplicada</div>
-        <div style="margin-top:18px;font-size:16px;font-weight:800">${selected.nombre} ${selected.apellido}</div>
-        <div class="muted" style="margin-top:4px">${toISODate(new Date(selected.createdAt))}</div>
-      </div>
-    </div>
-
-    <div style="margin-top:32px;display:flex;justify-content:center">
-      ${mapSvg}
-    </div>
-
-    <div style="margin-top:24px">
-      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px">Detalle por talento</h3>
-      <div class="grid">
-        ${TALENT_ORDER.map((tid) => {
-          const s = byId.get(tid);
-          const config = TALENT_CONFIG[tid];
-          const t = talents.find((x: any) => x.id === tid);
-          const percentage = pct(s?.score ?? 0, s?.max ?? 0);
-          return `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:8px">
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:24px;color:${config.color}">${config.symbol}</span>
-                <div>
-                  <div style="font-weight:700;font-size:13px">${t?.reportTitle || t?.quizTitle || `T${tid}`}</div>
-                  <div class="muted" style="font-size:11px">${config.category}</div>
-                </div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-weight:900;font-size:16px;color:${config.color}">${percentage}%</div>
-              </div>
-            </div>`;
-        }).join("\n")}
-      </div>
-    </div>
-  </section>`;
-
-  const resumenPage = `
-  <section class="page">
-    <h2 class="h2">Tus 3 talentos más destacados</h2>
-    <div class="grid" style="margin-top:14px">
-      ${top3Rows
-        .map((t, idx) => {
-          const config = TALENT_CONFIG[t.talentId];
-          const percentage = pct(t.score, t.max);
-          return `
-            <div class="card">
-              <div style="display:flex;gap:12px;align-items:flex-start">
-                <div style="font-size:32px;color:${config?.color || "#000"}">${config?.symbol || ""}</div>
-                <div style="flex:1">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                    <span style="font-size:12px;font-weight:700;color:var(--muted)">#${idx + 1}</span>
-                    <span style="font-weight:900;font-size:16px">${t.reportTitle || t.quizTitle}</span>
-                  </div>
-                  <div class="muted" style="font-size:13px;line-height:1.5">${t.reportSummary}</div>
-                  <div style="margin-top:8px;text-align:right">
-                    <span style="font-size:20px;font-weight:900;color:${config?.color}">${percentage}%</span>
-                  </div>
-                </div>
-              </div>
-            </div>`;
-        })
-        .join("\n")}
-    </div>
-
-    <div style="margin-top:16px" class="card">
-      <div style="font-weight:900;margin-bottom:8px">Todos los talentos</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Símbolo</th>
-            <th>Talento</th>
-            <th>Código</th>
-            <th>Puntuación</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${TALENT_ORDER.map((tid) => {
-            const s = byId.get(tid);
-            const config = TALENT_CONFIG[tid];
-            const t = talents.find((x: any) => x.id === tid);
-            const percentage = pct(s?.score ?? 0, s?.max ?? 0);
-            return `
-              <tr>
-                <td style="text-align:center;font-size:20px;color:${config.color}">${config.symbol}</td>
-                <td style="font-weight:700">${t?.reportTitle || t?.quizTitle || `T${tid}`}</td>
-                <td style="text-align:center">${t?.code}</td>
-                <td style="text-align:center;font-weight:700">${percentage}%</td>
-              </tr>`;
-          }).join("\n")}
-        </tbody>
-      </table>
-    </div>
-  </section>`;
-
-  const profesionesPage = `
-  <section class="page">
-    <h2 class="h2">Profesiones y roles sugeridos</h2>
-    <div class="muted" style="font-size:13px;margin-bottom:12px">Basado en tus talentos principales:</div>
-    <div class="card">
-      <ul style="margin:0;padding-left:20px;font-size:13px">
-        ${top3Rows
-          .flatMap((t) => t.exampleRoles)
-          .map((role: string) => `<li style="margin-bottom:8px">${role}</li>`)
-          .join("\n")}
-      </ul>
-    </div>
-  </section>`;
-
-  const detailPages = ordered.map((t) => {
-    const s = byId.get(t.id);
-    const config = TALENT_CONFIG[t.id];
-    const percentage = pct(s?.score ?? 0, s?.max ?? 0);
-    const fields = (t.fields ?? []).map((x: string) => `<li>${x}</li>`).join("");
-    const comps = (t.competencies ?? []).map((x: string) => `<li>${x}</li>`).join("");
-    const roles = (t.exampleRoles ?? []).map((x: string) => `<li>${x}</li>`).join("");
-
-    return `
-    <section class="page">
-      <div class="pill">${t.code} · ${config?.symbol || ""} · ${t.titleGenotype || ""}</div>
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:14px">
-        <div>
-          <h2 class="h2">${t.reportTitle || t.quizTitle}</h2>
-          <div class="muted" style="font-size:13px">${t.group || t.quizTitle}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="muted" style="font-size:12px;font-weight:700">Puntuación</div>
-          <div style="font-size:28px;font-weight:900;color:${config?.color || "#000"}">${percentage}%</div>
-        </div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div style="font-weight:900;margin-bottom:6px">Resumen neurocognitivo</div>
-        <div style="font-size:13px" class="muted">${t.reportSummary || ""}</div>
-      </div>
-      <div class="grid grid2" style="margin-top:12px">
-        <div class="card">
-          <div style="font-weight:900;margin-bottom:8px">Ámbitos profesionales</div>
-          <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${fields}</ul>
-        </div>
-        <div class="card">
-          <div style="font-weight:900;margin-bottom:8px">Competencias personales</div>
-          <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${comps}</ul>
-        </div>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <div style="font-weight:900;margin-bottom:8px">Roles y profesiones de ejemplo</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px" class="muted">${roles}</ul>
-      </div>
-    </section>`;
-  }).join("\n");
-
-  return cover + resumenPage + profesionesPage + detailPages;
-}
-
 export default function AdminClient({ rows, exportHref, talents, filters }: any) {
   const router = useRouter();
   const pathname = usePathname();
@@ -582,16 +366,6 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     }
   }, [selected]);
 
-  function captureSvg(): string {
-    const container = document.getElementById('hidden-talent-wheel');
-    if (!container) return "";
-    
-    const svg = container.querySelector('svg');
-    if (!svg) return "";
-    
-    return new XMLSerializer().serializeToString(svg);
-  }
-
   async function exportInformePDF(row: any) {
     const scoresJson = row.assessments?.[0]?.scoresJson;
     if (!scoresJson) {
@@ -663,70 +437,87 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     URL.revokeObjectURL(url);
   }
 
-  function downloadMapaHtml() {
-    if (!selected || !svgReady) return;
-    const title = `${selected.nombre}-${selected.apellido}-Mapa-Talentos`;
-    const mapSvg = captureSvg();
-    const byId = new Map(scores.map((s) => [s.talentId, s]));
+  async function exportInformesPDFMasivo() {
+    const JSZip = (window as any).JSZip;
+    if (!JSZip) {
+      alert('JSZip no está cargado');
+      return;
+    }
 
-    const body = `
-      <section class="page">
-        <div class="pill">NEUROCIENCIA APLICADA · DESCUBRE TU FUTURO PROFESIONAL</div>
-        <h1 class="h1" style="margin-top:12px">MAPA DE TALENTOS</h1>
-        <div style="margin-top:8px;font-size:16px;font-weight:800">${selected.nombre} ${selected.apellido}</div>
-        <div class="muted">${toISODate(new Date(selected.createdAt))}</div>
-        
-        <div style="margin-top:24px;display:flex;justify-content:center">
-          ${mapSvg}
-        </div>
+    const zip = new JSZip();
+    const fecha = new Date().toISOString().slice(0, 10);
+    let procesados = 0;
 
-        <div style="margin-top:24px">
-          <h3 style="font-size:14px;font-weight:700;margin-bottom:12px">Detalle por talento</h3>
-          <div class="grid">
-            ${TALENT_ORDER.map((tid) => {
-              const s = byId.get(tid);
-              const config = TALENT_CONFIG[tid];
-              const t = talents.find((x: any) => x.id === tid);
-              const percentage = pct(s?.score ?? 0, s?.max ?? 0);
-              return `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:8px">
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <span style="font-size:24px;color:${config.color}">${config.symbol}</span>
-                    <div>
-                      <div style="font-weight:700;font-size:13px">${t?.reportTitle || t?.quizTitle || `T${tid}`}</div>
-                      <div class="muted" style="font-size:11px">${config.category}</div>
-                    </div>
-                  </div>
-                  <div style="text-align:right">
-                    <div style="font-weight:900;font-size:16px;color:${config.color}">${percentage}%</div>
-                  </div>
-                </div>`;
-            }).join("\n")}
-          </div>
-        </div>
-      </section>`;
+    for (const r of rows) {
+      const scoresJson = r.assessments?.[0]?.scoresJson;
+      if (!scoresJson) continue;
 
-    const html = buildHtmlDoc(title, body);
-    downloadTextFile(`${title}.html`, html, "text/html;charset=utf-8");
-  }
+      const rowScores = getScores(scoresJson);
+      
+      const container = document.getElementById('hidden-talent-wheel-temp');
+      if (container) container.remove();
+      
+      const tempDiv = document.createElement('div');
+      tempDiv.id = 'hidden-talent-wheel-temp';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.width = '600px';
+      tempDiv.style.height = '600px';
+      document.body.appendChild(tempDiv);
 
-  function downloadInformeHtml() {
-    if (!selected || !svgReady) return;
-    const title = `${selected.nombre}-${selected.apellido}-Informe-Talentos`;
-    const mapSvg = captureSvg();
+      const { createRoot } = await import('react-dom/client');
+      const root = createRoot(tempDiv);
+      const TalentWheelModule = await import('@/components/TalentWheel');
+      const TalentWheel = TalentWheelModule.default;
 
-    const reportBody = ReportHtml({
-      selected,
-      talents,
-      scores,
-      top3Rows,
-      mapSvg,
-      answers,
-      questionMap: QUESTION_MAP,
-    });
+      await new Promise<void>((resolve) => {
+        root.render(
+          React.createElement(TalentWheel, {
+            scores: rowScores,
+            showFullLabels: true,
+          })
+        );
+        setTimeout(resolve, 500);
+      });
 
-    const html = buildHtmlDoc(title, reportBody);
-    downloadTextFile(`${title}.html`, html, "text/html;charset=utf-8");
+      const svg = tempDiv.querySelector('svg');
+      const mapSvg = svg ? new XMLSerializer().serializeToString(svg) : '';
+
+      root.unmount();
+      tempDiv.remove();
+
+      const response = await fetch('/api/generate-informe-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName: `${r.nombre} ${r.apellido}`,
+          date: toISODate(new Date(r.createdAt)),
+          scores: rowScores,
+          mapSvg,
+        }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        zip.file(`${r.nombre}-${r.apellido}-Informe.pdf`, blob);
+        procesados++;
+      }
+    }
+
+    if (procesados === 0) {
+      alert('No se pudo generar ningún informe');
+      return;
+    }
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `informes-talentos-${fecha}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   const rankedTalents = useMemo(() => {
@@ -853,6 +644,10 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           >
             Exportar filtrados (Neurotalento)
           </ButtonGhost>
+
+          <ButtonGhost type="button" onClick={exportInformesPDFMasivo}>
+            Exportar Informes PDF
+          </ButtonGhost>
         </div>
       </form>
 
@@ -960,27 +755,9 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   <div className="text-sm text-[var(--muted-foreground)]">{selected.user.email}</div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <ButtonGhost 
-                    type="button" 
-                    className="text-xs px-3 py-2" 
-                    onClick={downloadMapaHtml}
-                    disabled={!svgReady}
-                  >
-                    📊 Mapa HTML
-                  </ButtonGhost>
-                  <ButtonGhost 
-                    type="button" 
-                    className="text-xs px-3 py-2" 
-                    onClick={downloadInformeHtml}
-                    disabled={!svgReady}
-                  >
-                    📄 Informe HTML
-                  </ButtonGhost>
-                  <ButtonGhost type="button" onClick={() => setOpenId(null)}>
-                    Cerrar
-                  </ButtonGhost>
-                </div>
+                <ButtonGhost type="button" onClick={() => setOpenId(null)}>
+                  Cerrar
+                </ButtonGhost>
               </div>
 
               <div className="px-5 pt-4">
@@ -1131,7 +908,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
                     <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Informe completo</div>
                     <div className="text-sm text-[var(--muted-foreground)]">
-                      Descarga el HTML del informe completo usando el botón "📄 Informe HTML" de arriba.
+                      Usa el botón <strong>I</strong> en la fila del usuario para descargar el Informe PDF completo.
                     </div>
                   </div>
                 )}
