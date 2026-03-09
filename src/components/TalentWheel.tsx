@@ -11,6 +11,8 @@ type Props = {
   }>;
   printMode?: boolean;
   showFullLabels?: boolean;
+  modelType?: 'genotipo' | 'neurotalento';
+  centerText?: string;
 };
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryColor: string; axis: string }> = {
@@ -22,6 +24,28 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryCo
   8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", axis: "Desempeño" },
   1: { symbol: "Δ", color: "#DC2626", secondaryColor: "#EF4444", axis: "Acción" },
   4: { symbol: "Α", color: "#EF4444", secondaryColor: "#F87171", axis: "Acción" },
+};
+
+const GENOTIPO_SYMBOLS: Record<number, string> = {
+  1: "△",
+  2: "⬠",
+  3: "∞",
+  4: "◇",
+  5: "○",
+  6: "⬭",
+  7: "□",
+  8: "▭",
+};
+
+const NEUROTALENTO_SYMBOLS: Record<number, string> = {
+  1: "Σ",
+  2: "Π",
+  3: "Ψ",
+  4: "α",
+  5: "Ω",
+  6: "Φ",
+  7: "Θ",
+  8: "Μ",
 };
 
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
@@ -60,7 +84,7 @@ function splitTalentTitle(title: string): [string, string] {
   ];
 }
 
-export default function TalentWheel({ scores, printMode = false, showFullLabels = false }: Props) {
+export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
       const scoreData = scores.find((s) => s.talentId === talentId);
@@ -71,13 +95,22 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
       const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
       const fullTitle = talent?.reportTitle || getTalentTitle(talentId);
       const [line1, line2] = splitTalentTitle(fullTitle);
+
+      let symbol: string;
+      if (modelType === 'genotipo') {
+        symbol = GENOTIPO_SYMBOLS[talentId] ?? config.symbol;
+      } else if (modelType === 'neurotalento') {
+        symbol = NEUROTALENTO_SYMBOLS[talentId] ?? config.symbol;
+      } else {
+        symbol = config.symbol;
+      }
       
       return {
         id: talentId,
         title: fullTitle,
         titleLine1: line1,
         titleLine2: line2,
-        symbol: config.symbol,
+        symbol,
         score,
         maxScore,
         percentage,
@@ -86,7 +119,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         axis: config.axis,
       };
     });
-  }, [scores]);
+  }, [scores, modelType]);
 
   const size = 700;
   const center = size / 2;
@@ -267,11 +300,11 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           y={center}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize="16"
+          fontSize={(centerText ?? 'Talentos').length > 8 ? "9" : "16"}
           fontWeight="600"
           fill="#666"
         >
-          Talentos
+          {centerText ?? 'Talentos'}
         </text>
       </svg>
 
