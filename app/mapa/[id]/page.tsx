@@ -42,10 +42,12 @@ export default async function MapaPage({ params }: Props) {
     max: s.max,
   }));
 
+  const fullName = `${person.nombre} ${person.apellido}`;
+
   return (
     <html lang="es">
       <head>
-        <title>Mapas de Talentos - {person.nombre} {person.apellido}</title>
+        <title>Mapas de Talentos - {fullName}</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>{`
@@ -110,12 +112,18 @@ export default async function MapaPage({ params }: Props) {
       <body>
         <div className="header">
           <h1>MAPAS DE TALENTOS</h1>
-          <div className="name">{person.nombre} {person.apellido}</div>
+          <div className="name">{fullName}</div>
           <div className="date">{new Date(person.createdAt).toLocaleDateString("es-ES")}</div>
         </div>
         
         <div className="diagram-container">
-          <BothTalentWheels scores={wheelScores} />
+          <BothTalentWheels 
+            scores={wheelScores}
+            userName={fullName}
+            submissionId={person.id}
+            initialGenotipoSummary={person.genotipoSummary ?? ""}
+            initialNeurotalentoSummary={person.neurotalentoSummary ?? ""}
+          />
         </div>
 
         <script dangerouslySetInnerHTML={{
