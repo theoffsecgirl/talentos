@@ -280,9 +280,9 @@ function generatePDFHTML(
       ${talentListRows}
     </div>`;
 
-  // Summary banner (curved black box)
+  // Summary banner (curved black box) - smaller version for PDF
   const summaryBanner = summaryText && summaryText.trim()
-    ? `<div style="width:100%;max-width:560px;margin:16px auto 0;padding:16px 24px;background:#000;color:#fff;border-radius:50px;font-size:9px;line-height:1.5;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+    ? `<div style="width:100%;max-width:560px;margin:8px auto 0;padding:8px 16px;background:#000;color:#fff;border-radius:40px;font-size:7px;line-height:1.4;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
         ${summaryText}
       </div>`
     : "";
