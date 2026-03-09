@@ -47,11 +47,12 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Estrategia y comunicación",
     reportSummary:
-      "Perfil con facilidad para la estrategia y el arte de la palabra, así como su divulgación. Capacidad para vender, convencer y negociar. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil con facilidad por la estrategia y el arte de la palabra y la oratoria. También tienen capacidad para vender, convencer y negociar. Es el talento de las personas que realizan su actividad profesional sustentada en la habilidad comunicativa, la capacidad comercial y negociadora, y la perseverancia para alcanzar los objetivos propuestos. Propio de personas divulgadoras, políticas que trasladan una imagen de éxito de sí mismas.",
     fields: [
-      "Estrategia y venta",
+      "Gestión empresarial, principalmente comercial",
       "Divulgación y comunicación",
-      "Conexión humana",
+      "Negociación",
+      "Conexión con personas",
     ],
     competencies: [
       "Crean utilizando todo tipo de estrategias para conseguir sus objetivos",
@@ -86,11 +87,12 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Analítico y riguroso",
     reportSummary:
-      "Perfil que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que genere ideas innovadoras. Les atrae el mundo de la ciencia y la adquisición de conocimientos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental.",
+      "Perfil que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que generen ideas innovadoras. Les atrae el mundo de la ciencia por su curiosidad intelectual aplicada a todos los ámbitos profesionales. Es el talento de las personas que realizan su actividad profesional sustentada en altos conocimientos, la aplicación de lo que se sabe y la búsqueda de lo que se quiere saber.",
     fields: [
       "Investigación científica",
-      "Sanitaria",
-      "Tecnológica",
+      "La salud: humana, animal, de la naturaleza",
+      "Ciencias aplicadas",
+      "Tecnología y diseño del entorno",
     ],
     competencies: [
       "Crean desde una base de conocimiento, estudian y exploran lo imposible",
@@ -125,11 +127,11 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Acompañamiento y docencia",
     reportSummary:
-      "Perfil con pasión por el saber y el conocimiento. Suele ser una persona expresiva y comunicativa, con capacidad de escucha y de visión crítica. Este perfil se ubica en el eje generador, relacionado con la conexión humana, el equilibrio entre emoción y razón, y las capacidades creativas aplicadas.",
+      "Perfil interesado por el saber y el conocimiento. Suele ser personas expresivas y comunicativas, con capacidad de escucha y de visión crítica. Es el talento de las personas que realizan su actividad profesional sustentada en el acompañamiento de otras personas para hacerlas crecer y conseguir lo mejor de sí mismas. Propio de todo tipo de gestores de personas, docentes y formadores, filósofos, psicólogos y personas que realizan diferentes tipos de terapias.",
     fields: [
       "Humanidades",
-      "Docencia, coaching",
-      "Salud de las personas",
+      "Docencia, coaching, RRHH",
+      "Salud, desarrollo y crecimiento de las personas",
     ],
     competencies: [
       "Crean utilizando todo tipo de pensamiento, divergente o disruptivo",
@@ -163,11 +165,12 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Gestión y organización",
     reportSummary:
-      "Perfil que muestra capacidad de gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir sus objetivos. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y el enfoque mental en la forma de funcionar.",
+      "Perfil que muestra capacidad de control, gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir éxitos y resultados. Es el talento de las personas que realizan su actividad profesional sustentada en la capacidad de gestionar recursos de todo tipo y donde el análisis y la razón están por delante de la emoción. Se automotivan, tienen las ideas muy claras y saben cuáles son sus objetivos, que siempre controlan y nunca dejan de focalizar.",
     fields: [
       "Empresarial",
       "Administrativo",
       "Financiero",
+      "Legal",
       "Seguridad y protección",
     ],
     competencies: [
@@ -203,7 +206,7 @@ export const TALENTS: Talent[] = [
     group: "PROFUNDIDAD Y SENSIBILIDAD",
     reportTitle: "Empático y compasivo",
     reportSummary:
-      "Perfil que prioriza el bienestar de las personas, acompañarlas es una prioridad. Se caracteriza por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Este perfil pertenece al eje de vínculo, relacionado con la intuición, la capacidad de relación con los demás y con uno mismo.",
+      "Perfil que prioriza el bienestar de las personas, ayudar es una prioridad. Se caracterizan por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Es el talento de las personas que realizan su actividad profesional proyectada en la entrega, y la ayuda incondicional a los demás. Las diferentes actividades que se emprenden a nivel profesional deben tener una trascendencia en el ser humano, la ecología, el bienestar colectivo, la mejora de las condiciones de vida de las personas. Propio de profesionales relacionados con salud física y mental, educación, trabajos humanitarios, o servicios sociales.",
     fields: [
       "Relacionados con las personas y la entrega personal y profesional",
     ],
@@ -239,12 +242,12 @@ export const TALENTS: Talent[] = [
     group: "CREATIVIDAD Y VÍNCULO",
     reportTitle: "Imaginación y creatividad",
     reportSummary:
-      "Perfil que se caracteriza por su pasión por la creatividad y suele destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Este perfil se ubica en el eje generador, entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad aplicada.",
+      "Perfil que se caracteriza por su pasión por la creatividad y suelen destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Puede expresarse en las diferentes modalidades de arte, ya sean las más tradicionales, como el cine, el teatro, la pintura o la música, pero también pueden asociarse a todo tipo de ciencias aplicadas como la arquitectura, ingenierías, o incluso del mundo de la salud donde sea necesaria la creatividad para solucionar todo tipo de problemas. Finalmente también pueden incluirse las diferentes habilidades deportivas que pueden proporcionar una actividad profesional de élite.",
     fields: [
       "Capacidades artísticas",
       "Creatividad aplicada a todos los ámbitos profesionales y personales",
-      "Arte",
-      "Deportes de élite",
+      "Arte en todas sus expresiones",
+      "Deporte de élite",
     ],
     competencies: [
       "Crean constantemente en todas las facetas de la vida",
@@ -278,12 +281,12 @@ export const TALENTS: Talent[] = [
     group: "PROFUNDIDAD Y SENSIBILIDAD",
     reportTitle: "Profundo e introspectivo",
     reportSummary:
-      "Perfil que muestra mucha sensibilidad y profundidad en la forma de percibir el mundo. También destaca por tener una gran intuición. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, investigación o profundidad: la muerte, eventos traumáticos, la diversidad mental y conductual, así como expresiones artísticas alternativas. Este perfil pertenece al eje de vínculo, relacionado con la intuición y la percepción frente al análisis y la razón.",
+      "Perfil que muestra sensibilidad y profundidad en la manera de percibir el mundo, tanto personal como profesional. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, intuición, investigación y profundidad: la muerte, acontecimientos traumáticos, la diversidad mental y conductual. Suelen tener atracción por temas duros de la vida, como los cercanos a la muerte, el dolor, o el trauma. Propio de profesionales que acompañan en final de la vida, como cuidados paliativos, tanatopraxia, enfermedades mentales severas, oncológicas, etc. También de investigación criminal, forense, o psiquiátrica. Pueden dedicarse a actividades artísticas, como el cine, literatura, pintura, diseño de moda, etc, relacionadas con la oscuridad, el terror, el misterio, o el crimen.",
     fields: [
       "Sanitario",
       "Jurídico-social",
-      "Artístico, clima dark",
-      "Expresiones artísticas alternativas",
+      "Investigación del fraude, el error, la estafa",
+      "Artístico del mundo cute-gore, neo-gore, gothic, coming-of-age",
     ],
     competencies: [
       "Crean en zonas ocultas, profundas, a veces de difícil comprensión",
@@ -318,14 +321,11 @@ export const TALENTS: Talent[] = [
     group: "ACCIÓN Y RESULTADOS",
     reportTitle: "Aplicado y cooperador",
     reportSummary:
-      "Perfil que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional. Este perfil pertenece al eje pragmático, relacionado con la razón, el control y la ejecución práctica.",
+      "Perfil que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional y de proyección hacia el equipo de trabajo. Es el talento de las personas que realizan su actividad profesional siguiendo las instrucciones que reciben de un organismo superior. Cumplen, son responsables y logran los objetivos que les han sido encomendados. Propio de todo tipo de trabajo que se ejecuta con precisión, responsabilidad y alta cooperación con el equipo.",
     fields: [
-      "Educación",
       "Administración",
-      "Agraria",
-      "Hostelería y turismo",
-      "Seguridad y vigilancia",
-      "Transporte y mecánica",
+      "Educación",
+      "Agrario",
     ],
     competencies: [
       "La creatividad no es su característica principal",
