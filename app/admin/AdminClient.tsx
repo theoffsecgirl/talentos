@@ -738,7 +738,8 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               for (const r of rows) {
                 const ans = getRowAnswers(r);
                 if (!ans) continue;
-                await exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre, zip);
+                const summary = r.genotipoSummary ?? "";
+                await exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre, zip, summary);
               }
               const content = await zip.generateAsync({ type: "blob" });
               const url = URL.createObjectURL(content);
@@ -767,7 +768,8 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               for (const r of rows) {
                 const ans = getRowAnswers(r);
                 if (!ans) continue;
-                await exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre, zip);
+                const summary = r.neurotalentoSummary ?? "";
+                await exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre, zip, summary);
               }
               const content = await zip.generateAsync({ type: "blob" });
               const url = URL.createObjectURL(content);
@@ -828,7 +830,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   aria-label="Exportar Modelo Genotipo"
                   onClick={() => {
                     const ans = getRowAnswers(r);
-                    if (ans) exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre);
+                    if (ans) exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre, undefined, r.genotipoSummary ?? "");
                   }}
                 >
                   G
@@ -840,7 +842,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   aria-label="Exportar Modelo Neurotalento"
                   onClick={() => {
                     const ans = getRowAnswers(r);
-                    if (ans) exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre);
+                    if (ans) exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre, undefined, r.neurotalentoSummary ?? "");
                   }}
                 >
                   N
@@ -1042,7 +1044,13 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   </div>
                 ) : tab === "mapa" ? (
                   <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
-                    <BothTalentWheels scores={scores} />
+                    <BothTalentWheels 
+                      scores={scores} 
+                      userName={`${selected.nombre} ${selected.apellido}`}
+                      submissionId={selected.id}
+                      initialGenotipoSummary={selected.genotipoSummary ?? ""}
+                      initialNeurotalentoSummary={selected.neurotalentoSummary ?? ""}
+                    />
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-[var(--border)] p-4 bg-[var(--card)]">
