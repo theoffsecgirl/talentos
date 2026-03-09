@@ -85,6 +85,24 @@ function splitTalentTitle(title: string): [string, string] {
   ];
 }
 
+function calculateProfessionalProfile(talents: Array<{ id: number; percentage: number; axis: string }>) {
+  const axisScores: Record<string, number[]> = {};
+  
+  talents.forEach(t => {
+    if (!axisScores[t.axis]) {
+      axisScores[t.axis] = [];
+    }
+    axisScores[t.axis].push(t.percentage);
+  });
+
+  const axisAverages = Object.entries(axisScores).map(([axis, scores]) => ({
+    axis,
+    average: scores.reduce((sum, s) => sum + s, 0) / scores.length,
+  })).sort((a, b) => b.average - a.average);
+
+  return axisAverages;
+}
+
 export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
@@ -122,10 +140,12 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
     });
   }, [scores, modelType]);
 
+  const professionalProfile = useMemo(() => calculateProfessionalProfile(talents), [talents]);
+
   const size = 700;
   const center = size / 2;
-  const radius = 230;  // Reducido de 260 a 230
-  const innerRadius = 75;  // Reducido de 80 a 75
+  const radius = 230;
+  const innerRadius = 75;
 
   const sections = talents.map((talent, index) => {
     const anglePerSection = (Math.PI * 2) / 8;
@@ -206,6 +226,52 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           );
         })}
 
+        {/* Ejes en el exterior del círculo */}
+        {/* Arriba: Conocimiento */}
+        <text
+          x={center}
+          y={center - radius - 15}
+          textAnchor="middle"
+          fontSize="14"
+          fontWeight="bold"
+          fill="#8B5CF6"
+        >
+          Conocimiento
+        </text>
+        {/* Derecha: Imaginación */}
+        <text
+          x={center + radius + 15}
+          y={center + 5}
+          textAnchor="start"
+          fontSize="14"
+          fontWeight="bold"
+          fill="#06B6D4"
+        >
+          Imaginación
+        </text>
+        {/* Abajo: Acción */}
+        <text
+          x={center}
+          y={center + radius + 25}
+          textAnchor="middle"
+          fontSize="14"
+          fontWeight="bold"
+          fill="#DC2626"
+        >
+          Acción
+        </text>
+        {/* Izquierda: Entrega/Desempeño */}
+        <text
+          x={center - radius - 15}
+          y={center + 5}
+          textAnchor="end"
+          fontSize="14"
+          fontWeight="bold"
+          fill="#F59E0B"
+        >
+          Desempeño
+        </text>
+
         {/* Secciones de talentos */}
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
@@ -232,7 +298,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 opacity="0.3"
               />
 
-              {/* Porcentaje dentro de la sección */}
+              {/* Porcentaje dentro de la sección SIN el símbolo % */}
               {talent.percentage > 15 && (
                 <text
                   x={percentPos.x}
@@ -244,7 +310,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                   fill="white"
                   style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
                 >
-                  {talent.percentage}%
+                  {talent.percentage}
                 </text>
               )}
 
@@ -308,6 +374,28 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           {centerText ?? 'Talentos'}
         </text>
       </svg>
+
+      {/* Perfil profesional */}
+      {professionalProfile.length > 0 && (
+        <div className="w-full max-w-2xl print:max-w-full mb-6">
+          <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Perfil profesional</h3>
+          <div className="flex flex-wrap gap-2">
+            {professionalProfile.map((axis, idx) => (
+              <div
+                key={axis.axis}
+                className="px-4 py-2 rounded-lg border-2 font-semibold text-sm"
+                style={{
+                  borderColor: idx === 0 ? '#10B981' : '#e5e7eb',
+                  backgroundColor: idx === 0 ? '#f0fdf4' : 'white',
+                  color: idx === 0 ? '#10B981' : '#6b7280',
+                }}
+              >
+                {axis.axis} ({Math.round(axis.average)}%)
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Siempre mostrar detalle de talentos abajo */}
       <div className="w-full max-w-2xl print:max-w-full">
