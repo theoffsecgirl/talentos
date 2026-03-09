@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
 
     await browser.close();
 
-    return new NextResponse(pdfBuffer, {
+    return new Response(pdfBuffer.buffer, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${userName}-Informe-Talentos.pdf"`,
