@@ -193,8 +193,10 @@ function generateWheelSVG(
     return `<text x="${al.x}" y="${al.y}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444" letter-spacing="0.5" ${transform}>${al.name}</text>`;
   }).join("");
 
-  // Center text — always rendered as two lines "NEURO" / "TALENTOS"
+  // Center text based on model type
   const centerLineFontSize = "9";
+  const centerLine1 = modelType === "genotipo" ? "GENO" : "NEURO";
+  const centerLine2 = modelType === "genotipo" ? "TIPOS" : "TALENTOS";
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>${defs}</defs>
@@ -203,8 +205,8 @@ function generateWheelSVG(
   ${diagonals}
   ${sectorSVG}
   <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2"/>
-  <text x="${center}" y="${center - 6}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">NEURO</text>
-  <text x="${center}" y="${center + 8}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">TALENTOS</text>
+  <text x="${center}" y="${center - 6}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine1}</text>
+  <text x="${center}" y="${center + 8}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine2}</text>
   ${axisLabelsSVG}
 </svg>`;
 }
@@ -287,23 +289,23 @@ function generatePDFHTML(
   </style>
 </head>
 <body>
-  <div style="width:794px;padding:20px;">
+  <div style="width:1122px;padding:30px;">
     <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:2px solid #111;padding-bottom:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:2px solid #111;padding-bottom:10px;">
       <div>
-        <div style="font-size:18px;font-weight:700;color:#111;">MAPA DE NEUROTALENTOS</div>
-        <div style="font-size:11px;color:#555;">${userName ? userName + " — " : ""}${modelLabel}</div>
+        <div style="font-size:20px;font-weight:700;color:#111;">MAPA DE ${modelType === "genotipo" ? "GENOTIPOS" : "NEUROTALENTOS"}</div>
+        <div style="font-size:12px;color:#555;">${userName ? userName + " — " : ""}${modelLabel}</div>
       </div>
-      <div style="font-size:10px;color:#888;">Basado en neurociencia aplicada</div>
+      <div style="font-size:11px;color:#888;">Basado en neurociencia aplicada</div>
     </div>
     <!-- Main layout -->
-    <div style="display:flex;gap:16px;">
+    <div style="display:flex;gap:30px;align-items:flex-start;">
       <!-- Left: wheel -->
-      <div style="width:390px;flex-shrink:0;">
+      <div style="flex-shrink:0;">
         ${svgContent}
       </div>
       <!-- Right: profile + list -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
         ${profileSection}
         ${talentListSection}
       </div>
@@ -344,16 +346,16 @@ export function exportTalentModelPDF(
     container.style.position = "fixed";
     container.style.top = "-9999px";
     container.style.left = "-9999px";
-    container.style.width = "794px";
+    container.style.width = "1122px";
     document.body.appendChild(container);
 
     const iframe = document.createElement("iframe");
-    iframe.style.width = "794px";
-    iframe.style.height = "600px";
+    iframe.style.width = "1122px";
+    iframe.style.height = "794px";
     iframe.style.border = "none";
     container.appendChild(iframe);
 
-    const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}neurotalentos-${modelType}.pdf`;
+    const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "genotipos" : "neurotalentos"}.pdf`;
     console.log('📄 Filename:', fileName);
 
     // Write HTML to iframe
@@ -382,7 +384,7 @@ export function exportTalentModelPDF(
           filename: fileName,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-          jsPDF: { unit: "px", format: [794, 600], orientation: "landscape" },
+          jsPDF: { unit: "px", format: [1122, 794], orientation: "landscape" },
         })
         .from(target);
 
