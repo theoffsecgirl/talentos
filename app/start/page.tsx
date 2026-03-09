@@ -211,6 +211,7 @@ export default function StartPage() {
   const [saving, setSaving] = useState<boolean>(false);
   const [savedOk, setSavedOk] = useState<boolean>(false);
   const [selectedCareers, setSelectedCareers] = useState<string[]>([]);
+  const [otroCareerText, setOtroCareerText] = useState<string>("");
 
   const submittingRef = useRef(false);
 
@@ -262,6 +263,9 @@ export default function StartPage() {
     if (step === STEP_POST_3) {
       if (selectedCareers.length === 0) {
         return "Selecciona al menos un campo profesional o marca 'Ninguna'.";
+      }
+      if (selectedCareers.includes("Otro") && !otroCareerText.trim()) {
+        return "Escribe tu campo profesional personalizado en el campo 'Otro'.";
       }
     }
 
@@ -347,8 +351,9 @@ export default function StartPage() {
     setError("");
 
     try {
-      const identificaCampos = selectedCareers.length > 0 && !selectedCareers.includes("Ninguna") ? "Sí" : "No";
-      const campoIdentificado = selectedCareers.includes("Ninguna") ? null : selectedCareers.join(", ");
+      const careersToSave = selectedCareers.map(c => c === "Otro" ? otroCareerText.trim() : c).filter(Boolean);
+      const identificaCampos = careersToSave.length > 0 && !careersToSave.includes("Ninguna") ? "Sí" : "No";
+      const campoIdentificado = careersToSave.includes("Ninguna") ? null : careersToSave.join(", ");
 
       const res = await fetch("/api/onboarding", {
         method: "POST",
@@ -423,12 +428,6 @@ export default function StartPage() {
               <p className="mt-2 text-sm text-[var(--muted-foreground)] print:text-gray-600">Mapa visual de tus talentos basado en neurociencia aplicada</p>
             </div>
             <div className="flex items-center gap-3 no-print">
-              <ButtonGhost type="button" onClick={exportToPDF} className="text-xs">
-                <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Exportar PDF
-              </ButtonGhost>
               <ProgressRing value={progress} />
             </div>
           </header>
@@ -732,7 +731,7 @@ export default function StartPage() {
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {suggestedCareers.map((career) => (
                       <button
                         key={career}
@@ -763,7 +762,49 @@ export default function StartPage() {
                         </div>
                       </button>
                     ))}
-                    
+
+                    <button
+                      onClick={() => toggleCareer("Otro")}
+                      className={cx(
+                        "w-full p-3 rounded-lg border-2 text-left transition-all",
+                        selectedCareers.includes("Otro")
+                          ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
+                          : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--muted-foreground)]"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cx(
+                            "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0",
+                            selectedCareers.includes("Otro")
+                              ? "border-[var(--background)] bg-[var(--background)]"
+                              : "border-[var(--muted-foreground)]"
+                          )}
+                        >
+                          {selectedCareers.includes("Otro") && (
+                            <svg className="w-3 h-3 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm font-semibold">Otro</span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {selectedCareers.includes("Otro") && (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        value={otroCareerText}
+                        onChange={(e) => setOtroCareerText(e.target.value)}
+                        placeholder="Escribe tu campo profesional..."
+                        className="w-full p-3 rounded-lg border-2 border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
+                      />
+                    </div>
+                  )}
+
+                  <div className="mt-2">
                     <button
                       onClick={() => toggleCareer("Ninguna")}
                       className={cx(
@@ -825,6 +866,7 @@ export default function StartPage() {
                   setSaving(false);
                   setSavedOk(false);
                   setSelectedCareers([]);
+                  setOtroCareerText("");
                   submittingRef.current = false;
                 }}
               >
