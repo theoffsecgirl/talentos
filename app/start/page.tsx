@@ -425,9 +425,9 @@ export default function StartPage() {
     const uniqueRecommendedCareers = Array.from(new Set(allRecommendedCareers));
 
     return (
-      <main className="min-h-screen bg-[var(--background)]">
-        {/* Vista para descargar PDF (oculta) */}
-        <div className="hidden">
+      <>
+        {/* Vista para descargar PDF (fuera de pantalla pero renderizada) */}
+        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
           <PDFDownloadView 
             scores={wheelScores} 
             userName={pre.nombre} 
@@ -436,103 +436,105 @@ export default function StartPage() {
         </div>
 
         {/* Vista normal en pantalla */}
-        <div className="max-w-4xl mx-auto px-4 py-12" id="results-content">
-          <header className="flex items-end justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-[var(--foreground)] print:text-black">Tus Resultados</h1>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)] print:text-gray-600">Mapa visual de tus talentos basado en neurociencia aplicada</p>
-            </div>
-            <div className="flex items-center gap-3 no-print">
-              <ProgressRing value={progress} />
-            </div>
-          </header>
+        <main className="min-h-screen bg-[var(--background)]">
+          <div className="max-w-4xl mx-auto px-4 py-12" id="results-content">
+            <header className="flex items-end justify-between gap-4 mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-[var(--foreground)] print:text-black">Tus Resultados</h1>
+                <p className="mt-2 text-sm text-[var(--muted-foreground)] print:text-gray-600">Mapa visual de tus talentos basado en neurociencia aplicada</p>
+              </div>
+              <div className="flex items-center gap-3 no-print">
+                <ProgressRing value={progress} />
+              </div>
+            </header>
 
-          <div className="mb-12">
-            <TalentWheel scores={wheelScores} showFullLabels={true} />
-          </div>
+            <div className="mb-12">
+              <TalentWheel scores={wheelScores} showFullLabels={true} />
+            </div>
 
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
-            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4 print:text-black">Tus 3 talentos más destacados</h2>
-            <div className="space-y-4">
-              {top3.map((t, idx) => {
-                const percentage = t.max > 0 ? Math.round((t.score / t.max) * 100) : 0;
-                return (
-                  <div key={t.id} className="p-5 rounded-xl border border-[var(--border)] bg-[var(--background)] print:border-gray-300 print:bg-white talent-card">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl font-bold text-[var(--muted-foreground)] print:text-gray-500">#{idx + 1}</span>
-                        <div>
-                          <h3 className="font-bold text-lg text-[var(--foreground)] print:text-black">{t.reportTitle || t.quizTitle}</h3>
-                          <p className="text-xs text-[var(--muted-foreground)] mt-1 print:text-gray-600">{t.reportSummary}</p>
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
+              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4 print:text-black">Tus 3 talentos más destacados</h2>
+              <div className="space-y-4">
+                {top3.map((t, idx) => {
+                  const percentage = t.max > 0 ? Math.round((t.score / t.max) * 100) : 0;
+                  return (
+                    <div key={t.id} className="p-5 rounded-xl border border-[var(--border)] bg-[var(--background)] print:border-gray-300 print:bg-white talent-card">
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl font-bold text-[var(--muted-foreground)] print:text-gray-500">#{idx + 1}</span>
+                          <div>
+                            <h3 className="font-bold text-lg text-[var(--foreground)] print:text-black">{t.reportTitle || t.quizTitle}</h3>
+                            <p className="text-xs text-[var(--muted-foreground)] mt-1 print:text-gray-600">{t.reportSummary}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-3xl font-bold text-[var(--foreground)] print:text-black">{percentage}%</div>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-3xl font-bold text-[var(--foreground)] print:text-black">{percentage}%</div>
-                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Sección de profesiones y roles sugeridos */}
-          {uniqueRecommendedCareers.length > 0 && (
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
-              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 print:text-black">Profesiones y roles sugeridos</h2>
-              <p className="text-sm text-[var(--muted-foreground)] mb-4 print:text-gray-600">Basado en tus talentos principales:</p>
-              <div className="grid gap-2">
-                {uniqueRecommendedCareers.map((role, i) => (
-                  <div key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)] print:text-black">
-                    <span className="text-[var(--accent)] mt-0.5 print:text-blue-600">•</span>
-                    <span>{role}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
-          )}
 
-          {/* Sección de campos con los que te identificas */}
-          {selectedCareers.length > 0 && !selectedCareers.includes("Ninguna") && (
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
-              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 print:text-black">Campos profesionales con los que te identificas</h2>
-              <div className="grid gap-2 mt-4">
-                {selectedCareers.map((career, i) => (
-                  <div key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)] print:text-black">
-                    <span className="text-green-600 mt-0.5">✓</span>
-                    <span>{career}</span>
-                  </div>
-                ))}
+            {/* Sección de profesiones y roles sugeridos */}
+            {uniqueRecommendedCareers.length > 0 && (
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
+                <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 print:text-black">Profesiones y roles sugeridos</h2>
+                <p className="text-sm text-[var(--muted-foreground)] mb-4 print:text-gray-600">Basado en tus talentos principales:</p>
+                <div className="grid gap-2">
+                  {uniqueRecommendedCareers.map((role, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)] print:text-black">
+                      <span className="text-[var(--accent)] mt-0.5 print:text-blue-600">•</span>
+                      <span>{role}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
+
+            {/* Sección de campos con los que te identificas */}
+            {selectedCareers.length > 0 && !selectedCareers.includes("Ninguna") && (
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8 print:shadow-none print:border-gray-300 talent-card">
+                <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2 print:text-black">Campos profesionales con los que te identificas</h2>
+                <div className="grid gap-2 mt-4">
+                  {selectedCareers.map((career, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm text-[var(--foreground)] print:text-black">
+                      <span className="text-green-600 mt-0.5">✓</span>
+                      <span>{career}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Botones de descarga */}
+            <div className="mb-6 flex flex-wrap gap-3 no-print">
+              <ButtonPrimary type="button" onClick={exportToPDF} className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Descargar PDF
+              </ButtonPrimary>
+              <ButtonGhost type="button" onClick={handlePrint} className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Imprimir
+              </ButtonGhost>
             </div>
-          )}
 
-          {/* Botones de descarga */}
-          <div className="mb-6 flex flex-wrap gap-3 no-print">
-            <ButtonPrimary type="button" onClick={exportToPDF} className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Descargar PDF
-            </ButtonPrimary>
-            <ButtonGhost type="button" onClick={handlePrint} className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
-              Imprimir
-            </ButtonGhost>
+            <div className="mt-6 flex justify-between gap-3 no-print">
+              <ButtonGhost type="button" onClick={back}>
+                Atrás
+              </ButtonGhost>
+              <ButtonPrimary type="button" onClick={next}>
+                Continuar con el registro
+              </ButtonPrimary>
+            </div>
           </div>
-
-          <div className="mt-6 flex justify-between gap-3 no-print">
-            <ButtonGhost type="button" onClick={back}>
-              Atrás
-            </ButtonGhost>
-            <ButtonPrimary type="button" onClick={next}>
-              Continuar con el registro
-            </ButtonPrimary>
-          </div>
-        </div>
-      </main>
+        </main>
+      </>
     );
   }
 
