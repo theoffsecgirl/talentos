@@ -27,6 +27,10 @@ export default function RootLayout({
     <html lang="es" className="min-h-full">
       <head>
         <Script
+          src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+          strategy="beforeInteractive"
+        />
+        <Script
           src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
           strategy="beforeInteractive"
         />
