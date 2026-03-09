@@ -592,6 +592,77 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     return new XMLSerializer().serializeToString(svg);
   }
 
+  async function exportInformePDF(row: any) {
+    const scoresJson = row.assessments?.[0]?.scoresJson;
+    if (!scoresJson) {
+      alert('No hay datos de assessment');
+      return;
+    }
+
+    const rowScores = getScores(scoresJson);
+    
+    // Capturar SVG del mapa oculto
+    const container = document.getElementById('hidden-talent-wheel-temp');
+    if (container) container.remove();
+    
+    const tempDiv = document.createElement('div');
+    tempDiv.id = 'hidden-talent-wheel-temp';
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.width = '600px';
+    tempDiv.style.height = '600px';
+    document.body.appendChild(tempDiv);
+
+    // Renderizar temporalmente TalentWheel
+    const { createRoot } = await import('react-dom/client');
+    const root = createRoot(tempDiv);
+    const TalentWheelModule = await import('@/components/TalentWheel');
+    const TalentWheel = TalentWheelModule.default;
+
+    await new Promise<void>((resolve) => {
+      root.render(
+        React.createElement(TalentWheel, {
+          scores: rowScores,
+          showFullLabels: true,
+        })
+      );
+      setTimeout(resolve, 500);
+    });
+
+    const svg = tempDiv.querySelector('svg');
+    const mapSvg = svg ? new XMLSerializer().serializeToString(svg) : '';
+
+    root.unmount();
+    tempDiv.remove();
+
+    // Llamar a API para generar PDF
+    const response = await fetch('/api/generate-informe-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userName: `${row.nombre} ${row.apellido}`,
+        date: toISODate(new Date(row.createdAt)),
+        scores: rowScores,
+        mapSvg,
+      }),
+    });
+
+    if (!response.ok) {
+      alert('Error generando PDF');
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${row.nombre}-${row.apellido}-Informe-Talentos.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   function downloadMapaHtml() {
     if (!selected || !svgReady) return;
     const title = `${selected.nombre}-${selected.apellido}-Mapa-Talentos`;
@@ -844,6 +915,15 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                   }}
                 >
                   N
+                </ButtonGhost>
+                <ButtonGhost
+                  type="button"
+                  className="px-2 py-1 text-xs font-bold"
+                  title="Exportar Informe PDF"
+                  aria-label="Exportar Informe PDF"
+                  onClick={() => exportInformePDF(r)}
+                >
+                  I
                 </ButtonGhost>
                 <ButtonGhost
                   type="button"
