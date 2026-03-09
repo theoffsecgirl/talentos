@@ -173,7 +173,7 @@ function generateWheelSVG(
     const fillPath  = createArcPath(center, center, s.startAngle, s.endAngle, s.fillRadius, innerRadius);
     const outerPath = createArcPath(center, center, s.startAngle, s.endAngle, radius, innerRadius);
     const pctText   = s.percentage > 15
-      ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="white">${s.percentage}%</text>`
+      ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="white">${s.percentage}</text>`
       : "";
     return `
       <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
@@ -222,7 +222,8 @@ function generateBatteryBar(percentage: number): string {
 function generatePDFHTML(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
-  userName: string
+  userName: string,
+  summaryText?: string
 ): string {
   const symbolMap  = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
   const modelLabel = modelType === "genotipo" ? "Modelo Genotipo" : "Modelo Neurotalento";
@@ -279,6 +280,13 @@ function generatePDFHTML(
       ${talentListRows}
     </div>`;
 
+  // Summary banner (curved black box)
+  const summaryBanner = summaryText && summaryText.trim()
+    ? `<div style="width:100%;max-width:560px;margin:16px auto 0;padding:16px 24px;background:#000;color:#fff;border-radius:50px;font-size:9px;line-height:1.5;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+        ${summaryText}
+      </div>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -300,9 +308,10 @@ function generatePDFHTML(
     </div>
     <!-- Main layout -->
     <div style="display:flex;gap:24px;align-items:flex-start;">
-      <!-- Left: wheel -->
-      <div style="flex-shrink:0;">
+      <!-- Left: wheel + summary -->
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
         ${svgContent}
+        ${summaryBanner}
       </div>
       <!-- Right: profile + list -->
       <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
@@ -319,9 +328,10 @@ export function exportTalentModelPDF(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
-  zip?: JSZip
+  zip?: JSZip,
+  summaryText?: string
 ): Promise<void> {
-  console.log('🎯 exportTalentModelPDF called', { modelType, userName, hasZip: !!zip });
+  console.log('🎯 exportTalentModelPDF called', { modelType, userName, hasZip: !!zip, hasSummary: !!summaryText });
   
   return new Promise((resolve) => {
     if (typeof window === "undefined") { 
@@ -339,7 +349,7 @@ export function exportTalentModelPDF(
     }
 
     console.log('✅ html2pdf found, generating HTML...');
-    const htmlContent = generatePDFHTML(ranked, modelType, userName);
+    const htmlContent = generatePDFHTML(ranked, modelType, userName, summaryText);
     console.log('✅ HTML generated, creating container...');
 
     const container = document.createElement("div");
