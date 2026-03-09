@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import TalentWheel from "@/components/TalentWheel";
 import { exportTalentModelPDF, RankedTalent } from "@/lib/generateTalentModelPDF";
 import { TALENTS } from "@/lib/talents";
-import JSZip from "jszip";
 
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
@@ -729,6 +728,11 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <ButtonGhost
             type="button"
             onClick={async () => {
+              const JSZip = (window as any).JSZip;
+              if (!JSZip) {
+                alert('JSZip no está cargado');
+                return;
+              }
               const zip = new JSZip();
               const fecha = new Date().toISOString().slice(0, 10);
               for (const r of rows) {
@@ -753,6 +757,11 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <ButtonGhost
             type="button"
             onClick={async () => {
+              const JSZip = (window as any).JSZip;
+              if (!JSZip) {
+                alert('JSZip no está cargado');
+                return;
+              }
               const zip = new JSZip();
               const fecha = new Date().toISOString().slice(0, 10);
               for (const r of rows) {
