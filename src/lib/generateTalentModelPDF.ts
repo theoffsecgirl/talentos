@@ -356,21 +356,23 @@ export function exportTalentModelPDF(
     const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}neurotalentos-${modelType}.pdf`;
     console.log('📄 Filename:', fileName);
 
-    iframe.onload = () => {
-      console.log('✅ iframe loaded');
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) { 
-        console.log('❌ iframe doc not found');
-        document.body.removeChild(container); 
-        resolve(); 
-        return; 
-      }
+    // Write HTML to iframe
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) { 
+      console.log('❌ iframe doc not found');
+      document.body.removeChild(container); 
+      resolve(); 
+      return; 
+    }
 
-      iframeDoc.open();
-      iframeDoc.write(htmlContent);
-      iframeDoc.close();
-      console.log('✅ HTML written to iframe');
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+    console.log('✅ HTML written to iframe');
 
+    // Wait for iframe content to render
+    setTimeout(() => {
+      console.log('✅ iframe content rendered');
       const target = iframeDoc.body.firstElementChild as HTMLElement ?? iframeDoc.body;
 
       console.log('🔧 Creating html2pdf instance...');
@@ -414,6 +416,6 @@ export function exportTalentModelPDF(
             resolve();
           });
       }
-    };
+    }, 300); // Wait 300ms for rendering
   });
 }
