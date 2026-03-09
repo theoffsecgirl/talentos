@@ -36,6 +36,10 @@ model Submission {
   ideaCarreraFinal      String?
   ideaCarreraTextoFinal String?
 
+  // ✅ Resúmenes de mapas
+  genotipoSummary     String? @default("")
+  neurotalentoSummary String? @default("")
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
