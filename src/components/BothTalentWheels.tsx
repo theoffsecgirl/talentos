@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import TalentWheel from "@/components/TalentWheel";
 import { exportTalentModelPDF, type RankedTalent } from "@/lib/generateTalentModelPDF";
 import { TALENTS } from "@/lib/talents";
+import { debounce } from "@/lib/utils";
 
 type Score = {
   talentId: number;
@@ -14,13 +15,55 @@ type Score = {
 type Props = {
   scores: Score[];
   userName?: string;
+  submissionId?: string;
+  initialGenotipoSummary?: string;
+  initialNeurotalentoSummary?: string;
 };
 
-export default function BothTalentWheels({ scores, userName = "" }: Props) {
+export default function BothTalentWheels({ 
+  scores, 
+  userName = "", 
+  submissionId,
+  initialGenotipoSummary = "",
+  initialNeurotalentoSummary = ""
+}: Props) {
   const [activeTab, setActiveTab] = useState<"genotipo" | "neurotalento">("genotipo");
-  const [genotipoSummary, setGenotipoSummary] = useState("");
-  const [neurotalentoSummary, setNeurotalentoSummary] = useState("");
+  const [genotipoSummary, setGenotipoSummary] = useState(initialGenotipoSummary);
+  const [neurotalentoSummary, setNeurotalentoSummary] = useState(initialNeurotalentoSummary);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Debounced save function
+  const saveSummary = useCallback(
+    debounce(async (genotipo: string, neurotalento: string) => {
+      if (!submissionId) return;
+      
+      setIsSaving(true);
+      try {
+        await fetch('/api/submissions/update-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            genotipoSummary: genotipo,
+            neurotalentoSummary: neurotalento,
+          }),
+        });
+      } catch (err) {
+        console.error('Error saving summary:', err);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1000),
+    [submissionId]
+  );
+
+  // Auto-save when summaries change
+  useEffect(() => {
+    if (submissionId) {
+      saveSummary(genotipoSummary, neurotalentoSummary);
+    }
+  }, [genotipoSummary, neurotalentoSummary, saveSummary, submissionId]);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -109,24 +152,29 @@ export default function BothTalentWheels({ scores, userName = "" }: Props) {
           </button>
         </div>
 
-        {/* Export button */}
-        <button
-          onClick={handleExport}
-          disabled={isExporting}
-          style={{
-            padding: "8px 16px",
-            fontSize: "14px",
-            fontWeight: "600",
-            color: "#fff",
-            background: isExporting ? "#9ca3af" : "#DC2626",
-            border: "none",
-            borderRadius: "6px",
-            cursor: isExporting ? "not-allowed" : "pointer",
-            transition: "all 0.2s",
-          }}
-        >
-          {isExporting ? "Exportando..." : `Exportar ${activeTab === "genotipo" ? "Genotipo" : "Neurotalento"}`}
-        </button>
+        {/* Export button + save indicator */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {isSaving && (
+            <span style={{ fontSize: "12px", color: "#9ca3af" }}>Guardando...</span>
+          )}
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            style={{
+              padding: "8px 16px",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#fff",
+              background: isExporting ? "#9ca3af" : "#DC2626",
+              border: "none",
+              borderRadius: "6px",
+              cursor: isExporting ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            {isExporting ? "Exportando..." : `Exportar ${activeTab === "genotipo" ? "Genotipo" : "Neurotalento"}`}
+          </button>
+        </div>
       </div>
 
       {/* Summary input field */}
