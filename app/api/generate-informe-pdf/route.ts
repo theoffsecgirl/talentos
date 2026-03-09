@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import { TALENTS } from "@/lib/talents";
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string; category: string; axis: string }> = {
@@ -139,9 +140,14 @@ export async function POST(req: NextRequest) {
 
     const html = buildInformeHtml({ userName, date: date || new Date().toLocaleDateString('es-ES'), scores, mapSvg });
 
+    // Usar chromium en producción (Vercel), puppeteer local en dev
+    const isDev = process.env.NODE_ENV === 'development';
+    
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: isDev ? [] : chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: isDev ? '/usr/bin/chromium-browser' : await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
