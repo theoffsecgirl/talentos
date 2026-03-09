@@ -67,10 +67,10 @@ const AXIS_GROUPS = [
 
 // Axis label positions (at cardinal directions between sectors)
 const AXIS_LABELS: Array<{ name: string; x: number; y: number; rotate: number }> = [
-  { name: "SABER Y CONOCIMIENTO",  x: 350, y: 28,  rotate: 0   },
-  { name: "IMAGINACIÓN Y ARTE",    x: 672, y: 350, rotate: 90  },
-  { name: "DESTREZA Y PROYECCIÓN", x: 350, y: 672, rotate: 0   },
-  { name: "ACCIÓN Y RESULTADOS",   x: 28,  y: 350, rotate: -90 },
+  { name: "SABER Y CONOCIMIENTO",  x: 280, y: 22,  rotate: 0   },
+  { name: "IMAGINACIÓN Y ARTE",    x: 538, y: 280, rotate: 90  },
+  { name: "DESTREZA Y PROYECCIÓN", x: 280, y: 538, rotate: 0   },
+  { name: "ACCIÓN Y RESULTADOS",   x: 22,  y: 280, rotate: -90 },
 ];
 
 function toSafeNumber(value: unknown, fallback = 0): number {
@@ -108,10 +108,10 @@ function generateWheelSVG(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento"
 ): string {
-  const size        = 700;
+  const size        = 560;
   const center      = size / 2;
-  const radius      = 230;
-  const innerRadius = 75;
+  const radius      = 184;
+  const innerRadius = 60;
   const symbolMap   = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
 
   const sections = TALENT_ORDER.map((talentId, index) => {
@@ -126,7 +126,7 @@ function generateWheelSVG(
     const startAngle  = index * anglePerSec - Math.PI / 2;
     const endAngle    = startAngle + anglePerSec;
     const midAngle    = (startAngle + endAngle) / 2;
-    const labelDist   = radius + 95;
+    const labelDist   = radius + 76;
     const labelPos    = polarToCartesian(center, center, midAngle, labelDist);
     const percentPos  = polarToCartesian(center, center, midAngle, (fillRadius + innerRadius) / 2);
 
@@ -173,15 +173,15 @@ function generateWheelSVG(
     const fillPath  = createArcPath(center, center, s.startAngle, s.endAngle, s.fillRadius, innerRadius);
     const outerPath = createArcPath(center, center, s.startAngle, s.endAngle, radius, innerRadius);
     const pctText   = s.percentage > 15
-      ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="bold" fill="white">${s.percentage}%</text>`
+      ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="white">${s.percentage}%</text>`
       : "";
     return `
       <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
       <path d="${outerPath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3"/>
       ${pctText}
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 18).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="22" font-weight="bold" fill="${s.color}">${s.symbol}</text>
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 4).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="9.5" font-weight="600" fill="#333">${s.line1}</text>
-      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 16).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="9.5" font-weight="600" fill="#333">${s.line2}</text>` : ""}
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 14).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="bold" fill="${s.color}">${s.symbol}</text>
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 3).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="7.5" font-weight="600" fill="#333">${s.line1}</text>
+      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="7.5" font-weight="600" fill="#333">${s.line2}</text>` : ""}
     `;
   }).join("");
 
@@ -190,11 +190,11 @@ function generateWheelSVG(
     const transform = al.rotate !== 0
       ? `transform="rotate(${al.rotate}, ${al.x}, ${al.y})"`
       : "";
-    return `<text x="${al.x}" y="${al.y}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444" letter-spacing="0.5" ${transform}>${al.name}</text>`;
+    return `<text x="${al.x}" y="${al.y}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#444" letter-spacing="0.5" ${transform}>${al.name}</text>`;
   }).join("");
 
   // Center text based on model type
-  const centerLineFontSize = "9";
+  const centerLineFontSize = "8";
   const centerLine1 = modelType === "genotipo" ? "GENO" : "NEURO";
   const centerLine2 = modelType === "genotipo" ? "TIPOS" : "TALENTOS";
 
@@ -205,8 +205,8 @@ function generateWheelSVG(
   ${diagonals}
   ${sectorSVG}
   <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2"/>
-  <text x="${center}" y="${center - 6}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine1}</text>
-  <text x="${center}" y="${center + 8}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine2}</text>
+  <text x="${center}" y="${center - 5}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine1}</text>
+  <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine2}</text>
   ${axisLabelsSVG}
 </svg>`;
 }
@@ -214,8 +214,8 @@ function generateWheelSVG(
 function generateBatteryBar(percentage: number): string {
   const color  = percentage >= 67 ? "#CC0000" : "#111111";
   const pct    = Math.min(Math.max(percentage, 0), 100);
-  return `<div style="width:100%;height:10px;background:#e0e0e0;border-radius:3px;overflow:hidden;border:1px solid #ccc;">
-    <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>
+  return `<div style="width:100%;height:8px;background:#e0e0e0;border-radius:2px;overflow:hidden;border:1px solid #ccc;">
+    <div style="width:${pct}%;height:100%;background:${color};border-radius:2px;"></div>
   </div>`;
 }
 
@@ -237,19 +237,19 @@ function generatePDFHTML(
   const profileTitle = winner?.reportTitle ?? winner?.quizTitle ?? "—";
 
   const bulletItems = competencies.map(c => `
-    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;">
-      <span style="color:#CC0000;font-weight:bold;flex-shrink:0;">•</span>
-      <span style="font-size:11px;color:#333;">${c}</span>
+    <div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:4px;">
+      <span style="color:#CC0000;font-weight:bold;flex-shrink:0;font-size:9px;">•</span>
+      <span style="font-size:9px;color:#333;line-height:1.3;">${c}</span>
     </div>`).join("");
 
   const profileSection = `
-    <div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:14px;">
-      <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:6px;">PERFIL PROFESIONAL</div>
-      <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;text-transform:uppercase;">${profileTitle}</div>
+    <div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:7px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:5px;">PERFIL PROFESIONAL</div>
+      <div style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;text-transform:uppercase;">${profileTitle}</div>
       ${bulletItems}
-      ${topRole ? `<div style="margin-top:10px;border:2px solid #CC0000;border-radius:6px;padding:8px;background:#fff3f3;">
-        <div style="font-size:9px;font-weight:700;color:#CC0000;letter-spacing:0.5px;margin-bottom:3px;">ROL SUGERIDO</div>
-        <div style="font-size:11px;color:#333;">${topRole}</div>
+      ${topRole ? `<div style="margin-top:8px;border:2px solid #CC0000;border-radius:5px;padding:6px;background:#fff3f3;">
+        <div style="font-size:7px;font-weight:700;color:#CC0000;letter-spacing:0.5px;margin-bottom:2px;">ROL SUGERIDO</div>
+        <div style="font-size:9px;color:#333;">${topRole}</div>
       </div>` : ""}
     </div>`;
 
@@ -261,21 +261,21 @@ function generatePDFHTML(
       const sym = symbolMap[talentId] ?? "?";
       const nam = rd?.reportTitle ?? "";
       const bar = generateBatteryBar(pct);
-      return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
-        <div style="font-size:13px;font-weight:700;color:${TALENT_COLORS[talentId] ?? '#666'};width:18px;text-align:center;flex-shrink:0;">${sym}</div>
-        <div style="font-size:10px;font-weight:600;color:#333;width:110px;flex-shrink:0;">${pct} - ${nam}</div>
+      return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+        <div style="font-size:11px;font-weight:700;color:${TALENT_COLORS[talentId] ?? '#666'};width:15px;text-align:center;flex-shrink:0;">${sym}</div>
+        <div style="font-size:8px;font-weight:600;color:#333;width:90px;flex-shrink:0;">${pct} - ${nam}</div>
         <div style="flex:1;">${bar}</div>
       </div>`;
     }).join("");
-    return `<div style="margin-bottom:10px;">
-      <div style="font-size:9px;font-weight:700;color:#555;letter-spacing:0.5px;border-bottom:1px solid #ddd;padding-bottom:3px;margin-bottom:5px;">${group.name}</div>
+    return `<div style="margin-bottom:8px;">
+      <div style="font-size:7px;font-weight:700;color:#555;letter-spacing:0.5px;border-bottom:1px solid #ddd;padding-bottom:2px;margin-bottom:4px;">${group.name}</div>
       ${rows}
     </div>`;
   }).join("");
 
   const talentListSection = `
-    <div style="background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:14px;">
-      <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:8px;">TALENTOS POR EJE</div>
+    <div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:12px;">
+      <div style="font-size:7px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:6px;">TALENTOS POR EJE</div>
       ${talentListRows}
     </div>`;
 
@@ -289,23 +289,23 @@ function generatePDFHTML(
   </style>
 </head>
 <body>
-  <div style="width:1122px;padding:30px;">
+  <div style="width:1000px;padding:25px;">
     <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:2px solid #111;padding-bottom:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:8px;">
       <div>
-        <div style="font-size:20px;font-weight:700;color:#111;">MAPA DE ${modelType === "genotipo" ? "GENOTIPOS" : "NEUROTALENTOS"}</div>
-        <div style="font-size:12px;color:#555;">${userName ? userName + " — " : ""}${modelLabel}</div>
+        <div style="font-size:16px;font-weight:700;color:#111;">MAPA DE ${modelType === "genotipo" ? "GENOTIPOS" : "NEUROTALENTOS"}</div>
+        <div style="font-size:10px;color:#555;">${userName ? userName + " — " : ""}${modelLabel}</div>
       </div>
-      <div style="font-size:11px;color:#888;">Basado en neurociencia aplicada</div>
+      <div style="font-size:9px;color:#888;">Basado en neurociencia aplicada</div>
     </div>
     <!-- Main layout -->
-    <div style="display:flex;gap:30px;align-items:flex-start;">
+    <div style="display:flex;gap:24px;align-items:flex-start;">
       <!-- Left: wheel -->
       <div style="flex-shrink:0;">
         ${svgContent}
       </div>
       <!-- Right: profile + list -->
-      <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
         ${profileSection}
         ${talentListSection}
       </div>
@@ -346,12 +346,12 @@ export function exportTalentModelPDF(
     container.style.position = "fixed";
     container.style.top = "-9999px";
     container.style.left = "-9999px";
-    container.style.width = "1122px";
+    container.style.width = "1000px";
     document.body.appendChild(container);
 
     const iframe = document.createElement("iframe");
-    iframe.style.width = "1122px";
-    iframe.style.height = "794px";
+    iframe.style.width = "1000px";
+    iframe.style.height = "707px";
     iframe.style.border = "none";
     container.appendChild(iframe);
 
@@ -384,7 +384,7 @@ export function exportTalentModelPDF(
           filename: fileName,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-          jsPDF: { unit: "px", format: [1122, 794], orientation: "landscape" },
+          jsPDF: { unit: "px", format: [1000, 707], orientation: "landscape" },
         })
         .from(target);
 
