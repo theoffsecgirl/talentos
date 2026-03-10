@@ -18,38 +18,6 @@ type Props = {
   userName?: string;
 };
 
-// Mapeo talentId (1-8) -> key usado en pdf-data
-const TALENT_KEY_MAP: Record<number, string> = {
-  1: 'estrategia',
-  2: 'analitico',
-  3: 'acompanamiento',
-  4: 'gestion',
-  5: 'empatico',
-  6: 'imaginacion',
-  7: 'profundo',
-  8: 'aplicado',
-};
-
-async function downloadPDF(
-  endpoint: string,
-  payload: object,
-  filename: string
-) {
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`Error ${res.status}`);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 export default function BothTalentWheels({
   scores,
   userName = "",
@@ -57,50 +25,11 @@ export default function BothTalentWheels({
   const [activeTab, setActiveTab] = useState<"genotipo" | "neurotalento">("genotipo");
   const [genotipoSummary, setGenotipoSummary] = useState("");
   const [neurotalentoSummary, setNeurotalentoSummary] = useState("");
-  const [isExporting, setIsExporting] = useState(false);
   const [loadingBtn, setLoadingBtn] = useState<string | null>(null);
 
-  // Convierte scores array -> Record<string, number> (porcentaje 0-100)
-  const buildScoresRecord = (): Record<string, number> => {
-    const record: Record<string, number> = {};
-    for (const s of scores) {
-      const key = TALENT_KEY_MAP[s.talentId];
-      if (key) record[key] = s.max > 0 ? Math.round((s.score / s.max) * 100) : 0;
-    }
-    return record;
-  };
-
-  const handleDownload = async (
-    tipo: 'informe' | 'mapa',
-    modelo: 'genotipo' | 'neurotalento'
-  ) => {
-    const btnKey = `${tipo}-${modelo}`;
-    setLoadingBtn(btnKey);
-    try {
-      const scoresRecord = buildScoresRecord();
-      const resumen = modelo === 'genotipo' ? genotipoSummary : neurotalentoSummary;
-      const endpoint = tipo === 'informe'
-        ? '/api/generate-informe-pdf'
-        : '/api/generate-mapa-pdf';
-      const safeName = userName.toLowerCase().replace(/\s+/g, '-') || 'talentos';
-      const filename = `${safeName}-${tipo}-${modelo}.pdf`;
-      await downloadPDF(endpoint, {
-        nombre: userName || 'Candidato',
-        scores: scoresRecord,
-        modelo,
-        textoResumen: resumen || undefined,
-      }, filename);
-    } catch (err) {
-      console.error(`Error descargando ${tipo} ${modelo}:`, err);
-      alert(`Error al generar el PDF. Inténtalo de nuevo.`);
-    } finally {
-      setLoadingBtn(null);
-    }
-  };
-
-  const handleExport = async () => {
-    setIsExporting(true);
-    const ranked: RankedTalent[] = scores
+  // Construye el array RankedTalent ordenado por porcentaje desc
+  const buildRanked = (): RankedTalent[] => {
+    return scores
       .map(s => {
         const talent = TALENTS.find(t => t.id === s.talentId);
         if (!talent) return null;
@@ -117,19 +46,69 @@ export default function BothTalentWheels({
           max: s.max,
         };
       })
-      .filter(Boolean) as RankedTalent[];
-    ranked.sort((a, b) => {
-      const pctA = a.max > 0 ? a.score / a.max : 0;
-      const pctB = b.max > 0 ? b.score / b.max : 0;
-      return pctB - pctA;
-    });
-    const summary = activeTab === "genotipo" ? genotipoSummary : neurotalentoSummary;
+      .filter(Boolean)
+      .sort((a, b) => {
+        const pctA = (a as RankedTalent).max > 0 ? (a as RankedTalent).score / (a as RankedTalent).max : 0;
+        const pctB = (b as RankedTalent).max > 0 ? (b as RankedTalent).score / (b as RankedTalent).max : 0;
+        return pctB - pctA;
+      }) as RankedTalent[];
+  };
+
+  // Exporta mapa usando html2pdf (mismo mecanismo que los botones G/N del admin)
+  const handleExportMapa = async (modelo: "genotipo" | "neurotalento") => {
+    const btnKey = `mapa-${modelo}`;
+    setLoadingBtn(btnKey);
     try {
-      await exportTalentModelPDF(ranked, activeTab, userName, undefined, summary);
+      const ranked = buildRanked();
+      const summary = modelo === "genotipo" ? genotipoSummary : neurotalentoSummary;
+      await exportTalentModelPDF(ranked, modelo, userName, undefined, summary);
     } catch (err) {
-      console.error('Error exporting PDF:', err);
+      console.error(`Error exportando mapa ${modelo}:`, err);
+      alert("Error al generar el PDF. Inténtalo de nuevo.");
     } finally {
-      setIsExporting(false);
+      setLoadingBtn(null);
+    }
+  };
+
+  // Exporta informe usando la API route (generate-informe-pdf)
+  const handleDownloadInforme = async (modelo: "genotipo" | "neurotalento") => {
+    const btnKey = `informe-${modelo}`;
+    setLoadingBtn(btnKey);
+    try {
+      const scoresRecord: Record<string, number> = {};
+      const KEY_MAP: Record<number, string> = {
+        1: 'estrategia', 2: 'analitico', 3: 'acompanamiento',
+        4: 'gestion', 5: 'empatico', 6: 'imaginacion',
+        7: 'profundo', 8: 'aplicado',
+      };
+      for (const s of scores) {
+        const key = KEY_MAP[s.talentId];
+        if (key) scoresRecord[key] = s.max > 0 ? Math.round((s.score / s.max) * 100) : 0;
+      }
+      const resumen = modelo === 'genotipo' ? genotipoSummary : neurotalentoSummary;
+      const res = await fetch('/api/generate-informe-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: userName || 'Candidato',
+          scores: scoresRecord,
+          modelo,
+          textoResumen: resumen || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(userName || 'talentos').toLowerCase().replace(/\s+/g, '-')}-informe-${modelo}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(`Error descargando informe ${modelo}:`, err);
+      alert('Error al generar el informe. Inténtalo de nuevo.');
+    } finally {
+      setLoadingBtn(null);
     }
   };
 
@@ -148,7 +127,7 @@ export default function BothTalentWheels({
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-      {/* Tabs + botón legacy */}
+      {/* Tabs */}
       <div
         style={{
           display: "flex",
@@ -192,41 +171,34 @@ export default function BothTalentWheels({
             Mapa Neurotalento
           </button>
         </div>
-        <button
-          onClick={handleExport}
-          disabled={isExporting}
-          style={btnStyle("#DC2626", isExporting)}
-        >
-          {isExporting ? "Exportando..." : `Exportar ${activeTab === "genotipo" ? "Genotipo" : "Neurotalento"}`}
-        </button>
       </div>
 
-      {/* Botones nuevos PDF */}
+      {/* Botones de descarga */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px" }}>
         <button
-          onClick={() => handleDownload('informe', 'genotipo')}
-          disabled={loadingBtn === 'informe-genotipo'}
+          onClick={() => handleDownloadInforme('genotipo')}
+          disabled={!!loadingBtn}
           style={btnStyle("#1d4ed8", loadingBtn === 'informe-genotipo')}
         >
           {loadingBtn === 'informe-genotipo' ? '⏳ Generando...' : '📄 Informe Genotipo'}
         </button>
         <button
-          onClick={() => handleDownload('informe', 'neurotalento')}
-          disabled={loadingBtn === 'informe-neurotalento'}
+          onClick={() => handleDownloadInforme('neurotalento')}
+          disabled={!!loadingBtn}
           style={btnStyle("#7c3aed", loadingBtn === 'informe-neurotalento')}
         >
           {loadingBtn === 'informe-neurotalento' ? '⏳ Generando...' : '📄 Informe Neurotalento'}
         </button>
         <button
-          onClick={() => handleDownload('mapa', 'genotipo')}
-          disabled={loadingBtn === 'mapa-genotipo'}
+          onClick={() => handleExportMapa('genotipo')}
+          disabled={!!loadingBtn}
           style={btnStyle("#0f766e", loadingBtn === 'mapa-genotipo')}
         >
           {loadingBtn === 'mapa-genotipo' ? '⏳ Generando...' : '🗺️ Mapa Genotipo'}
         </button>
         <button
-          onClick={() => handleDownload('mapa', 'neurotalento')}
-          disabled={loadingBtn === 'mapa-neurotalento'}
+          onClick={() => handleExportMapa('neurotalento')}
+          disabled={!!loadingBtn}
           style={btnStyle("#b45309", loadingBtn === 'mapa-neurotalento')}
         >
           {loadingBtn === 'mapa-neurotalento' ? '⏳ Generando...' : '🗺️ Mapa Neurotalento'}
