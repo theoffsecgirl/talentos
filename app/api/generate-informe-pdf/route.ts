@@ -141,6 +141,8 @@ export async function POST(req: NextRequest) {
     const html = buildInformeHtml({ userName, date: date || new Date().toLocaleDateString('es-ES'), scores, mapSvg });
 
     const isDev = process.env.NODE_ENV === 'development';
+    console.log("[PDF] isDev:", isDev);
+    console.log("[PDF] NODE_ENV:", process.env.NODE_ENV);
 
     let executablePath: string;
     if (!isDev) {
