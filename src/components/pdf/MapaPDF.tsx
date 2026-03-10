@@ -1,5 +1,3 @@
-'use client'
-
 import React from 'react'
 import { Document, Page, View, Text, Svg, Circle, Path, StyleSheet } from '@react-pdf/renderer'
 import { TALENT_COLORS, SYMBOLS_GENOTIPO, SYMBOLS_NEUROTALENTO, EJES, TALENT_NAMES, NEUROCOGNITIVE_DATA } from '../../lib/pdf-data'
