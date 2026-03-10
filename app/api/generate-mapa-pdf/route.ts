@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import React from 'react'
-import { InformePDF } from '@/components/pdf/InformePDF'
+import { MapaPDF } from '@/components/pdf/MapaPDF'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { nombre, scores, textoResumen, modelo, fecha } = body
+    const { nombre, scores, textoResumen, modelo } = body
 
     if (!nombre || !scores || !modelo) {
       return NextResponse.json({ error: 'Faltan campos: nombre, scores, modelo' }, { status: 400 })
@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = await renderToBuffer(
-      React.createElement(InformePDF, { modelo, nombre, scores, textoResumen, fecha })
+      React.createElement(MapaPDF, { modelo, nombre, scores, textoResumen })
     )
 
-    const filename = `${nombre.toLowerCase().replace(/\s+/g, '-')}-informe-${modelo}.pdf`
+    const filename = `${nombre.toLowerCase().replace(/\s+/g, '-')}-mapa-${modelo}.pdf`
 
     return new NextResponse(buffer, {
       status: 200,
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[generate-informe-pdf]', err)
+    console.error('[generate-mapa-pdf]', err)
     return NextResponse.json({ error: 'Error generando PDF' }, { status: 500 })
   }
 }
