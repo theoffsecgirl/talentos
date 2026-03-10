@@ -9,20 +9,16 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { nombre, scores, textoResumen, modelo, fecha } = body
-
     if (!nombre || !scores || !modelo) {
       return NextResponse.json({ error: 'Faltan campos: nombre, scores, modelo' }, { status: 400 })
     }
     if (!['genotipo', 'neurotalento'].includes(modelo)) {
       return NextResponse.json({ error: 'modelo debe ser genotipo o neurotalento' }, { status: 400 })
     }
-
     const buffer = await renderToBuffer(
       React.createElement(InformePDF, { modelo, nombre, scores, textoResumen, fecha })
     )
-
     const filename = `${nombre.toLowerCase().replace(/\s+/g, '-')}-informe-${modelo}.pdf`
-
     return new NextResponse(buffer, {
       status: 200,
       headers: {
