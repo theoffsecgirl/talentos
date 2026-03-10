@@ -120,7 +120,6 @@ export default async function MapaPage({ params }: Props) {
           <BothTalentWheels 
             scores={wheelScores}
             userName={fullName}
-            submissionId={person.id}
             initialGenotipoSummary={person.genotipoSummary ?? ""}
             initialNeurotalentoSummary={person.neurotalentoSummary ?? ""}
           />
