@@ -14,7 +14,7 @@
     "@prisma/adapter-neon": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@react-pdf/renderer": "^4.1.6",
-    "@sparticuz/chromium": "^130.0.0",
+    "@sparticuz/chromium-min": "^143.0.4",
     "@vercel/og": "^0.6.3",
     "exceljs": "^4.4.0",
     "jszip": "^3.10.1",

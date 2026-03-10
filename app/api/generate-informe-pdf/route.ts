@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 import { TALENTS } from "@/lib/talents";
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string; category: string; axis: string }> = {
@@ -35,7 +35,7 @@ function buildInformeHtml(data: {
     const config = TALENT_CONFIG[tid];
     const t = TALENTS.find((x: any) => x.id === tid);
     const percentage = pct(s?.score ?? 0, s?.max ?? 0);
-    
+
     return `
       <section class="page">
         <div style="margin-bottom: 24px;">
@@ -46,7 +46,7 @@ function buildInformeHtml(data: {
               <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">${config.axis}</div>
             </div>
           </div>
-          
+
           <div style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
             <div style="font-weight: 700; font-size: 14px;">Puntuación</div>
             <div style="font-size: 32px; font-weight: 900; color: ${config.color};">${s?.score ?? 0}</div>
@@ -111,7 +111,7 @@ function buildInformeHtml(data: {
       </div>
       <h1 style="font-size: 48px; font-weight: 900; margin-bottom: 16px;">TU INFORME DE TALENTOS</h1>
       <div style="font-size: 18px; color: #6b7280; margin-bottom: 40px;">Mapa visual basado en neurociencia aplicada</div>
-      
+
       <div style="margin-top: 60px;">
         <div style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">${userName}</div>
         <div style="font-size: 14px; color: #6b7280;">${date}</div>
@@ -140,13 +140,24 @@ export async function POST(req: NextRequest) {
 
     const html = buildInformeHtml({ userName, date: date || new Date().toLocaleDateString('es-ES'), scores, mapSvg });
 
-    // Usar chromium en producción (Vercel), puppeteer local en dev
     const isDev = process.env.NODE_ENV === 'development';
-    
+
+    let executablePath: string;
+    if (!isDev) {
+      executablePath = await chromium.executablePath(
+        'https://github.com/Sparticuz/chromium/releases/download/v130.0.0/chromium-v130.0.0-pack.tar'
+      );
+      // CRÍTICO: configurar LD_LIBRARY_PATH para libnspr4.so
+      const execDir = executablePath.split('/').slice(0, -1).join('/');
+      process.env.LD_LIBRARY_PATH = execDir;
+    } else {
+      executablePath = '/usr/bin/chromium-browser';
+    }
+
     const browser = await puppeteer.launch({
-      args: isDev ? ['--no-sandbox'] : [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
       defaultViewport: chromium.defaultViewport,
-      executablePath: isDev ? '/usr/bin/chromium-browser' : await chromium.executablePath(),
+      executablePath,
       headless: true,
     });
 
