@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Document, Page, View, Text, Svg, Circle, Path, StyleSheet } from '@react-pdf/renderer'
-import { TALENT_COLORS, SYMBOLS_GENOTIPO, SYMBOLS_NEUROTALENTO, EJES, TALENT_NAMES, NEUROCOGNITIVE_DATA } from '../lib/pdf-data'
+import { TALENT_COLORS, SYMBOLS_GENOTIPO, SYMBOLS_NEUROTALENTO, EJES, TALENT_NAMES, NEUROCOGNITIVE_DATA } from '../../lib/pdf-data'
 
 const BG = '#0B0B1A'
 const BG2 = '#0F0F20'
