@@ -144,10 +144,10 @@ export async function POST(req: NextRequest) {
     const isDev = process.env.NODE_ENV === 'development';
     
     const browser = await puppeteer.launch({
-      args: isDev ? [] : chromium.args,
+      args: isDev ? ['--no-sandbox'] : [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
       defaultViewport: chromium.defaultViewport,
       executablePath: isDev ? '/usr/bin/chromium-browser' : await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: true,
     });
 
     const page = await browser.newPage();
