@@ -12,6 +12,8 @@ type Score = {
 };
 
 type Props = {
+  initialGenotipoSummary?: string;
+  initialNeurotalentoSummary?: string;
   scores: Score[];
   userName?: string;
 };
