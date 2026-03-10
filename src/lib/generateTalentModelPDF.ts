@@ -1,4 +1,10 @@
 import { TALENTS } from "@/lib/talents";
+import {
+  TALENT_COLORS as INFORME_COLORS,
+  SYMBOLS_GENOTIPO, SYMBOLS_NEUROTALENTO,
+  SOFT_SKILLS_GENOTIPO, SOFT_SKILLS_NEUROTALENTO,
+  TALENT_NAMES, NEUROCOGNITIVE_DATA, EJES,
+} from "@/lib/pdf-data";
 import type JSZip from "jszip";
 
 type Html2PdfInstance = {
@@ -23,26 +29,38 @@ export type RankedTalent = {
   max: number;
 };
 
+// talentId (1-8) -> key de pdf-data
+const ID_TO_KEY: Record<number, string> = {
+  1: "estrategia",
+  2: "analitico",
+  3: "acompanamiento",
+  4: "gestion",
+  5: "empatico",
+  6: "imaginacion",
+  7: "profundo",
+  8: "aplicado",
+};
+
 const GENOTIPO_SYMBOLS: Record<number, string> = {
-  1: "△",
-  2: "⬠",
-  3: "∞",
-  4: "◇",
-  5: "○",
-  6: "⬭",
-  7: "□",
-  8: "▭",
+  1: "\u25b3",
+  2: "\u2b20",
+  3: "\u221e",
+  4: "\u25c7",
+  5: "\u25cb",
+  6: "\u2bed",
+  7: "\u25a1",
+  8: "\u25ad",
 };
 
 const NEUROTALENTO_SYMBOLS: Record<number, string> = {
-  1: "Σ",
-  2: "Π",
-  3: "Ψ",
-  4: "α",
-  5: "Ω",
-  6: "Φ",
-  7: "Θ",
-  8: "Μ",
+  1: "\u03a3",
+  2: "\u03a0",
+  3: "\u03a8",
+  4: "\u03b1",
+  5: "\u03a9",
+  6: "\u03a6",
+  7: "\u0398",
+  8: "\u039c",
 };
 
 const TALENT_COLORS: Record<number, string> = {
@@ -59,18 +77,17 @@ const TALENT_COLORS: Record<number, string> = {
 const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
 
 const AXIS_GROUPS = [
-  { name: "ACCIÓN Y RESULTADOS", talents: [4, 1] },
+  { name: "ACCI\u00d3N Y RESULTADOS", talents: [4, 1] },
   { name: "SABER Y CONOCIMIENTO", talents: [2, 3] },
-  { name: "IMAGINACIÓN Y ARTE", talents: [6, 7] },
-  { name: "DESTREZA Y PROYECCIÓN", talents: [8, 5] },
+  { name: "IMAGINACI\u00d3N Y ARTE", talents: [6, 7] },
+  { name: "DESTREZA Y PROYECCI\u00d3N", talents: [8, 5] },
 ];
 
-// Axis label positions (at cardinal directions between sectors)
 const AXIS_LABELS: Array<{ name: string; x: number; y: number; rotate: number }> = [
-  { name: "SABER Y CONOCIMIENTO",  x: 280, y: 22,  rotate: 0   },
-  { name: "IMAGINACIÓN Y ARTE",    x: 538, y: 280, rotate: 90  },
-  { name: "DESTREZA Y PROYECCIÓN", x: 280, y: 538, rotate: 0   },
-  { name: "ACCIÓN Y RESULTADOS",   x: 22,  y: 280, rotate: -90 },
+  { name: "SABER Y CONOCIMIENTO",   x: 280, y: 22,  rotate: 0   },
+  { name: "IMAGINACI\u00d3N Y ARTE",     x: 538, y: 280, rotate: 90  },
+  { name: "DESTREZA Y PROYECCI\u00d3N", x: 280, y: 538, rotate: 0   },
+  { name: "ACCI\u00d3N Y RESULTADOS",    x: 22,  y: 280, rotate: -90 },
 ];
 
 function toSafeNumber(value: unknown, fallback = 0): number {
@@ -79,10 +96,7 @@ function toSafeNumber(value: unknown, fallback = 0): number {
 }
 
 function polarToCartesian(cx: number, cy: number, angle: number, r: number) {
-  return {
-    x: cx + r * Math.cos(angle),
-    y: cy + r * Math.sin(angle),
-  };
+  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
 }
 
 function createArcPath(
@@ -90,16 +104,16 @@ function createArcPath(
   startAngle: number, endAngle: number,
   outerR: number, innerR: number
 ): string {
-  const start = polarToCartesian(cx, cy, startAngle, outerR);
-  const end   = polarToCartesian(cx, cy, endAngle,   outerR);
+  const start      = polarToCartesian(cx, cy, startAngle, outerR);
+  const end        = polarToCartesian(cx, cy, endAngle,   outerR);
   const innerStart = polarToCartesian(cx, cy, startAngle, innerR);
   const innerEnd   = polarToCartesian(cx, cy, endAngle,   innerR);
-  const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+  const laf        = endAngle - startAngle > Math.PI ? 1 : 0;
   return [
     `M ${start.x} ${start.y}`,
-    `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+    `A ${outerR} ${outerR} 0 ${laf} 1 ${end.x} ${end.y}`,
     `L ${innerEnd.x} ${innerEnd.y}`,
-    `A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
+    `A ${innerR} ${innerR} 0 ${laf} 0 ${innerStart.x} ${innerStart.y}`,
     `Z`,
   ].join(" ");
 }
@@ -108,52 +122,38 @@ function generateWheelSVG(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento"
 ): string {
-  const size        = 560;
-  const center      = size / 2;
-  const radius      = 184;
-  const innerRadius = 60;
-  const symbolMap   = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
+  const size = 560, center = size / 2, radius = 184, innerRadius = 60;
+  const symbolMap = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
 
   const sections = TALENT_ORDER.map((talentId, index) => {
-    const rd          = ranked.find(r => r.id === talentId);
-    const color       = TALENT_COLORS[talentId] ?? "#999";
-    const score       = toSafeNumber(rd?.score, 0);
-    const max         = toSafeNumber(rd?.max, 15);
-    const percentage  = max > 0 ? Math.round((score / max) * 100) : 0;
-    const fillPct     = percentage / 100;
-    const fillRadius  = innerRadius + (radius - innerRadius) * fillPct;
-    const anglePerSec = (Math.PI * 2) / 8;
-    const startAngle  = index * anglePerSec - Math.PI / 2;
-    const endAngle    = startAngle + anglePerSec;
-    const midAngle    = (startAngle + endAngle) / 2;
-    const labelDist   = radius + 76;
-    const labelPos    = polarToCartesian(center, center, midAngle, labelDist);
-    const percentPos  = polarToCartesian(center, center, midAngle, (fillRadius + innerRadius) / 2);
-
-    const talent    = TALENTS.find(t => t.id === talentId);
-    const fullTitle = talent?.reportTitle ?? "";
-    const symbol    = symbolMap[talentId] ?? "?";
-
-    // Split title for two lines
-    let line1 = fullTitle;
-    let line2 = "";
+    const rd         = ranked.find(r => r.id === talentId);
+    const color      = TALENT_COLORS[talentId] ?? "#999";
+    const score      = toSafeNumber(rd?.score, 0);
+    const max        = toSafeNumber(rd?.max, 15);
+    const percentage = max > 0 ? Math.round((score / max) * 100) : 0;
+    const fillPct    = percentage / 100;
+    const fillRadius = innerRadius + (radius - innerRadius) * fillPct;
+    const aps        = (Math.PI * 2) / 8;
+    const startAngle = index * aps - Math.PI / 2;
+    const endAngle   = startAngle + aps;
+    const midAngle   = (startAngle + endAngle) / 2;
+    const labelPos   = polarToCartesian(center, center, midAngle, radius + 76);
+    const percentPos = polarToCartesian(center, center, midAngle, (fillRadius + innerRadius) / 2);
+    const talent     = TALENTS.find(t => t.id === talentId);
+    const fullTitle  = talent?.reportTitle ?? "";
+    const symbol     = symbolMap[talentId] ?? "?";
+    let line1 = fullTitle, line2 = "";
     if (fullTitle.includes(" y ")) {
-      const parts = fullTitle.split(" y ");
-      if (parts.length === 2) { line1 = parts[0] + " y"; line2 = parts[1]; }
+      const p = fullTitle.split(" y "); if (p.length === 2) { line1 = p[0] + " y"; line2 = p[1]; }
     } else if (fullTitle.includes(" e ")) {
-      const parts = fullTitle.split(" e ");
-      if (parts.length === 2) { line1 = parts[0] + " e"; line2 = parts[1]; }
+      const p = fullTitle.split(" e "); if (p.length === 2) { line1 = p[0] + " e"; line2 = p[1]; }
     } else {
-      const words    = fullTitle.split(" ");
-      const midPoint = Math.ceil(words.length / 2);
-      line1 = words.slice(0, midPoint).join(" ");
-      line2 = words.slice(midPoint).join(" ");
+      const w = fullTitle.split(" "), m = Math.ceil(w.length / 2);
+      line1 = w.slice(0, m).join(" "); line2 = w.slice(m).join(" ");
     }
-
-    return { talentId, color, percentage, fillRadius, fillPct, startAngle, endAngle, midAngle, labelPos, percentPos, symbol, line1, line2 };
+    return { talentId, color, percentage, fillRadius, fillPct, startAngle, endAngle, labelPos, percentPos, symbol, line1, line2 };
   });
 
-  // Gradient defs
   const defs = sections.map(s => `
     <radialGradient id="pdf-g-${s.talentId}" cx="50%" cy="50%">
       <stop offset="0%" stop-color="${s.color}" stop-opacity="${Math.min(s.fillPct * 1.2, 1)}"/>
@@ -161,14 +161,12 @@ function generateWheelSVG(
       <stop offset="100%" stop-color="${s.color}" stop-opacity="0.1"/>
     </radialGradient>`).join("");
 
-  // Diagonal dividers
   const diagonals = [1, 3, 5, 7].map(idx => {
     const angle = (idx * Math.PI * 2) / 8 - Math.PI / 2;
     const outer = polarToCartesian(center, center, angle, radius);
     return `<line x1="${center}" y1="${center}" x2="${outer.x.toFixed(2)}" y2="${outer.y.toFixed(2)}" stroke="#666" stroke-width="1" stroke-dasharray="4 4"/>`;
   }).join("");
 
-  // Sector paths and labels
   const sectorSVG = sections.map(s => {
     const fillPath  = createArcPath(center, center, s.startAngle, s.endAngle, s.fillRadius, innerRadius);
     const outerPath = createArcPath(center, center, s.startAngle, s.endAngle, radius, innerRadius);
@@ -185,18 +183,13 @@ function generateWheelSVG(
     `;
   }).join("");
 
-  // Axis labels
   const axisLabelsSVG = AXIS_LABELS.map(al => {
-    const transform = al.rotate !== 0
-      ? `transform="rotate(${al.rotate}, ${al.x}, ${al.y})"`
-      : "";
+    const transform = al.rotate !== 0 ? `transform="rotate(${al.rotate}, ${al.x}, ${al.y})"` : "";
     return `<text x="${al.x}" y="${al.y}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#444" letter-spacing="0.5" ${transform}>${al.name}</text>`;
   }).join("");
 
-  // Center text based on model type
-  const centerLineFontSize = "8";
-  const centerLine1 = modelType === "genotipo" ? "GENO" : "NEURO";
-  const centerLine2 = modelType === "genotipo" ? "TIPOS" : "TALENTOS";
+  const cl1 = modelType === "genotipo" ? "GENO" : "NEURO";
+  const cl2 = modelType === "genotipo" ? "TIPOS" : "TALENTOS";
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>${defs}</defs>
@@ -205,16 +198,15 @@ function generateWheelSVG(
   ${diagonals}
   ${sectorSVG}
   <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2"/>
-  <text x="${center}" y="${center - 5}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine1}</text>
-  <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="${centerLineFontSize}" font-weight="700" fill="#444">${centerLine2}</text>
+  <text x="${center}" y="${center - 5}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl1}</text>
+  <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl2}</text>
   ${axisLabelsSVG}
 </svg>`;
 }
 
-function generateBatteryBar(percentage: number): string {
-  const color  = percentage >= 67 ? "#CC0000" : "#111111";
-  const pct    = Math.min(Math.max(percentage, 0), 100);
-  return `<div style="width:100%;height:8px;background:#e0e0e0;border-radius:2px;overflow:hidden;border:1px solid #ccc;">
+function generateBatteryBar(percentage: number, color = "#111"): string {
+  const pct = Math.min(Math.max(percentage, 0), 100);
+  return `<div style="width:100%;height:6px;background:#2a2a3a;border-radius:2px;overflow:hidden;">
     <div style="width:${pct}%;height:100%;background:${color};border-radius:2px;"></div>
   </div>`;
 }
@@ -232,14 +224,13 @@ function generatePDFHTML(
 
   const svgContent = generateWheelSVG(ranked, modelType);
 
-  // Right panel top: winner profile
   const competencies = winnerFull?.competencies ?? [];
   const topRole      = winnerFull?.exampleRoles?.[0] ?? "";
-  const profileTitle = winner?.reportTitle ?? winner?.quizTitle ?? "—";
+  const profileTitle = winner?.reportTitle ?? winner?.quizTitle ?? "\u2014";
 
   const bulletItems = competencies.map(c => `
     <div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:4px;">
-      <span style="color:#CC0000;font-weight:bold;flex-shrink:0;font-size:9px;">•</span>
+      <span style="color:#CC0000;font-weight:bold;flex-shrink:0;font-size:9px;">&bull;</span>
       <span style="font-size:9px;color:#333;line-height:1.3;">${c}</span>
     </div>`).join("");
 
@@ -254,17 +245,16 @@ function generatePDFHTML(
       </div>` : ""}
     </div>`;
 
-  // Right panel bottom: talent list by axis
   const talentListRows = AXIS_GROUPS.map(group => {
     const rows = group.talents.map(talentId => {
       const rd  = ranked.find(r => r.id === talentId);
       const pct = rd && rd.max > 0 ? Math.round((rd.score / rd.max) * 100) : 0;
       const sym = symbolMap[talentId] ?? "?";
       const nam = rd?.reportTitle ?? "";
-      const bar = generateBatteryBar(pct);
+      const bar = generateBatteryBar(pct, TALENT_COLORS[talentId]);
       return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
         <div style="font-size:11px;font-weight:700;color:${TALENT_COLORS[talentId] ?? '#666'};width:15px;text-align:center;flex-shrink:0;">${sym}</div>
-        <div style="font-size:8px;font-weight:600;color:#333;width:90px;flex-shrink:0;">${pct} - ${nam}</div>
+        <div style="font-size:8px;font-weight:600;color:#333;width:90px;flex-shrink:0;">${pct}% - ${nam}</div>
         <div style="flex:1;">${bar}</div>
       </div>`;
     }).join("");
@@ -280,48 +270,216 @@ function generatePDFHTML(
       ${talentListRows}
     </div>`;
 
-  // Summary banner (curved black box) - smaller version for PDF
-  const summaryBanner = summaryText && summaryText.trim()
-    ? `<div style="width:100%;max-width:560px;margin:8px auto 0;padding:8px 16px;background:#000;color:#fff;border-radius:40px;font-size:7px;line-height:1.4;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-        ${summaryText}
-      </div>`
+  const summaryBanner = summaryText?.trim()
+    ? `<div style="width:100%;max-width:560px;margin:8px auto 0;padding:8px 16px;background:#000;color:#fff;border-radius:40px;font-size:7px;line-height:1.4;text-align:center;">${summaryText}</div>`
     : "";
 
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #111; }
-  </style>
-</head>
-<body>
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
+  <style>* { box-sizing:border-box; margin:0; padding:0; } body { font-family:Arial,sans-serif; background:#fff; color:#111; }</style>
+</head><body>
   <div style="width:1000px;padding:25px;">
-    <!-- Header -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:8px;">
       <div>
-        <div style="font-size:16px;font-weight:700;color:#111;">MAPA DE ${modelType === "genotipo" ? "GENOTIPOS" : "NEUROTALENTOS"}</div>
-        <div style="font-size:10px;color:#555;">${userName ? userName + " — " : ""}${modelLabel}</div>
+        <div style="font-size:16px;font-weight:700;">MAPA DE ${modelType === "genotipo" ? "GENOTIPOS" : "NEUROTALENTOS"}</div>
+        <div style="font-size:10px;color:#555;">${userName ? userName + " \u2014 " : ""}${modelLabel}</div>
       </div>
       <div style="font-size:9px;color:#888;">Basado en neurociencia aplicada</div>
     </div>
-    <!-- Main layout -->
     <div style="display:flex;gap:24px;align-items:flex-start;">
-      <!-- Left: wheel + summary -->
       <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
         ${svgContent}
         ${summaryBanner}
       </div>
-      <!-- Right: profile + list -->
       <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
         ${profileSection}
         ${talentListSection}
       </div>
     </div>
   </div>
-</body>
-</html>`;
+</body></html>`;
+}
+
+// ─── Informe multi-página (portada + 8 páginas de talento) ───────────────────
+
+function hex2rgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function generateInformeHTML(
+  ranked: RankedTalent[],
+  modelType: "genotipo" | "neurotalento",
+  userName: string,
+  summaryText?: string
+): string {
+  const symMap    = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
+  const softMap   = modelType === "genotipo" ? SOFT_SKILLS_GENOTIPO : SOFT_SKILLS_NEUROTALENTO;
+  const titulo    = modelType === "genotipo" ? "INFORME DE GENOTIPOS" : "INFORME DE NEUROTALENTOS";
+  const BG        = "#0B0B1A";
+  const fecha     = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+
+  // Mini wheel SVG para portada (220px)
+  const miniWheel = generateWheelSVG(ranked, modelType)
+    .replace('width="560" height="560"', 'width="220" height="220"');
+
+  // Portada
+  const portadaResumen = summaryText?.trim()
+    ? `<div style="margin-top:28px;border:1px solid #1E1E36;border-radius:8px;padding:16px;width:60%;text-align:left;">
+        <div style="color:#6B7280;font-size:7px;letter-spacing:2px;margin-bottom:6px;">RESUMEN DEL EVALUADOR</div>
+        <div style="color:#D1D5DB;font-size:9px;line-height:1.6;">${summaryText}</div>
+      </div>`
+    : "";
+
+  const portada = `
+  <div class="pagina" style="background:${BG};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;">
+    <div style="color:#6B7280;font-size:8px;letter-spacing:4px;margin-bottom:18px;">${titulo}</div>
+    <div style="color:#fff;font-size:38px;font-weight:bold;letter-spacing:3px;">${userName.toUpperCase()}</div>
+    <div style="width:60px;height:2px;background:#1E1E36;margin:20px 0;"></div>
+    <div style="color:#374151;font-size:9px;letter-spacing:2px;">${fecha}</div>
+    <div style="color:#374151;font-size:7px;letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Modelo ${modelType}</div>
+    ${portadaResumen}
+    <div style="margin-top:32px;opacity:0.6;">${miniWheel}</div>
+  </div>`;
+
+  // Ordenar por score desc
+  const ordenado = [...EJES.flatMap(e => e.keys)].sort((a, b) => {
+    const rdA = ranked.find(r => ID_TO_KEY[r.id] === a);
+    const rdB = ranked.find(r => ID_TO_KEY[r.id] === b);
+    const pA = rdA && rdA.max > 0 ? rdA.score / rdA.max : 0;
+    const pB = rdB && rdB.max > 0 ? rdB.score / rdB.max : 0;
+    return pB - pA;
+  });
+
+  // Páginas de talento
+  const talentPages = ordenado.map((key, i) => {
+    const rd      = ranked.find(r => ID_TO_KEY[r.id] === key);
+    const color   = INFORME_COLORS[key] ?? "#888";
+    const symbol  = symMap[key] ?? "?";
+    const name    = TALENT_NAMES[key] ?? key;
+    const data    = NEUROCOGNITIVE_DATA[key];
+    const soft    = softMap[key] ?? [];
+    const score   = rd && rd.max > 0 ? rd.score : 0;
+    const max     = rd?.max ?? 15;
+    const pts15   = Math.round(score * 15 / (max || 15));
+    const pct     = max > 0 ? Math.round((score / max) * 100) : 0;
+
+    const ambitoTags = data.ambitos.map(a =>
+      `<span style="background:${hex2rgba(color, 0.15)};color:${color};border-radius:4px;padding:3px 8px;font-size:7px;font-weight:bold;margin:0 4px 4px 0;display:inline-block;">${a}</span>`
+    ).join("");
+
+    const softTags = soft.map(s =>
+      `<span style="border:1px solid ${hex2rgba(color, 0.4)};color:${color};border-radius:4px;padding:3px 7px;font-size:7px;margin:0 4px 4px 0;display:inline-block;">${s}</span>`
+    ).join("");
+
+    const perfilPuntos = (data.perfilPuntos ?? []).map(p =>
+      `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;">
+        <span style="color:${color};font-size:10px;flex-shrink:0;line-height:1.2;">&#9658;</span>
+        <span style="color:#D1D5DB;font-size:8.5px;line-height:1.5;">${p}</span>
+      </div>`
+    ).join("");
+
+    return `
+  <div class="pagina" style="background:${BG};display:flex;flex-direction:row;">
+    <!-- Columna izquierda -->
+    <div style="width:36%;padding:38px;display:flex;flex-direction:column;justify-content:space-between;background:${hex2rgba(color, 0.07)};">
+      <div>
+        <div style="font-size:72px;font-weight:bold;color:${color};line-height:1;">${symbol}</div>
+        <div style="color:#fff;font-size:18px;font-weight:bold;margin-top:6px;">${name}</div>
+        <div style="color:#6B7280;font-size:6.5px;letter-spacing:1.5px;margin-top:5px;line-height:1.4;">${data.eje}</div>
+      </div>
+      <div>
+        <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:18px;">Puntuación</div>
+        <div style="display:flex;align-items:baseline;margin-top:2px;">
+          <span style="font-size:44px;font-weight:bold;color:${color};line-height:1;">${pts15}</span>
+          <span style="color:#374151;font-size:18px;margin-left:4px;">/15</span>
+        </div>
+        <div style="height:5px;border-radius:3px;margin-top:6px;background:#1E1E36;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>
+        </div>
+      </div>
+      ${soft.length > 0 ? `<div>
+        <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:14px;margin-bottom:5px;">Soft Skills</div>
+        <div style="display:flex;flex-wrap:wrap;">${softTags}</div>
+      </div>` : ""}
+    </div>
+    <!-- Columna derecha -->
+    <div style="width:64%;padding:38px;background:#0F0F20;display:flex;flex-direction:column;">
+      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">Resumen Neurocognitivo</div>
+      <div style="color:#D1D5DB;font-size:8.5px;line-height:1.6;">${data.resumen}</div>
+      <div style="color:#9CA3AF;font-size:7.5px;line-height:1.5;margin-top:8px;">${data.detalle}</div>
+      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:14px;margin-bottom:5px;">Perfil</div>
+      ${perfilPuntos}
+      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:12px;margin-bottom:5px;">Ámbitos Profesionales</div>
+      <div style="display:flex;flex-wrap:wrap;">${ambitoTags}</div>
+      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:12px;margin-bottom:4px;">Rol sugerido</div>
+      <div style="color:${color};font-size:8px;font-weight:600;">${data.rol}</div>
+    </div>
+    <div style="position:absolute;bottom:16px;right:24px;color:#1F2937;font-size:7px;">${i + 2} / ${ordenado.length + 1}</div>
+  </div>`;
+  }).join("");
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:Arial,Helvetica,sans-serif; background:#0B0B1A; }
+  .pagina { width:841px; height:595px; position:relative; page-break-after:always; overflow:hidden; }
+  .pagina:last-child { page-break-after:auto; }
+</style>
+</head><body>
+  ${portada}
+  ${talentPages}
+</body></html>`;
+}
+
+function runHtml2Pdf(
+  htmlContent: string,
+  fileName: string,
+  pageFormat: [number, number],
+  zip?: JSZip
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") { resolve(); return; }
+    const html2pdf = (window as unknown as { html2pdf?: Html2PdfFn }).html2pdf;
+    if (!html2pdf) { if (!zip) window.print(); resolve(); return; }
+
+    const container = document.createElement("div");
+    container.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:" + pageFormat[0] + "px;";
+    document.body.appendChild(container);
+
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = `width:${pageFormat[0]}px;height:${pageFormat[1]}px;border:none;`;
+    container.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) { document.body.removeChild(container); resolve(); return; }
+
+    iframeDoc.open(); iframeDoc.write(htmlContent); iframeDoc.close();
+
+    setTimeout(() => {
+      const target = (iframeDoc.body.firstElementChild as HTMLElement) ?? iframeDoc.body;
+      const instance = html2pdf()
+        .set({
+          margin: 0,
+          filename: fileName,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+          jsPDF: { unit: "px", format: pageFormat, orientation: "landscape" },
+        })
+        .from(target);
+
+      if (zip) {
+        instance.output("blob")
+          .then((blob: Blob) => { zip.file(fileName, blob); document.body.removeChild(container); resolve(); })
+          .catch(() => { document.body.removeChild(container); resolve(); });
+      } else {
+        instance.save()
+          .then(() => { document.body.removeChild(container); resolve(); })
+          .catch(() => { document.body.removeChild(container); resolve(); });
+      }
+    }, 400);
+  });
 }
 
 export function exportTalentModelPDF(
@@ -331,103 +489,18 @@ export function exportTalentModelPDF(
   zip?: JSZip,
   summaryText?: string
 ): Promise<void> {
-  console.log('🎯 exportTalentModelPDF called', { modelType, userName, hasZip: !!zip, hasSummary: !!summaryText });
-  
-  return new Promise((resolve) => {
-    if (typeof window === "undefined") { 
-      console.log('❌ Not in browser');
-      resolve(); 
-      return; 
-    }
+  const html     = generatePDFHTML(ranked, modelType, userName, summaryText);
+  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "genotipos" : "neurotalentos"}.pdf`;
+  return runHtml2Pdf(html, fileName, [1000, 707], zip);
+}
 
-    const html2pdf = (window as unknown as { html2pdf?: Html2PdfFn }).html2pdf;
-    if (!html2pdf) {
-      console.log('❌ html2pdf not found');
-      if (!zip) window.print();
-      resolve();
-      return;
-    }
-
-    console.log('✅ html2pdf found, generating HTML...');
-    const htmlContent = generatePDFHTML(ranked, modelType, userName, summaryText);
-    console.log('✅ HTML generated, creating container...');
-
-    const container = document.createElement("div");
-    container.style.position = "fixed";
-    container.style.top = "-9999px";
-    container.style.left = "-9999px";
-    container.style.width = "1000px";
-    document.body.appendChild(container);
-
-    const iframe = document.createElement("iframe");
-    iframe.style.width = "1000px";
-    iframe.style.height = "707px";
-    iframe.style.border = "none";
-    container.appendChild(iframe);
-
-    const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "genotipos" : "neurotalentos"}.pdf`;
-    console.log('📄 Filename:', fileName);
-
-    // Write HTML to iframe
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!iframeDoc) { 
-      console.log('❌ iframe doc not found');
-      document.body.removeChild(container); 
-      resolve(); 
-      return; 
-    }
-
-    iframeDoc.open();
-    iframeDoc.write(htmlContent);
-    iframeDoc.close();
-    console.log('✅ HTML written to iframe');
-
-    // Wait for iframe content to render
-    setTimeout(() => {
-      console.log('✅ iframe content rendered');
-      const target = iframeDoc.body.firstElementChild as HTMLElement ?? iframeDoc.body;
-
-      console.log('🔧 Creating html2pdf instance...');
-      const instance = html2pdf()
-        .set({
-          margin: 0,
-          filename: fileName,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-          jsPDF: { unit: "px", format: [1000, 707], orientation: "landscape" },
-        })
-        .from(target);
-
-      if (zip) {
-        console.log('📦 Generating blob for ZIP...');
-        instance
-          .output("blob")
-          .then((blob: Blob) => {
-            console.log('✅ Blob generated, adding to ZIP');
-            zip.file(fileName, blob);
-            document.body.removeChild(container);
-            resolve();
-          })
-          .catch((err) => {
-            console.error('❌ Error generating blob:', err);
-            document.body.removeChild(container);
-            resolve();
-          });
-      } else {
-        console.log('💾 Saving PDF directly...');
-        instance
-          .save()
-          .then(() => {
-            console.log('✅ PDF saved successfully');
-            document.body.removeChild(container);
-            resolve();
-          })
-          .catch((err) => {
-            console.error('❌ Error saving PDF:', err);
-            document.body.removeChild(container);
-            resolve();
-          });
-      }
-    }, 300); // Wait 300ms for rendering
-  });
+export function exportInformePDF(
+  ranked: RankedTalent[],
+  modelType: "genotipo" | "neurotalento",
+  userName: string,
+  summaryText?: string
+): Promise<void> {
+  const html     = generateInformeHTML(ranked, modelType, userName, summaryText);
+  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}informe-${modelType}.pdf`;
+  return runHtml2Pdf(html, fileName, [841, 595], undefined);
 }
