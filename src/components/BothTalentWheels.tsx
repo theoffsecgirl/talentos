@@ -14,12 +14,19 @@ type Score = {
 type Props = {
   scores: Score[];
   userName?: string;
+  initialGenotipoSummary?: string;
+  initialNeurotalentoSummary?: string;
 };
 
-export default function BothTalentWheels({ scores, userName = "" }: Props) {
+export default function BothTalentWheels({
+  scores,
+  userName = "",
+  initialGenotipoSummary = "",
+  initialNeurotalentoSummary = "",
+}: Props) {
   const [activeTab, setActiveTab] = useState<"genotipo" | "neurotalento">("genotipo");
-  const [genotipoSummary, setGenotipoSummary] = useState("");
-  const [neurotalentoSummary, setNeurotalentoSummary] = useState("");
+  const [genotipoSummary, setGenotipoSummary] = useState(initialGenotipoSummary);
+  const [neurotalentoSummary, setNeurotalentoSummary] = useState(initialNeurotalentoSummary);
   const [loadingBtn, setLoadingBtn] = useState<string | null>(null);
 
   const buildRanked = (): RankedTalent[] =>
@@ -117,8 +124,8 @@ export default function BothTalentWheels({ scores, userName = "" }: Props) {
 
       {/* Botones de descarga */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px" }}>
-        {btn("🗺️ Mapa Genotipo",      "mapa-genotipo",      "#0f766e", () => handle("mapa",    "genotipo"))}
-        {btn("🗺️ Mapa Neurotalento", "mapa-neurotalento", "#b45309", () => handle("mapa",    "neurotalento"))}
+        {btn("🗺️ Mapa Genotipo",       "mapa-genotipo",       "#0f766e", () => handle("mapa",    "genotipo"))}
+        {btn("🗺️ Mapa Neurotalento",  "mapa-neurotalento",  "#b45309", () => handle("mapa",    "neurotalento"))}
         {btn("📄 Informe Genotipo",    "informe-genotipo",   "#1d4ed8", () => handle("informe", "genotipo"))}
         {btn("📄 Informe Neurotalento","informe-neurotalento","#7c3aed", () => handle("informe", "neurotalento"))}
       </div>
@@ -134,7 +141,11 @@ export default function BothTalentWheels({ scores, userName = "" }: Props) {
         <textarea
           id={`summary-${activeTab}`}
           value={activeTab === "genotipo" ? genotipoSummary : neurotalentoSummary}
-          onChange={e => activeTab === "genotipo" ? setGenotipoSummary(e.target.value) : setNeurotalentoSummary(e.target.value)}
+          onChange={e =>
+            activeTab === "genotipo"
+              ? setGenotipoSummary(e.target.value)
+              : setNeurotalentoSummary(e.target.value)
+          }
           placeholder={`Escribe el ${activeTab === "genotipo" ? "resumen genotípico" : "resumen neurocognitivo"} aquí.`}
           style={{
             width: "100%",
