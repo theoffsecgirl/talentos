@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const element = React.createElement(MapaPDF, { modelo, nombre, scores, textoResumen }) as React.ReactElement<any>
     const buffer = await renderToBuffer(element)
     const filename = `${nombre.toLowerCase().replace(/\s+/g,'-')}-mapa-${modelo}.pdf`
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${filename}"` },
     })
