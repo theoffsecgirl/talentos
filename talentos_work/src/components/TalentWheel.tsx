@@ -141,10 +141,10 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
   const professionalProfile = useMemo(() => calculateProfessionalProfile(talents), [talents]);
 
-  const size = 700;
+  const size = 640;
   const center = size / 2;
-  const radius = 230;
-  const innerRadius = 75;
+  const radius = 206;
+  const innerRadius = 72;
 
   const sections = talents.map((talent, index) => {
     const anglePerSection = (Math.PI * 2) / 8;
@@ -189,7 +189,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[550px]">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[500px]">
         <defs>
           {sections.map(({ talent, fillPercentage }) => (
             <radialGradient
@@ -225,22 +225,22 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           );
         })}
 
-        <text x={center} y={center - radius - 15} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#8B5CF6">
+        <text x={center} y={center - radius - 15} textAnchor="middle" fontSize="12" fontWeight="bold" fill="#8B5CF6">
           Acción y resultados
         </text>
-        <text x={center + radius + 15} y={center + 5} textAnchor="start" fontSize="14" fontWeight="bold" fill="#06B6D4">
+        <text x={center + radius + 15} y={center + 5} textAnchor="start" fontSize="12" fontWeight="bold" fill="#06B6D4">
           Imaginación y arte
         </text>
-        <text x={center} y={center + radius + 25} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#DC2626">
+        <text x={center} y={center + radius + 25} textAnchor="middle" fontSize="12" fontWeight="bold" fill="#DC2626">
           Destreza y proyección
         </text>
-        <text x={center - radius - 15} y={center + 5} textAnchor="end" fontSize="14" fontWeight="bold" fill="#F59E0B">
+        <text x={center - radius - 15} y={center + 5} textAnchor="end" fontSize="12" fontWeight="bold" fill="#F59E0B">
           Saber y conocimiento
         </text>
 
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelDistance = showFullLabels ? radius + 88 : radius + 50;
+          const labelDistance = showFullLabels ? radius + 72 : radius + 46;
           const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
@@ -267,7 +267,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                   y={percentPos.y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="18"
+                  fontSize="16"
                   fontWeight="bold"
                   fill="white"
                   style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
@@ -281,7 +281,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 y={labelPos.y - (showFullLabels ? 20 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="20"
+                fontSize="16"
                 fontWeight="700"
                 fill={talent.color}
               >
@@ -294,7 +294,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                     y={labelPos.y + 4}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="8"
+                    fontSize="7"
                     fontWeight="600"
                     fill="#333"
                     className="print:text-[9px]"

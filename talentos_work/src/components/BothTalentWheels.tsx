@@ -16,6 +16,8 @@ type Props = {
   userName?: string;
   initialGenotipoSummary?: string;
   initialNeurotalentoSummary?: string;
+  rolEscogido?: string;
+  rolPensado?: string;
 };
 
 export default function BothTalentWheels({
@@ -23,6 +25,8 @@ export default function BothTalentWheels({
   userName = "",
   initialGenotipoSummary = "",
   initialNeurotalentoSummary = "",
+  rolEscogido = "",
+  rolPensado = "",
 }: Props) {
   const [activeTab, setActiveTab] = useState<"genotipo" | "neurotalento">("genotipo");
   const [genotipoSummary, setGenotipoSummary] = useState(initialGenotipoSummary);
@@ -64,7 +68,14 @@ export default function BothTalentWheels({
       const ranked  = buildRanked();
       const summary = modelo === "genotipo" ? genotipoSummary : neurotalentoSummary;
       if (tipo === "mapa") {
-        await exportTalentModelPDF(ranked, modelo, userName, undefined, summary);
+        await exportTalentModelPDF(
+          ranked,
+          modelo,
+          userName,
+          undefined,
+          summary,
+          { rolEscogido, rolPensado }
+        );
       } else {
         await exportInformePDF(ranked, modelo, userName, summary);
       }

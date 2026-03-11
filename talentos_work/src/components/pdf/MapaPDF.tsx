@@ -20,11 +20,11 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
     width: 841.89,
     height: 595.28,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   colLeft: {
-    width: '44%',
+    width: '41%',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 10,
@@ -32,10 +32,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   colRight: {
-    width: '56%',
+    width: '59%',
     backgroundColor: BG2,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     borderRadius: 10,
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   headerNombre: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14.5,
     fontWeight: 'bold',
     letterSpacing: 1.2,
   },
@@ -75,19 +75,19 @@ const styles = StyleSheet.create({
   },
   perfilTitulo: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 8.2,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   perfilItem: {
     color: '#C7CED8',
-    fontSize: 6.5,
-    marginBottom: 2.5,
+    fontSize: 6.0,
+    marginBottom: 2,
     lineHeight: 1.35,
   },
   rolesRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 4,
     marginTop: 6,
   },
   rolBox: {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 6,
     flex: 1,
-    minHeight: 34,
+    minHeight: 30,
   },
   rolLabel: {
     color: '#6B7280',
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   rolText: {
     color: '#E5E7EB',
-    fontSize: 6.8,
+    fontSize: 6.2,
     marginTop: 2,
     lineHeight: 1.2,
   },
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   ejeLabel: {
     color: '#7B8192',
-    fontSize: 5.4,
+    fontSize: 5.0,
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     marginBottom: 2.5,
@@ -133,27 +133,27 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   talentSymbol: {
-    fontSize: 8.5,
+    fontSize: 7.4,
     width: 12,
     textAlign: 'center',
     color: SYMBOL_COLOR,
   },
   talentScore: {
     color: SCORE_COLOR,
-    fontSize: 6.2,
+    fontSize: 5.8,
     fontWeight: 'bold',
     width: 18,
     marginLeft: 2,
   },
   talentName: {
     color: '#C7CED8',
-    fontSize: 5.8,
-    width: 110,
+    fontSize: 5.2,
+    width: 96,
     lineHeight: 1.15,
     marginRight: 4,
   },
   barBg: {
-    width: 58,
+    width: 52,
     height: 3,
     backgroundColor: BORDER,
     borderRadius: 2,
@@ -173,13 +173,13 @@ const styles = StyleSheet.create({
   },
   resumenText: {
     color: '#D1D5DB',
-    fontSize: 6.5,
-    lineHeight: 1.35,
+    fontSize: 6.0,
+    lineHeight: 1.3,
   },
 })
 
 function BarTalent({ score }: { score: number }) {
-  const totalWidth = 58
+  const totalWidth = 52
   const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0
   const w = Math.max(1, (safeScore / 100) * totalWidth)
   const color = safeScore > 67 ? BAR_RED : BAR_DARK
@@ -198,9 +198,9 @@ function BarTalent({ score }: { score: number }) {
 }
 
 function MapaSVG({ scores }: { scores: Record<string, number> }) {
-  const cx = 135
-  const cy = 135
-  const r = 98
+  const cx = 122
+  const cy = 122
+  const r = 88
   const keys = ['gestion', 'estrategia', 'imaginacion', 'profundo', 'aplicado', 'empatico', 'analitico', 'acompanamiento']
   const step = (2 * Math.PI) / keys.length
   const toRad = (i: number) => i * step - Math.PI / 2
@@ -215,8 +215,8 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
       value: Math.round(scores[key] ?? 0),
       x: cx + rv * Math.cos(angle),
       y: cy + rv * Math.sin(angle),
-      labelX: cx + (rv + 14) * Math.cos(angle),
-      labelY: cy + (rv + 14) * Math.sin(angle),
+      labelX: cx + (rv + 12) * Math.cos(angle),
+      labelY: cy + (rv + 12) * Math.sin(angle),
     }
   })
 
@@ -225,7 +225,7 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
     .join(' ') + ' Z'
 
   return (
-    <Svg width={270} height={270} viewBox="0 0 270 270">
+    <Svg width={244} height={244} viewBox="0 0 244 244">
       {levels.map((level, idx) => {
         const ringPath = keys
           .map((_, i) => {
@@ -270,7 +270,7 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
       {points.map((p) => (
         <Text
           key={`score-${p.key}`}
-          style={{ color: '#E5E7EB', fontSize: 6.2, fontWeight: 'bold' }}
+          style={{ color: '#E5E7EB', fontSize: 5.8, fontWeight: 'bold' }}
           x={p.labelX - 5}
           y={p.labelY + 2}
         >
