@@ -90,14 +90,14 @@ function safeNum(value: any): string {
 function ProgressRing({ value }: { value: number }) {
   const pct = clamp(Math.round(value), 0, 100);
   const style = {
-    background: `conic-gradient(var(--foreground) ${pct}%, rgba(148,163,184,0.35) ${pct}% 100%)`,
+    background: `conic-gradient(var(--foreground) ${pct}, rgba(148,163,184,0.35) ${pct} 100%)`,
   } as React.CSSProperties;
 
   return (
     <div className="flex items-center gap-3">
       <div className="w-11 h-11 rounded-full p-[3px]" style={style}>
         <div className="w-full h-full rounded-full bg-[var(--card)] flex items-center justify-center border border-[var(--border)]">
-          <span className="text-[11px] font-semibold text-[var(--foreground)]">{pct}%</span>
+          <span className="text-[11px] font-semibold text-[var(--foreground)]">{pct}</span>
         </div>
       </div>
     </div>
@@ -176,12 +176,7 @@ const SCALE = [
 
 export default function StartPage() {
   const questions = useMemo<Question[]>(() => {
-    const shuffledTalents = shuffle(TALENTS).map((t) => ({
-      ...t,
-      items: shuffle(t.items),
-    }));
-
-    return shuffledTalents.flatMap((t) =>
+    const allQuestions = TALENTS.flatMap((t) =>
       t.items.map((it) => ({
         itemId: it.id,
         text: it.text,
@@ -190,6 +185,8 @@ export default function StartPage() {
         talentQuizTitle: t.quizTitle,
       }))
     );
+
+    return shuffle(allQuestions);
   }, []);
 
   const N = questions.length;
@@ -468,7 +465,7 @@ export default function StartPage() {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-3xl font-bold text-[var(--foreground)] print:text-black">{percentage}%</div>
+                          <div className="text-3xl font-bold text-[var(--foreground)] print:text-black">{percentage}</div>
                         </div>
                       </div>
                     </div>
