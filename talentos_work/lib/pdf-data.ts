@@ -18,11 +18,11 @@ export const TALENT_COLORS: Record<string, string> = {
 export const SYMBOLS_GENOTIPO: Record<string, string> = {
   gestion:        '□',
   estrategia:     '△',
-  imaginacion:    '⬭',
+  imaginacion:    '⬯',
   profundo:       '◇',
   aplicado:       '▭',
   empatico:       '○',
-  analitico:      '⬟',
+  analitico:      '⬠',
   acompanamiento: '∞',
 }
 

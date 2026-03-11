@@ -8,7 +8,9 @@ export const runtime = 'nodejs'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { nombre, scores, textoResumen, modelo, rolEscogido, rolPensado } = body
+    const { nombre, scores, textoResumen, modelo } = body
+    const rolEscogido = body?.rolEscogido ?? body?.campoIdentificado ?? body?.identificaCampos ?? ''
+    const rolPensado = body?.rolPensado ?? body?.ideaCarreraTextoFinal ?? body?.ideaCarrera ?? ''
     if (!nombre || !scores || !modelo)
       return NextResponse.json({ error: 'Faltan campos: nombre, scores, modelo' }, { status: 400 })
     if (!['genotipo','neurotalento'].includes(modelo))

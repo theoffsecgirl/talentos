@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   colLeft: {
-    width: '41%',
+    width: '39%',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 10,
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   colRight: {
-    width: '59%',
+    width: '61%',
     backgroundColor: BG2,
     paddingVertical: 14,
     paddingHorizontal: 14,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   talentSymbol: {
-    fontSize: 7.4,
+    fontSize: 7.0,
     width: 12,
     textAlign: 'center',
     color: SYMBOL_COLOR,
@@ -148,12 +148,12 @@ const styles = StyleSheet.create({
   talentName: {
     color: '#C7CED8',
     fontSize: 5.2,
-    width: 96,
+    width: 104,
     lineHeight: 1.15,
     marginRight: 4,
   },
   barBg: {
-    width: 52,
+    width: 56,
     height: 3,
     backgroundColor: BORDER,
     borderRadius: 2,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
 })
 
 function BarTalent({ score }: { score: number }) {
-  const totalWidth = 52
+  const totalWidth = 56
   const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0
   const w = Math.max(1, (safeScore / 100) * totalWidth)
   const color = safeScore > 67 ? BAR_RED : BAR_DARK
@@ -198,25 +198,27 @@ function BarTalent({ score }: { score: number }) {
 }
 
 function MapaSVG({ scores }: { scores: Record<string, number> }) {
-  const cx = 122
-  const cy = 122
-  const r = 88
+  const cx = 118
+  const cy = 118
+  const r = 82
   const keys = ['gestion', 'estrategia', 'imaginacion', 'profundo', 'aplicado', 'empatico', 'analitico', 'acompanamiento']
   const step = (2 * Math.PI) / keys.length
   const toRad = (i: number) => i * step - Math.PI / 2
   const levels = [0.2, 0.4, 0.6, 0.8, 1]
 
   const points = keys.map((key, i) => {
-    const value = Math.max(0, Math.min(100, scores[key] ?? 0)) / 100
+    const raw = Number(scores?.[key] ?? 0)
+    const valuePct = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0
+    const value = valuePct / 100
     const angle = toRad(i)
     const rv = r * value
     return {
       key,
-      value: Math.round(scores[key] ?? 0),
+      value: Math.round(valuePct),
       x: cx + rv * Math.cos(angle),
       y: cy + rv * Math.sin(angle),
-      labelX: cx + (rv + 12) * Math.cos(angle),
-      labelY: cy + (rv + 12) * Math.sin(angle),
+      labelX: cx + (rv + 10) * Math.cos(angle),
+      labelY: cy + (rv + 10) * Math.sin(angle),
     }
   })
 
@@ -225,7 +227,7 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
     .join(' ') + ' Z'
 
   return (
-    <Svg width={244} height={244} viewBox="0 0 244 244">
+    <Svg width={236} height={236} viewBox="0 0 236 236">
       {levels.map((level, idx) => {
         const ringPath = keys
           .map((_, i) => {
@@ -250,16 +252,16 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
         )
       })}
 
-      <Path d={radarPath} fill={RADAR_FILL} fillOpacity={0.18} stroke={RADAR_STROKE} strokeWidth={1.2} />
+      <Path d={radarPath} fill={RADAR_FILL} fillOpacity={0.32} stroke={RADAR_STROKE} strokeWidth={1.2} />
 
       {points.map((p) => (
-        <Circle key={`point-${p.key}`} cx={p.x} cy={p.y} r={2.5} fill={RADAR_STROKE} />
+        <Circle key={`point-${p.key}`} cx={p.x} cy={p.y} r={2.2} fill={RADAR_STROKE} />
       ))}
 
       {[0, 60, 100].map((tick, idx) => (
         <Text
           key={`tick-${tick}`}
-          style={{ color: MUTED, fontSize: 6 }}
+          style={{ color: MUTED, fontSize: 5.8 }}
           x={cx + 4}
           y={cy - (r * [0, 0.6, 1][idx]) + (idx === 0 ? -2 : 2)}
         >
@@ -270,8 +272,8 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
       {points.map((p) => (
         <Text
           key={`score-${p.key}`}
-          style={{ color: '#E5E7EB', fontSize: 5.8, fontWeight: 'bold' }}
-          x={p.labelX - 5}
+          style={{ color: '#E5E7EB', fontSize: 5.4, fontWeight: 'bold' }}
+          x={p.labelX - 4}
           y={p.labelY + 2}
         >
           {String(p.value)}
@@ -328,11 +330,11 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rol
               </View>
               <View style={styles.rolBox}>
                 <Text style={styles.rolLabel}>Rol escogido</Text>
-                <Text style={styles.rolText}>{rolEscogido?.trim() || 'No indicado'}</Text>
+                <Text style={styles.rolText}>{(rolEscogido && rolEscogido.trim()) || 'No indicado'}</Text>
               </View>
               <View style={styles.rolBox}>
                 <Text style={styles.rolLabel}>Rol pensado</Text>
-                <Text style={styles.rolText}>{rolPensado?.trim() || 'No indicado'}</Text>
+                <Text style={styles.rolText}>{(rolPensado && rolPensado.trim()) || 'No indicado'}</Text>
               </View>
             </View>
           </View>

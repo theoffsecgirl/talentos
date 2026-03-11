@@ -49,11 +49,11 @@ const ID_TO_KEY: Record<number, string> = {
 const GENOTIPO_SYMBOLS: Record<number, string> = {
   4: "\u25a1",
   1: "\u25b3",
-  6: "\u2b2d",
+  6: "\u2B2F",
   7: "\u25c7",
   8: "\u25ad",
   5: "\u25cb",
-  2: "\u2b20",
+  2: "\u2B20",
   3: "\u221e",
 };
 
@@ -179,12 +179,12 @@ function generateWheelSVG(
       ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="white">${s.percentage}</text>`
       : "";
     return `
-      <path d="${fillPath}"  fill="none" stroke="${s.color}" stroke-width="1"/>
+      <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
       <path d="${outerPath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3"/>
       ${pctText}
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 14).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="bold" fill="#222">${s.symbol}</text>
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 3).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="6.0" font-weight="600" fill="#333">${s.line1}</text>
-      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="6.0" font-weight="600" fill="#333">${s.line2}</text>` : ""}
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 14).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="bold" fill="#222">${s.symbol}</text>
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 3).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.4" font-weight="600" fill="#333">${s.line1}</text>
+      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.4" font-weight="600" fill="#333">${s.line2}</text>` : ""}
     `;
   }).join("");
 
