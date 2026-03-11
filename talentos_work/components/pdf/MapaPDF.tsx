@@ -248,6 +248,8 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) 
   const dominante = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]
   const dominanteData = NEUROCOGNITIVE_DATA[dominante]
   const dominanteColor = TALENT_COLORS[dominante]
+  const rolEscogido = ''
+  const rolPensado = ''
 
   return (
     <Document>
@@ -295,14 +297,13 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) 
               <View key={eje.label}>
                 <Text style={styles.ejeLabel}>{eje.label}</Text>
                 {eje.keys.map(key => {
-                  const color = TALENT_COLORS[key]
                   const sym   = symbols[key]
                   return (
                     <View key={key} style={styles.talentRow}>
-                      <Text style={[styles.talentSymbol, { color }]}>{sym}</Text>
+                      <Text style={[styles.talentSymbol, { color: '#111111' }]}>{sym}</Text>
                       <Text style={styles.talentScore}>{scores[key]}</Text>
                       <Text style={styles.talentName}>{TALENT_NAMES[key]}</Text>
-                      <BarTalent score={scores[key]} color={color} />
+                      <BarTalent score={scores[key]} />
                     </View>
                   )
                 })}
