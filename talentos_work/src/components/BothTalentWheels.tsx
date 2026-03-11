@@ -183,6 +183,21 @@ export default function BothTalentWheels({
           <TalentWheel scores={scores} showFullLabels modelType="neurotalento" summaryText={neurotalentoSummary} />
         )}
       </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px", marginTop: "8px" }}>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "10px", background: "#fff" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>Rol escogido</div>
+          <div style={{ marginTop: "4px", fontSize: "14px", color: "#111827" }}>{rolEscogido?.trim() || "No indicado"}</div>
+        </div>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "10px", background: "#fff" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>Rol pensado</div>
+          <div style={{ marginTop: "4px", fontSize: "14px", color: "#111827" }}>{rolPensado?.trim() || "No indicado"}</div>
+        </div>
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "10px", background: "#fff" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumen activo</div>
+          <div style={{ marginTop: "4px", fontSize: "14px", color: "#111827" }}>{(activeTab === "genotipo" ? genotipoSummary : neurotalentoSummary)?.trim() || "Sin resumen"}</div>
+        </div>
+      </div>
     </div>
   );
 }

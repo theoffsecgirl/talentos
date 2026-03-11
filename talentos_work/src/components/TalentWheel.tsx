@@ -24,7 +24,7 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryCo
   7: { symbol: "◇", color: "#10B981", secondaryColor: "#34D399", axis: "Imaginación y arte" },
   8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", axis: "Destreza y proyección" },
   5: { symbol: "○", color: "#F59E0B", secondaryColor: "#FBBF24", axis: "Destreza y proyección" },
-  2: { symbol: "⬟", color: "#8B5CF6", secondaryColor: "#A78BFA", axis: "Saber y conocimiento" },
+  2: { symbol: "⬠", color: "#8B5CF6", secondaryColor: "#A78BFA", axis: "Saber y conocimiento" },
   3: { symbol: "∞", color: "#7C3AED", secondaryColor: "#8B5CF6", axis: "Saber y conocimiento" },
 };
 
@@ -35,7 +35,7 @@ const GENOTIPO_SYMBOLS: Record<number, string> = {
   7: "◇",
   8: "▭",
   5: "○",
-  2: "⬟",
+  2: "⬠",
   3: "∞",
 };
 
@@ -225,22 +225,28 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           );
         })}
 
-        <text x={center} y={center - radius - 15} textAnchor="middle" fontSize="12" fontWeight="bold" fill="#8B5CF6">
+        <text x={center} y={center - radius - 10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#8B5CF6">
           Acción y resultados
         </text>
-        <text x={center + radius + 15} y={center + 5} textAnchor="start" fontSize="12" fontWeight="bold" fill="#06B6D4">
-          Imaginación y arte
+        <text x={center + radius + 8} y={center - 2} textAnchor="start" fontSize="10" fontWeight="bold" fill="#06B6D4">
+          Imaginación
         </text>
-        <text x={center} y={center + radius + 25} textAnchor="middle" fontSize="12" fontWeight="bold" fill="#DC2626">
+        <text x={center + radius + 8} y={center + 10} textAnchor="start" fontSize="10" fontWeight="bold" fill="#06B6D4">
+          y arte
+        </text>
+        <text x={center} y={center + radius + 18} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#DC2626">
           Destreza y proyección
         </text>
-        <text x={center - radius - 15} y={center + 5} textAnchor="end" fontSize="12" fontWeight="bold" fill="#F59E0B">
-          Saber y conocimiento
+        <text x={center - radius - 8} y={center - 2} textAnchor="end" fontSize="10" fontWeight="bold" fill="#F59E0B">
+          Saber
+        </text>
+        <text x={center - radius - 8} y={center + 10} textAnchor="end" fontSize="10" fontWeight="bold" fill="#F59E0B">
+          y conocimiento
         </text>
 
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelDistance = showFullLabels ? radius + 72 : radius + 46;
+          const labelDistance = showFullLabels ? radius + 58 : radius + 40;
           const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
@@ -281,7 +287,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 y={labelPos.y - (showFullLabels ? 20 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="16"
+                fontSize="14"
                 fontWeight="700"
                 fill={talent.color}
               >
@@ -294,7 +300,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                     y={labelPos.y + 4}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="7"
+                    fontSize="6.5"
                     fontWeight="600"
                     fill="#333"
                     className="print:text-[9px]"
@@ -307,7 +313,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                       y={labelPos.y + 17}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="8"
+                      fontSize="6.5"
                       fontWeight="600"
                       fill="#333"
                       className="print:text-[9px]"

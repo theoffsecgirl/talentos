@@ -9,7 +9,7 @@ const MUTED = '#6B7280'
 const GRID = '#2A2A45'
 const RADAR_FILL = '#D1D5DB'
 const RADAR_STROKE = '#F3F4F6'
-const SYMBOL_COLOR = '#D1D5DB'
+const SYMBOL_COLOR = '#E5E7EB'
 const SCORE_COLOR = '#F9FAFB'
 const BAR_RED = '#DC2626'
 const BAR_DARK = '#111111'
@@ -295,7 +295,7 @@ export interface MapaPDFProps {
 }
 
 export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rolPensado }: MapaPDFProps) {
-  const symbols = SYMBOLS_GENOTIPO
+  const symbols = { ...SYMBOLS_GENOTIPO, analitico: '⬠' }
   const titulo = modelo === 'genotipo' ? 'MAPA DE GENIOTIPOS' : 'MAPA DE NEUROTALENTOS'
   const modelLabel = modelo === 'genotipo' ? 'GENIOTIPO' : 'NEUROTALENTO'
   const dominante = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'gestion'
