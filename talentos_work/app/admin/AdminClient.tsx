@@ -376,7 +376,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               for (const r of rows) {
                 const ans = getRowAnswers(r);
                 if (!ans) continue;
-                await exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre, zip);
+                await exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre, zip, undefined, { rolEscogido: r.campoIdentificado ?? r.identificaCampos ?? "", rolPensado: r.ideaCarreraTextoFinal ?? r.ideaCarrera ?? "" });
               }
               const content = await zip.generateAsync({ type: "blob" });
               const url = URL.createObjectURL(content);
@@ -400,7 +400,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               for (const r of rows) {
                 const ans = getRowAnswers(r);
                 if (!ans) continue;
-                await exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre, zip);
+                await exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre, zip, undefined, { rolEscogido: r.campoIdentificado ?? r.identificaCampos ?? "", rolPensado: r.ideaCarreraTextoFinal ?? r.ideaCarrera ?? "" });
               }
               const content = await zip.generateAsync({ type: "blob" });
               const url = URL.createObjectURL(content);

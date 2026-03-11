@@ -240,7 +240,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelDistance = showFullLabels ? radius + 100 : radius + 50;
+          const labelDistance = showFullLabels ? radius + 88 : radius + 50;
           const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
@@ -281,7 +281,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 y={labelPos.y - (showFullLabels ? 20 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="24"
+                fontSize="20"
                 fontWeight="700"
                 fill={talent.color}
               >
@@ -294,7 +294,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                     y={labelPos.y + 4}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="10"
+                    fontSize="8"
                     fontWeight="600"
                     fill="#333"
                     className="print:text-[9px]"
@@ -307,7 +307,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                       y={labelPos.y + 17}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="10"
+                      fontSize="8"
                       fontWeight="600"
                       fill="#333"
                       className="print:text-[9px]"
@@ -381,8 +381,9 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Detalle por talento</h3>
         <div className="grid gap-2 print:gap-1">
           {talents.map((t) => {
-            const isDanger = t.percentage >= 67;
+            const isDanger = t.percentage > 67;
             const textColor = isDanger ? '#DC2626' : '#000000';
+            const barColor = isDanger ? '#DC2626' : '#111111';
             
             return (
               <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] print:border-gray-300 print:bg-white print:p-2">
@@ -395,14 +396,17 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                       {t.title}
                     </div>
                     <div className="text-xs text-[var(--muted-foreground)] print:text-gray-600 mb-1">{t.axis}</div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${t.percentage}%`,
-                          backgroundColor: t.color,
-                        }}
-                      />
+                    <div className="w-full">
+                      <div className="mb-1 flex justify-between text-[10px] text-gray-500"><span>0</span><span>60</span><span>100</span></div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${t.percentage}%`,
+                            backgroundColor: barColor,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
