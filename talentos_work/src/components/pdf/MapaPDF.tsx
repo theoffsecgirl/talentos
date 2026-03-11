@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
   rolText: { color: '#D1D5DB', fontSize: 8, marginTop: 2 },
   ejeLabel: { color: '#374151', fontSize: 6, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 3, marginTop: 6 },
   talentRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  talentSymbol: { fontSize: 10, width: 16, textAlign: 'center' },
+  talentSymbol: { fontSize: 10, width: 16, textAlign: 'center', color: '#111111' },
   talentScore: { color: '#FFFFFF', fontSize: 7.5, fontWeight: 'bold', width: 22, marginLeft: 2 },
   talentName: { color: '#9CA3AF', fontSize: 7, flex: 1 },
   barBg: { width: 70, height: 3, backgroundColor: BORDER, borderRadius: 2 },
@@ -31,11 +31,19 @@ const styles = StyleSheet.create({
   resumenText: { color: '#D1D5DB', fontSize: 7.5, lineHeight: 1.5 },
 })
 
-function BarTalent({ score, color }: { score: number; color: string }) {
+function BarTalent({ score }: { score: number }) {
   const w = Math.max(1, (score / 100) * 70)
+  const color = score > 67 ? '#DC2626' : '#111111'
   return (
-    <View style={styles.barBg}>
-      <View style={{ width: w, height: 3, backgroundColor: color, borderRadius: 2 }} />
+    <View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 70, marginBottom: 2 }}>
+        <Text style={{ color: '#6B7280', fontSize: 5 }}>0</Text>
+        <Text style={{ color: '#6B7280', fontSize: 5 }}>60</Text>
+        <Text style={{ color: '#6B7280', fontSize: 5 }}>100</Text>
+      </View>
+      <View style={styles.barBg}>
+        <View style={{ width: w, height: 3, backgroundColor: color, borderRadius: 2 }} />
+      </View>
     </View>
   )
 }
@@ -52,7 +60,7 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
         const a1=toRad(i), a2=toRad(i+1), val=(scores[key]??0)/100, rv=r*val
         const x1=cx+rv*Math.cos(a1), y1=cy+rv*Math.sin(a1)
         const x2=cx+rv*Math.cos(a2), y2=cy+rv*Math.sin(a2)
-        return <Path key={key} d={`M ${cx} ${cy} L ${x1} ${y1} A ${rv} ${rv} 0 0 1 ${x2} ${y2} Z`} fill={TALENT_COLORS[key]} fillOpacity={0.75} stroke={TALENT_COLORS[key]} strokeWidth={0.4} />
+        return <Path key={key} d={`M ${cx} ${cy} L ${x1} ${y1} A ${rv} ${rv} 0 0 1 ${x2} ${y2} Z`} fill="none" stroke={TALENT_COLORS[key]} strokeWidth={0.8} />
       })}
       {keys.map((_,i) => { const a=toRad(i); return <Path key={i} d={`M ${cx} ${cy} L ${cx+r*Math.cos(a)} ${cy+r*Math.sin(a)}`} stroke={BG} strokeWidth={1.5} /> })}
       <Circle cx={cx} cy={cy} r={3} fill="#FFFFFF" fillOpacity={0.4} />
@@ -65,9 +73,11 @@ export interface MapaPDFProps {
   nombre: string
   scores: Record<string, number>
   textoResumen?: string
+  rolEscogido?: string
+  rolPensado?: string
 }
 
-export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) {
+export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rolPensado }: MapaPDFProps) {
   const symbols = SYMBOLS_GENOTIPO
   const titulo  = modelo === 'genotipo' ? 'MAPA DE GENIOTIPOS' : 'MAPA DE NEUROTALENTOS'
   const modelLabel = modelo === 'genotipo' ? 'GENIOTIPO' : 'NEUROTALENTO'
@@ -92,7 +102,15 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) 
             {dominanteData.perfilPuntos.map((p,i) => <Text key={i} style={styles.perfilItem}>· {p}</Text>)}
             <View style={styles.rolBox}>
               <Text style={styles.rolLabel}>Rol sugerido</Text>
-              <Text style={styles.rolText}>{dominanteData.rol}</Text>
+              <Text style={styles.rolText}>{dominanteData.rol || 'No indicado'}</Text>
+            </View>
+            <View style={styles.rolBox}>
+              <Text style={styles.rolLabel}>Rol escogido</Text>
+              <Text style={styles.rolText}>{rolEscogido?.trim() || 'No indicado'}</Text>
+            </View>
+            <View style={styles.rolBox}>
+              <Text style={styles.rolLabel}>Rol pensado</Text>
+              <Text style={styles.rolText}>{rolPensado?.trim() || 'No indicado'}</Text>
             </View>
           </View>
           <View>
@@ -101,10 +119,10 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) 
                 <Text style={styles.ejeLabel}>{eje.label}</Text>
                 {eje.keys.map(key => (
                   <View key={key} style={styles.talentRow}>
-                    <Text style={[styles.talentSymbol, { color: TALENT_COLORS[key] }]}>{symbols[key]}</Text>
+                    <Text style={styles.talentSymbol}>{symbols[key]}</Text>
                     <Text style={styles.talentScore}>{scores[key]}</Text>
                     <Text style={styles.talentName}>{TALENT_NAMES[key]}</Text>
-                    <BarTalent score={scores[key]} color={TALENT_COLORS[key]} />
+                    <BarTalent score={scores[key]} />
                   </View>
                 ))}
               </View>

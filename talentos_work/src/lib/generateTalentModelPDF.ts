@@ -179,12 +179,12 @@ function generateWheelSVG(
       ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="white">${s.percentage}</text>`
       : "";
     return `
-      <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
+      <path d="${fillPath}"  fill="none" stroke="${s.color}" stroke-width="1"/>
       <path d="${outerPath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3"/>
       ${pctText}
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 14).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="bold" fill="${s.color}">${s.symbol}</text>
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 3).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="6.4" font-weight="600" fill="#333">${s.line1}</text>
-      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="6.4" font-weight="600" fill="#333">${s.line2}</text>` : ""}
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 14).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="15" font-weight="bold" fill="#222">${s.symbol}</text>
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 3).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="6.0" font-weight="600" fill="#333">${s.line1}</text>
+      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="6.0" font-weight="600" fill="#333">${s.line2}</text>` : ""}
     `;
   }).join("");
 
@@ -247,18 +247,18 @@ function generatePDFHTML(
     </div>`).join("");
 
   const roleCards = [
-    topRole ? `<div style="margin-top:8px;border:2px solid #CC0000;border-radius:5px;padding:6px;background:#fff3f3;">
+    `<div style="margin-top:8px;border:2px solid #CC0000;border-radius:5px;padding:6px;background:#fff3f3;">
         <div style="font-size:7px;font-weight:700;color:#CC0000;letter-spacing:0.5px;margin-bottom:2px;">ROL SUGERIDO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${topRole}</div>
-      </div>` : "",
-    meta?.rolEscogido ? `<div style="margin-top:8px;border:1.5px solid #111;border-radius:5px;padding:6px;background:#fff;">
+        <div style="font-size:9px;color:#333;line-height:1.35;">${topRole || "No indicado"}</div>
+      </div>`,
+    `<div style="margin-top:8px;border:1.5px solid #111;border-radius:5px;padding:6px;background:#fff;">
         <div style="font-size:7px;font-weight:700;color:#111;letter-spacing:0.5px;margin-bottom:2px;">ROL ESCOGIDO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${meta.rolEscogido}</div>
-      </div>` : "",
-    meta?.rolPensado ? `<div style="margin-top:8px;border:1.5px solid #666;border-radius:5px;padding:6px;background:#fafafa;">
+        <div style="font-size:9px;color:#333;line-height:1.35;">${meta?.rolEscogido?.trim() || "No indicado"}</div>
+      </div>`,
+    `<div style="margin-top:8px;border:1.5px solid #666;border-radius:5px;padding:6px;background:#fafafa;">
         <div style="font-size:7px;font-weight:700;color:#555;letter-spacing:0.5px;margin-bottom:2px;">ROL PENSADO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${meta.rolPensado}</div>
-      </div>` : "",
+        <div style="font-size:9px;color:#333;line-height:1.35;">${meta?.rolPensado?.trim() || "No indicado"}</div>
+      </div>`,
   ].join("");
 
   const profileSection = `
@@ -277,7 +277,7 @@ function generatePDFHTML(
       const nam = rd?.reportTitle ?? "";
       const bar = generateBatteryBar(pct);
       return `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;">
-        <div style="font-size:10px;font-weight:700;color:${TALENT_COLORS[talentId] ?? '#666'};width:14px;text-align:center;flex-shrink:0;line-height:1.2;">${sym}</div>
+        <div style="font-size:10px;font-weight:700;color:#222;width:14px;text-align:center;flex-shrink:0;line-height:1.2;">${sym}</div>
         <div style="font-size:7px;font-weight:600;color:#333;width:110px;flex-shrink:0;line-height:1.25;word-break:break-word;">${pct} - ${nam}</div>
         <div style="flex:1;min-width:0;">${bar}</div>
       </div>`;

@@ -163,11 +163,19 @@ const styles = StyleSheet.create({
   },
 })
 
-function BarTalent({ score, color }: { score: number; color: string }) {
+function BarTalent({ score }: { score: number }) {
   const w = Math.max(1, (score / 100) * 70)
+  const color = score > 67 ? '#DC2626' : '#111111'
   return (
-    <View style={styles.barBg}>
-      <View style={{ width: w, height: 3, backgroundColor: color, borderRadius: 2 }} />
+    <View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 70, marginBottom: 2 }}>
+        <Text style={{ color: '#6B7280', fontSize: 5 }}>0</Text>
+        <Text style={{ color: '#6B7280', fontSize: 5 }}>60</Text>
+        <Text style={{ color: '#6B7280', fontSize: 5 }}>100</Text>
+      </View>
+      <View style={styles.barBg}>
+        <View style={{ width: w, height: 3, backgroundColor: color, borderRadius: 2 }} />
+      </View>
     </View>
   )
 }
@@ -199,7 +207,7 @@ function MapaSVG({ scores }: { scores: Record<string, number> }) {
           <Path
             key={key}
             d={`M ${cx} ${cy} L ${x1} ${y1} A ${rv} ${rv} 0 0 1 ${x2} ${y2} Z`}
-            fill={color}
+            fill="none"
             fillOpacity={0.75}
             stroke={color}
             strokeWidth={0.4}
@@ -269,7 +277,15 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) 
             ))}
             <View style={styles.rolBox}>
               <Text style={styles.rolLabel}>Rol sugerido</Text>
-              <Text style={styles.rolText}>{dominanteData.rol}</Text>
+              <Text style={styles.rolText}>{dominanteData.rol || 'No indicado'}</Text>
+            </View>
+            <View style={styles.rolBox}>
+              <Text style={styles.rolLabel}>Rol escogido</Text>
+              <Text style={styles.rolText}>{rolEscogido?.trim() || 'No indicado'}</Text>
+            </View>
+            <View style={styles.rolBox}>
+              <Text style={styles.rolLabel}>Rol pensado</Text>
+              <Text style={styles.rolText}>{rolPensado?.trim() || 'No indicado'}</Text>
             </View>
           </View>
 
