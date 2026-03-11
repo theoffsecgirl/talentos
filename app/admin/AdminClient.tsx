@@ -108,7 +108,7 @@ function Donut({ value }: { value: number }) {
           transform="rotate(-90 24 24)"
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">{value}%</div>
+      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">{value}</div>
     </div>
   );
 }
@@ -365,7 +365,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <ButtonGhost type="submit">Aplicar filtros</ButtonGhost>
           <ButtonGhost type="button" onClick={onClear}>Limpiar</ButtonGhost>
 
-          {/* Exportar masivo Genotipo */}
+          {/* Exportar masivo Geniotipo */}
           <ButtonGhost
             type="button"
             onClick={async () => {
@@ -381,12 +381,12 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               const content = await zip.generateAsync({ type: "blob" });
               const url = URL.createObjectURL(content);
               const a = document.createElement("a");
-              a.href = url; a.download = `neurotalentos-genotipo-${fecha}.zip`;
+              a.href = url; a.download = `neurotalentos-geniotipo-${fecha}.zip`;
               document.body.appendChild(a); a.click(); a.remove();
               URL.revokeObjectURL(url);
             }}
           >
-            Exportar filtrados (Genotipo)
+            Exportar filtrados (Geniotipo)
           </ButtonGhost>
 
           {/* Exportar masivo Neurotalento */}
@@ -551,7 +551,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
                                 <span className="text-[var(--muted-foreground)]"> · {t.reportTitle || t.quizTitle}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <div className={cx("text-sm font-bold", danger ? "text-[var(--danger)]" : "text-[var(--foreground)]")}>{p}%</div>
+                                <div className={cx("text-sm font-bold", danger ? "text-[var(--danger)]" : "text-[var(--foreground)]")}>{p}</div>
                                 <Pill>{indicator}</Pill>
                               </div>
                             </div>

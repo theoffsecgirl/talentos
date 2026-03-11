@@ -525,7 +525,7 @@ export default function StartPage() {
               <ButtonGhost type="button" onClick={back}>
                 Atrás
               </ButtonGhost>
-              <ButtonPrimary type="button" onClick={next}>
+              <ButtonPrimary type="button" onClick={() => { setError(""); setStep(STEP_POST_1); }}>
                 Continuar con el registro
               </ButtonPrimary>
             </div>

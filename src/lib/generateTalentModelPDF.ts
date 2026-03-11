@@ -218,7 +218,7 @@ function generatePDFHTML(
   summaryText?: string
 ): string {
   const symbolMap  = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
-  const modelLabel = modelType === "genotipo" ? "Modelo Genotipo" : "Modelo Neurotalento";
+  const modelLabel = modelType === "genotipo" ? "Modelo Geniotipo" : "Modelo Neurotalento";
   const winner     = ranked[0];
   const winnerFull = TALENTS.find(t => t.id === winner?.id);
 
@@ -254,7 +254,7 @@ function generatePDFHTML(
       const bar = generateBatteryBar(pct, TALENT_COLORS[talentId]);
       return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
         <div style="font-size:11px;font-weight:700;color:${TALENT_COLORS[talentId] ?? '#666'};width:15px;text-align:center;flex-shrink:0;">${sym}</div>
-        <div style="font-size:8px;font-weight:600;color:#333;width:90px;flex-shrink:0;">${pct}% - ${nam}</div>
+        <div style="font-size:8px;font-weight:600;color:#333;width:90px;flex-shrink:0;">${pct} - ${nam}</div>
         <div style="flex:1;">${bar}</div>
       </div>`;
     }).join("");
@@ -280,7 +280,7 @@ function generatePDFHTML(
   <div style="width:1000px;padding:25px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:8px;">
       <div>
-        <div style="font-size:16px;font-weight:700;">MAPA DE ${modelType === "genotipo" ? "GENOTIPOS" : "NEUROTALENTOS"}</div>
+        <div style="font-size:16px;font-weight:700;">MAPA DE ${modelType === "genotipo" ? "GENIOTIPOS" : "NEUROTALENTOS"}</div>
         <div style="font-size:10px;color:#555;">${userName ? userName + " \u2014 " : ""}${modelLabel}</div>
       </div>
       <div style="font-size:9px;color:#888;">Basado en neurociencia aplicada</div>
@@ -316,7 +316,7 @@ function generateInformeHTML(
 ): string {
   const symMap    = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
   const softMap   = modelType === "genotipo" ? SOFT_SKILLS_GENOTIPO : SOFT_SKILLS_NEUROTALENTO;
-  const titulo    = modelType === "genotipo" ? "INFORME DE GENOTIPOS" : "INFORME DE NEUROTALENTOS";
+  const titulo    = modelType === "genotipo" ? "INFORME DE GENIOTIPOS" : "INFORME DE NEUROTALENTOS";
   const BG        = "#0B0B1A";
   const fecha     = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
 
@@ -490,7 +490,7 @@ export function exportTalentModelPDF(
   summaryText?: string
 ): Promise<void> {
   const html     = generatePDFHTML(ranked, modelType, userName, summaryText);
-  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "genotipos" : "neurotalentos"}.pdf`;
+  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "geniotipos" : "neurotalentos"}.pdf`;
   return runHtml2Pdf(html, fileName, [1000, 707], zip);
 }
 

@@ -69,7 +69,7 @@ export interface MapaPDFProps {
 
 export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) {
   const symbols = modelo === 'genotipo' ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO
-  const titulo  = modelo === 'genotipo' ? 'MAPA DE GENOTIPOS' : 'MAPA DE NEUROTALENTOS'
+  const titulo  = modelo === 'genotipo' ? 'MAPA DE GENIOTIPOS' : 'MAPA DE NEUROTALENTOS'
   const dominante = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0]
   const dominanteData = NEUROCOGNITIVE_DATA[dominante]
   const dominanteColor = TALENT_COLORS[dominante]

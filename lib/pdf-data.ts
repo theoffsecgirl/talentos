@@ -13,7 +13,7 @@ export const TALENT_COLORS: Record<string, string> = {
 }
 
 // ─────────────────────────────────────────────
-// SÍMBOLOS — Modelo Genotipo (formas)
+// SÍMBOLOS — Modelo Geniotipo (formas)
 // ─────────────────────────────────────────────
 export const SYMBOLS_GENOTIPO: Record<string, string> = {
   estrategia:     '▷',

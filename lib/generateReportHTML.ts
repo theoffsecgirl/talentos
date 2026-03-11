@@ -647,7 +647,7 @@ export function generateReportHTML({
               <div class="bar">
                 <span style="width:${percentage}%;background:${data.color};"></span>
               </div>
-              <div class="muted" style="font-size:11px;margin-top:4px;">${percentage}% de tu perfil</div>
+              <div class="muted" style="font-size:11px;margin-top:4px;">${percentage} de tu perfil</div>
             </div>
           </div>
           `;

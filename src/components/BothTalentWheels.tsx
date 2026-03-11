@@ -117,16 +117,16 @@ export default function BothTalentWheels({
               cursor: "pointer",
             }}
           >
-            {t === "genotipo" ? "Mapa Genotipo" : "Mapa Neurotalento"}
+            {t === "genotipo" ? "Mapa Geniotipo" : "Mapa Neurotalento"}
           </button>
         ))}
       </div>
 
       {/* Botones de descarga */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px" }}>
-        {btn("🗺️ Mapa Genotipo",       "mapa-genotipo",       "#0f766e", () => handle("mapa",    "genotipo"))}
+        {btn("🗺️ Mapa Geniotipo",       "mapa-genotipo",       "#0f766e", () => handle("mapa",    "genotipo"))}
         {btn("🗺️ Mapa Neurotalento",  "mapa-neurotalento",  "#b45309", () => handle("mapa",    "neurotalento"))}
-        {btn("📄 Informe Genotipo",    "informe-genotipo",   "#1d4ed8", () => handle("informe", "genotipo"))}
+        {btn("📄 Informe Geniotipo",    "informe-genotipo",   "#1d4ed8", () => handle("informe", "genotipo"))}
         {btn("📄 Informe Neurotalento","informe-neurotalento","#7c3aed", () => handle("informe", "neurotalento"))}
       </div>
 

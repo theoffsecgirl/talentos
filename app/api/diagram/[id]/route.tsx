@@ -121,14 +121,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 >
                   <div
                     style={{
-                      width: `${talent.percentage}%`,
+                      width: `${talent.percentage}`,
                       height: '16px',
                       background: talent.color,
                       borderRadius: '8px',
                     }}
                   />
                 </div>
-                <div style={{ fontSize: '20px', fontWeight: 'bold', color: talent.color }}>{talent.percentage}%</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: talent.color }}>{talent.percentage}</div>
               </div>
             ))}
           </div>

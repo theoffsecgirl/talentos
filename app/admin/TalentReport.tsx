@@ -49,7 +49,7 @@ function Donut({ score, max }: { score: number; max: number }) {
   const dash = (p / 100) * c;
   return (
     <div className="flex items-center gap-3">
-      <svg width={size} height={size} viewBox="0 0 52 52" aria-label={`${p}%`}>
+      <svg width={size} height={size} viewBox="0 0 52 52" aria-label={`${p}`}>
         <circle cx="26" cy="26" r={r} fill="none" stroke="rgba(100,116,139,0.25)" strokeWidth="6" />
         <circle
           cx="26"
@@ -63,7 +63,7 @@ function Donut({ score, max }: { score: number; max: number }) {
           transform="rotate(-90 26 26)"
         />
         <text x="26" y="29" textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--foreground)">
-          {p}%
+          {p}
         </text>
       </svg>
     </div>
@@ -220,7 +220,7 @@ export function TalentReport({
           const talentQuestions = questionsByTalent.get(t.id) || [];
           const percentage = t.max > 0 ? Math.round((t.score / t.max) * 100) : 0;
           return (
-            <Accordion key={t.id} title={`${t.code} · ${t.quizTitle} (${percentage}%)`}>
+            <Accordion key={t.id} title={`${t.code} · ${t.quizTitle} (${percentage})`}>
               <div className="space-y-3">
                 {talentQuestions.map((item) => (
                   <div key={item.itemId} className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">

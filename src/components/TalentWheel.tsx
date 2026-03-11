@@ -184,7 +184,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
     ].join(" ");
   };
 
-  const displayCenterText = centerText || (modelType === 'genotipo' ? 'Genotipo' : modelType === 'neurotalento' ? 'Neurotalento' : 'Talentos');
+  const displayCenterText = centerText || (modelType === 'genotipo' ? 'Geniotipo' : modelType === 'neurotalento' ? 'Neurotalento' : 'Talentos');
 
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
