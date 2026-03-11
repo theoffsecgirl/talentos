@@ -295,7 +295,7 @@ export interface MapaPDFProps {
 }
 
 export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rolPensado }: MapaPDFProps) {
-  const symbols = { ...SYMBOLS_GENOTIPO, analitico: '⬠' }
+  const symbols: Record<string, string> = { ...SYMBOLS_GENOTIPO, analitico: '⬠' }
   const titulo = modelo === 'genotipo' ? 'MAPA DE GENIOTIPOS' : 'MAPA DE NEUROTALENTOS'
   const modelLabel = modelo === 'genotipo' ? 'GENIOTIPO' : 'NEUROTALENTO'
   const dominante = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'gestion'
@@ -345,9 +345,9 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rol
                 <Text style={styles.ejeLabel}>{eje.label}</Text>
                 {eje.keys.map((key) => (
                   <View key={key} style={styles.talentRow}>
-                    <Text style={styles.talentSymbol}>{symbols[key]}</Text>
+                    <Text style={styles.talentSymbol}>{symbols[key] ?? ''}</Text>
                     <Text style={styles.talentScore}>{Math.round(scores[key] ?? 0)}</Text>
-                    <Text style={styles.talentName}>{TALENT_NAMES[key]}</Text>
+                    <Text style={styles.talentName}>{TALENT_NAMES[key] ?? key}</Text>
                     <BarTalent score={scores[key] ?? 0} />
                   </View>
                 ))}
