@@ -12,3 +12,4 @@ Plataforma de evaluación de talentos con generación de informes PDF.
 ## Deploy
 
 Último test: 2026-03-02 22:22 CET
+test

@@ -44,7 +44,7 @@ export function generateMapHTML({
 
     return {
       id: talentId,
-      code: `T${talentId}`,
+      code: config.title,
       symbol: config.symbol,
       title: config.title,
       score,
@@ -138,7 +138,7 @@ export function generateMapHTML({
           y="${labelPos.y + 12}"
           text-anchor="middle"
           dominant-baseline="middle"
-          font-size="11"
+          font-size="9"
           fill="#666"
           font-weight="600"
         >${talent.code}</text>

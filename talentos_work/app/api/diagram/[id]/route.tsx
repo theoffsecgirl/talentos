@@ -6,9 +6,20 @@ import { TALENTS } from '@/lib/talents';
 // Cambio a Node.js runtime para evitar límite de 1MB en Edge
 export const runtime = 'nodejs';
 
+const TALENT_SHAPES: Record<number, string> = {
+  4: '□',
+  1: '△',
+  6: '⬭',
+  7: '◇',
+  8: '▭',
+  5: '○',
+  2: '⬟',
+  3: '∞',
+};
+
 const TALENT_CONFIG = TALENTS.reduce((acc, t) => {
   acc[t.id] = {
-    symbol: t.titleSymbolic.match(/\((.+?)\)/)?.[1] || t.code,
+    symbol: TALENT_SHAPES[t.id] || t.code,
     color: getTalentColor(t.id),
     reportTitle: t.reportTitle || t.quizTitle,
   };
@@ -38,7 +49,7 @@ function splitTalentTitle(title: string): [string, string] {
   return [words.slice(0, midPoint).join(' '), words.slice(midPoint).join(' ')];
 }
 
-const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
+const TALENT_ORDER = [4, 1, 6, 7, 8, 5, 2, 3];
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

@@ -407,7 +407,7 @@ export default function StartPage() {
           </header>
 
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm mb-8">
-            <TalentWheel scores={wheelScores} showFullLabels={true} />
+            <TalentWheel scores={wheelScores} showFullLabels={true} minimal />
           </div>
 
           {error && (

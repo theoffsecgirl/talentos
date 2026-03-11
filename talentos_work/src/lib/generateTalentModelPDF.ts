@@ -42,25 +42,25 @@ const ID_TO_KEY: Record<number, string> = {
 };
 
 const GENOTIPO_SYMBOLS: Record<number, string> = {
+  4: "\u25a1",
   1: "\u25b3",
+  6: "\u2b2d",
+  7: "\u25c7",
+  8: "\u25ad",
+  5: "\u25cb",
   2: "\u2b20",
   3: "\u221e",
-  4: "\u25c7",
-  5: "\u25cb",
-  6: "\u2bed",
-  7: "\u25a1",
-  8: "\u25ad",
 };
 
 const NEUROTALENTO_SYMBOLS: Record<number, string> = {
-  1: "\u03a3",
-  2: "\u03a0",
-  3: "\u03a8",
-  4: "\u03b1",
-  5: "\u03a9",
+  4: "\u0391",
+  1: "\u0394",
   6: "\u03a6",
   7: "\u0398",
   8: "\u039c",
+  5: "\u03a9",
+  2: "\u03a0",
+  3: "\u03a8",
 };
 
 const TALENT_COLORS: Record<number, string> = {
@@ -74,20 +74,20 @@ const TALENT_COLORS: Record<number, string> = {
   8: "#D97706",
 };
 
-const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
+const TALENT_ORDER = [4, 1, 6, 7, 8, 5, 2, 3];
 
 const AXIS_GROUPS = [
   { name: "ACCI\u00d3N Y RESULTADOS", talents: [4, 1] },
-  { name: "SABER Y CONOCIMIENTO", talents: [2, 3] },
   { name: "IMAGINACI\u00d3N Y ARTE", talents: [6, 7] },
   { name: "DESTREZA Y PROYECCI\u00d3N", talents: [8, 5] },
+  { name: "SABER Y CONOCIMIENTO", talents: [2, 3] },
 ];
 
 const AXIS_LABELS: Array<{ name: string; x: number; y: number; rotate: number }> = [
-  { name: "SABER Y CONOCIMIENTO",   x: 280, y: 22,  rotate: 0   },
-  { name: "IMAGINACI\u00d3N Y ARTE",     x: 538, y: 280, rotate: 90  },
-  { name: "DESTREZA Y PROYECCI\u00d3N", x: 280, y: 538, rotate: 0   },
-  { name: "ACCI\u00d3N Y RESULTADOS",    x: 22,  y: 280, rotate: -90 },
+  { name: "ACCI\u00d3N Y RESULTADOS", x: 280, y: 22, rotate: 0 },
+  { name: "IMAGINACI\u00d3N Y ARTE", x: 538, y: 280, rotate: 0 },
+  { name: "DESTREZA Y PROYECCI\u00d3N", x: 280, y: 538, rotate: 0 },
+  { name: "SABER Y CONOCIMIENTO", x: 22, y: 280, rotate: 0 },
 ];
 
 function toSafeNumber(value: unknown, fallback = 0): number {
@@ -188,8 +188,8 @@ function generateWheelSVG(
     return `<text x="${al.x}" y="${al.y}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#444" letter-spacing="0.5" ${transform}>${al.name}</text>`;
   }).join("");
 
-  const cl1 = modelType === "genotipo" ? "GENO" : "NEURO";
-  const cl2 = modelType === "genotipo" ? "TIPOS" : "TALENTOS";
+  const cl1 = "MAPA";
+  const cl2 = "TALENTOS";
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>${defs}</defs>

@@ -68,8 +68,9 @@ export interface MapaPDFProps {
 }
 
 export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) {
-  const symbols = modelo === 'genotipo' ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO
+  const symbols = SYMBOLS_GENOTIPO
   const titulo  = modelo === 'genotipo' ? 'MAPA DE GENIOTIPOS' : 'MAPA DE NEUROTALENTOS'
+  const modelLabel = modelo === 'genotipo' ? 'GENIOTIPO' : 'NEUROTALENTO'
   const dominante = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0]
   const dominanteData = NEUROCOGNITIVE_DATA[dominante]
   const dominanteColor = TALENT_COLORS[dominante]
@@ -84,7 +85,7 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) 
         <View style={styles.colRight}>
           <View>
             <Text style={styles.headerNombre}>{nombre.toUpperCase()}</Text>
-            <Text style={styles.headerModelo}>Modelo {modelo.toUpperCase()}</Text>
+            <Text style={styles.headerModelo}>Modelo {modelLabel}</Text>
           </View>
           <View style={[styles.perfilBox, { borderLeftColor: dominanteColor }]}>
             <Text style={[styles.perfilTitulo, { color: dominanteColor }]}>{TALENT_NAMES[dominante].toUpperCase()}</Text>

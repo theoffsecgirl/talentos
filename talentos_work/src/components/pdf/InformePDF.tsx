@@ -42,13 +42,14 @@ const styles = StyleSheet.create({
 
 function Portada({ nombre, modelo, fecha, textoResumen }: { nombre: string; modelo: 'genotipo'|'neurotalento'; fecha: string; textoResumen?: string }) {
   const titulo = modelo === 'genotipo' ? 'INFORME DE GENIOTIPOS' : 'INFORME DE NEUROTALENTOS'
+  const modelLabel = modelo === 'genotipo' ? 'Geniotipo' : 'Neurotalento'
   return (
     <Page size="A4" orientation="landscape" style={styles.portada}>
       <Text style={styles.portadaEyebrow}>{titulo}</Text>
       <Text style={styles.portadaNombre}>{nombre.toUpperCase()}</Text>
       <View style={styles.portadaLinea} />
       <Text style={styles.portadaFecha}>{fecha}</Text>
-      <Text style={[styles.portadaModelo, { marginTop: 6 }]}>Modelo {modelo}</Text>
+      <Text style={[styles.portadaModelo, { marginTop: 6 }]}>Modelo {modelLabel}</Text>
       {textoResumen ? (
         <View style={styles.portadaResumenBox}>
           <Text style={styles.portadaResumenLabel}>RESUMEN DEL EVALUADOR</Text>

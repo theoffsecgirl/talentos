@@ -174,7 +174,7 @@ function BarTalent({ score, color }: { score: number; color: string }) {
 
 function MapaSVG({ scores }: { scores: Record<string, number> }) {
   const cx = 150, cy = 150, r = 120
-  const keys = ['gestion', 'estrategia', 'analitico', 'acompanamiento', 'imaginacion', 'profundo', 'aplicado', 'empatico']
+  const keys = ['gestion', 'estrategia', 'imaginacion', 'profundo', 'aplicado', 'empatico', 'analitico', 'acompanamiento']
   const step = (2 * Math.PI) / 8
   const toRad = (i: number) => i * step - Math.PI / 2
 
@@ -232,8 +232,9 @@ export interface MapaPDFProps {
 }
 
 export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) {
-  const symbols = modelo === 'genotipo' ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO
-  const titulo  = modelo === 'genotipo' ? 'MAPA DE GENOTIPOS' : 'MAPA DE NEUROTALENTOS'
+  const symbols = SYMBOLS_GENOTIPO
+  const titulo  = modelo === 'genotipo' ? 'MAPA DE GENIOTIPOS' : 'MAPA DE NEUROTALENTOS'
+  const modelLabel = modelo === 'genotipo' ? 'GENIOTIPO' : 'NEUROTALENTO'
 
   // Talento dominante = mayor score
   const dominante = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]
@@ -255,7 +256,7 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen }: MapaPDFProps) 
           {/* Header */}
           <View>
             <Text style={styles.headerNombre}>{nombre.toUpperCase()}</Text>
-            <Text style={styles.headerModelo}>Modelo {modelo.toUpperCase()}</Text>
+            <Text style={styles.headerModelo}>Modelo {modelLabel}</Text>
           </View>
 
           {/* Perfil dominante */}

@@ -14,6 +14,7 @@ type Props = {
   modelType?: 'genotipo' | 'neurotalento';
   centerText?: string;
   summaryText?: string;
+  minimal?: boolean;
 };
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryColor: string; axis: string }> = {
@@ -101,7 +102,7 @@ function calculateProfessionalProfile(talents: Array<{ id: number; percentage: n
   return axisAverages;
 }
 
-export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText, summaryText }: Props) {
+export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText, summaryText, minimal = false }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
       const scoreData = scores.find((s) => s.talentId === talentId);
@@ -355,7 +356,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         </div>
       )}
 
-      {professionalProfile.length > 0 && (
+      {!minimal && professionalProfile.length > 0 && (
         <div className="w-full max-w-2xl print:max-w-full mb-6">
           <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Perfil profesional</h3>
           <div className="flex flex-wrap gap-2">
@@ -376,7 +377,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         </div>
       )}
 
-      <div className="w-full max-w-2xl print:max-w-full">
+      {!minimal && <div className="w-full max-w-2xl print:max-w-full">
         <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Detalle por talento</h3>
         <div className="grid gap-2 print:gap-1">
           {talents.map((t) => {
@@ -414,7 +415,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
             );
           })}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
