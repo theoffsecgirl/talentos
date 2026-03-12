@@ -30,10 +30,10 @@ export type Talent = {
 export const TALENTS: Talent[] = [
   {
     id: 1,
-    code: "T1",
-    titleSymbolic: "Delta (Δ) — Estrategia",
+    code: "DELTA",
+    titleSymbolic: "Delta (Δ) — Estrategia y comunicación",
     titleGenotype: "Triángulo",
-    quizTitle: "Comunicación y estrategia",
+    quizTitle: "Estrategia y comunicación",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "1.1", text: "Me importa especialmente que estén bien remuneradas." },
@@ -70,10 +70,10 @@ export const TALENTS: Talent[] = [
   },
   {
     id: 2,
-    code: "T2",
-    titleSymbolic: "Pi (Π) — Saber",
+    code: "PI",
+    titleSymbolic: "Pi (Π) — Investigación y ciencia aplicada",
     titleGenotype: "Pentágono",
-    quizTitle: "Investigación y ciencia",
+    quizTitle: "Investigación y ciencia aplicada",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "2.1", text: "Puedo dedicarme a la ciencia, la investigación o el descubrimiento de cosas nuevas." },
@@ -85,7 +85,7 @@ export const TALENTS: Talent[] = [
 
     axis: "PRAGMÁTICO",
     group: "ACCIÓN Y RESULTADOS",
-    reportTitle: "Analítico y riguroso",
+    reportTitle: "Investigación y ciencia aplicada",
     reportSummary:
       "Perfil que muestra interés por la investigación y pasión por el descubrimiento. Es habitual que generen ideas innovadoras. Les atrae el mundo de la ciencia por su curiosidad intelectual aplicada a todos los ámbitos profesionales. Es el talento de las personas que realizan su actividad profesional sustentada en altos conocimientos, la aplicación de lo que se sabe y la búsqueda de lo que se quiere saber.",
     fields: [
@@ -110,10 +110,10 @@ export const TALENTS: Talent[] = [
   },
   {
     id: 3,
-    code: "T3",
-    titleSymbolic: "Psi (Ψ) — Instruir",
+    code: "PSI",
+    titleSymbolic: "Psi (Ψ) — Acompañamiento y facilitación",
     titleGenotype: "Infinito",
-    quizTitle: "Educación y desarrollo personal",
+    quizTitle: "Acompañamiento y facilitación",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "3.1", text: "Puedo fomentar el aprendizaje, la convivencia y el autoconocimiento." },
@@ -125,7 +125,7 @@ export const TALENTS: Talent[] = [
 
     axis: "GENERADOR",
     group: "CREATIVIDAD Y VÍNCULO",
-    reportTitle: "Acompañamiento y docencia",
+    reportTitle: "Acompañamiento y facilitación",
     reportSummary:
       "Perfil interesado por el saber y el conocimiento. Suele ser personas expresivas y comunicativas, con capacidad de escucha y de visión crítica. Es el talento de las personas que realizan su actividad profesional sustentada en el acompañamiento de otras personas para hacerlas crecer y conseguir lo mejor de sí mismas. Propio de todo tipo de gestores de personas, docentes y formadores, filósofos, psicólogos y personas que realizan diferentes tipos de terapias.",
     fields: [
@@ -148,10 +148,10 @@ export const TALENTS: Talent[] = [
   },
   {
     id: 4,
-    code: "T4",
-    titleSymbolic: "Alfa (Α) — Control",
+    code: "ALFA",
+    titleSymbolic: "Alfa (Α) — Control y gestión",
     titleGenotype: "Cuadrado",
-    quizTitle: "Gestión y liderazgo",
+    quizTitle: "Control y gestión",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "4.1", text: "Puedo gestionar y administrar recursos económicos, humanos o técnicos." },
@@ -163,7 +163,7 @@ export const TALENTS: Talent[] = [
 
     axis: "PRAGMÁTICO",
     group: "ACCIÓN Y RESULTADOS",
-    reportTitle: "Gestión y organización",
+    reportTitle: "Control y gestión",
     reportSummary:
       "Perfil que muestra capacidad de control, gestión y organización, también, para seguir, proponer y dirigir retos. Pueden ser emprendedores y muestran iniciativas para conseguir éxitos y resultados. Es el talento de las personas que realizan su actividad profesional sustentada en la capacidad de gestionar recursos de todo tipo y donde el análisis y la razón están por delante de la emoción. Se automotivan, tienen las ideas muy claras y saben cuáles son sus objetivos, que siempre controlan y nunca dejan de focalizar.",
     fields: [
@@ -189,10 +189,10 @@ export const TALENTS: Talent[] = [
   },
   {
     id: 5,
-    code: "T5",
-    titleSymbolic: "Omega (Ω) — Trascender",
+    code: "OMEGA",
+    titleSymbolic: "Omega (Ω) — Trascendencia y intuición",
     titleGenotype: "Círculo",
-    quizTitle: "Servicio y ayuda social",
+    quizTitle: "Trascendencia y intuición",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "5.1", text: "Siento que ayudo directamente a otras personas." },
@@ -204,7 +204,7 @@ export const TALENTS: Talent[] = [
 
     axis: "VÍNCULO",
     group: "PROFUNDIDAD Y SENSIBILIDAD",
-    reportTitle: "Empático y compasivo",
+    reportTitle: "Trascendencia y intuición",
     reportSummary:
       "Perfil que prioriza el bienestar de las personas, ayudar es una prioridad. Se caracterizan por su intuición y también por su compromiso y altruismo. Capacidad para comprender los sentimientos y resolver conflictos. Es el talento de las personas que realizan su actividad profesional proyectada en la entrega, y la ayuda incondicional a los demás. Las diferentes actividades que se emprenden a nivel profesional deben tener una trascendencia en el ser humano, la ecología, el bienestar colectivo, la mejora de las condiciones de vida de las personas. Propio de profesionales relacionados con salud física y mental, educación, trabajos humanitarios, o servicios sociales.",
     fields: [
@@ -225,10 +225,10 @@ export const TALENTS: Talent[] = [
   },
   {
     id: 6,
-    code: "T6",
-    titleSymbolic: "Fi (Φ) — Creatividad",
+    code: "FI",
+    titleSymbolic: "Fi (Φ) — Creatividad e inventiva",
     titleGenotype: "Elipse",
-    quizTitle: "Creatividad e innovación",
+    quizTitle: "Creatividad e inventiva",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "6.1", text: "Me interesa la práctica deportiva de élite profesional." },
@@ -240,7 +240,7 @@ export const TALENTS: Talent[] = [
 
     axis: "GENERADOR",
     group: "CREATIVIDAD Y VÍNCULO",
-    reportTitle: "Imaginación y creatividad",
+    reportTitle: "Creatividad e inventiva",
     reportSummary:
       "Perfil que se caracteriza por su pasión por la creatividad y suelen destacar por su gran imaginación e inventiva, aplicada a todos los ámbitos profesionales. Puede expresarse en las diferentes modalidades de arte, ya sean las más tradicionales, como el cine, el teatro, la pintura o la música, pero también pueden asociarse a todo tipo de ciencias aplicadas como la arquitectura, ingenierías, o incluso del mundo de la salud donde sea necesaria la creatividad para solucionar todo tipo de problemas. Finalmente también pueden incluirse las diferentes habilidades deportivas que pueden proporcionar una actividad profesional de élite.",
     fields: [
@@ -264,10 +264,10 @@ export const TALENTS: Talent[] = [
   },
   {
     id: 7,
-    code: "T7",
-    titleSymbolic: "Theta (Θ) — Introspección",
+    code: "THETA",
+    titleSymbolic: "Theta (Θ) — Introspección y mirada interior",
     titleGenotype: "Rombo",
-    quizTitle: "Análisis profundo y forense",
+    quizTitle: "Introspección y mirada interior",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "7.1", text: "Se requiere un pensamiento profundo, analítico y reflexivo." },
@@ -279,7 +279,7 @@ export const TALENTS: Talent[] = [
 
     axis: "VÍNCULO",
     group: "PROFUNDIDAD Y SENSIBILIDAD",
-    reportTitle: "Profundo e introspectivo",
+    reportTitle: "Introspección y mirada interior",
     reportSummary:
       "Perfil que muestra sensibilidad y profundidad en la manera de percibir el mundo, tanto personal como profesional. Suelen sentir atracción por temas ocultos o no evidentes y que requieren introspección, intuición, investigación y profundidad: la muerte, acontecimientos traumáticos, la diversidad mental y conductual. Suelen tener atracción por temas duros de la vida, como los cercanos a la muerte, el dolor, o el trauma. Propio de profesionales que acompañan en final de la vida, como cuidados paliativos, tanatopraxia, enfermedades mentales severas, oncológicas, etc. También de investigación criminal, forense, o psiquiátrica. Pueden dedicarse a actividades artísticas, como el cine, literatura, pintura, diseño de moda, etc, relacionadas con la oscuridad, el terror, el misterio, o el crimen.",
     fields: [
@@ -304,10 +304,10 @@ export const TALENTS: Talent[] = [
   },
   {
     id: 8,
-    code: "T8",
-    titleSymbolic: "Meandro (▭) — Hacer",
+    code: "MEANDRO",
+    titleSymbolic: "Meandro (▭) — Funcionalidad y cooperación",
     titleGenotype: "Rectángulo",
-    quizTitle: "Ejecución y estabilidad",
+    quizTitle: "Funcionalidad y cooperación",
     intro: "Me atraen actividades o profesiones en las que…",
     items: [
       { id: "8.1", text: "Sigo normas, ejecuto planes y llevo las ideas a la práctica." },
@@ -319,7 +319,7 @@ export const TALENTS: Talent[] = [
 
     axis: "PRAGMÁTICO",
     group: "ACCIÓN Y RESULTADOS",
-    reportTitle: "Aplicado y cooperador",
+    reportTitle: "Funcionalidad y cooperación",
     reportSummary:
       "Perfil que demuestra facilidad de adaptación al trabajo rutinario, así como constancia y responsabilidad para cumplir retos y objetivos con una alta capacidad funcional y de proyección hacia el equipo de trabajo. Es el talento de las personas que realizan su actividad profesional siguiendo las instrucciones que reciben de un organismo superior. Cumplen, son responsables y logran los objetivos que les han sido encomendados. Propio de todo tipo de trabajo que se ejecuta con precisión, responsabilidad y alta cooperación con el equipo.",
     fields: [
@@ -346,26 +346,29 @@ export const TALENTS: Talent[] = [
 
 // Configuración de ejes neurocognitivos
 export const AXES = {
-  PRAGMATICO: {
-    name: "Circuito Pragmático",
+  ACCION_RESULTADOS: {
+    name: "Acción y resultados",
     shortName: "Acción y resultados",
-    description:
-      "El eje del talento de las capacidades pragmáticas se relaciona con la razón y el control. Predomina el enfoque mental en la forma de funcionar. Destaca la capacidad de las personas de gestionar y organizar los recursos, de dirigir o ser dirigidas. Capacidad analítica y práctica de enfrentarse a los problemas. Importante la adquisición de conocimiento intelectual, el rigor científico, las evidencias, la responsabilidad y el compromiso en la realización de la tarea.",
-    talents: [2, 4, 8],
+    description: "Incluye los talentos vinculados a la organización, la estrategia, la toma de decisiones y la orientación al logro.",
+    talents: [4, 1],
   },
-  GENERADOR: {
-    name: "Circuito Generador",
-    shortName: "Creatividad y vínculo",
-    description:
-      "El eje del talento de las capacidades generadoras se ubica entre los ámbitos de la emoción y la razón, buscando el equilibrio y la creatividad individual. La forma en que se conectan tiene que ver con la relación de las personas y las capacidades creativas aplicadas.",
-    talents: [1, 3, 6],
+  IMAGINACION_ARTE: {
+    name: "Imaginación y arte",
+    shortName: "Imaginación y arte",
+    description: "Agrupa los talentos relacionados con la creatividad, la expresión, la intuición y la mirada interior.",
+    talents: [6, 7],
   },
-  VINCULO: {
-    name: "Circuito de Vínculo",
-    shortName: "Profundidad y sensibilidad",
-    description:
-      "El eje del talento de las capacidades de vínculo está relacionado con la capacidad de la persona para la intuición, la capacidad de relación con los demás y con uno mismo. Les interesa la trascendencia, el mundo de lo que no es tan evidente, y sobre todo utilizan la intuición, la prospección, y la percepción frente al análisis y la razón.",
-    talents: [5, 7],
+  DESTREZA_PROYECCION: {
+    name: "Destreza y proyección",
+    shortName: "Destreza y proyección",
+    description: "Recoge los talentos orientados a la ejecución, la cooperación, la trascendencia y la proyección hacia los demás.",
+    talents: [8, 5],
+  },
+  SABER_CONOCIMIENTO: {
+    name: "Saber y conocimiento",
+    shortName: "Saber y conocimiento",
+    description: "Reúne los talentos asociados a la investigación, el aprendizaje, la facilitación y la transmisión del conocimiento.",
+    talents: [2, 3],
   },
 };
 

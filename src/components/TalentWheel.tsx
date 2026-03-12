@@ -14,42 +14,43 @@ type Props = {
   modelType?: 'genotipo' | 'neurotalento';
   centerText?: string;
   summaryText?: string;
+  minimal?: boolean;
 };
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryColor: string; axis: string }> = {
-  2: { symbol: "Π", color: "#8B5CF6", secondaryColor: "#A78BFA", axis: "Conocimiento" },
-  3: { symbol: "Ψ", color: "#7C3AED", secondaryColor: "#8B5CF6", axis: "Conocimiento" },
-  5: { symbol: "Ω", color: "#F59E0B", secondaryColor: "#FBBF24", axis: "Entrega" },
-  7: { symbol: "Θ", color: "#10B981", secondaryColor: "#34D399", axis: "Imaginación" },
-  6: { symbol: "Φ", color: "#06B6D4", secondaryColor: "#22D3EE", axis: "Imaginación" },
-  8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", axis: "Desempeño" },
-  1: { symbol: "Δ", color: "#DC2626", secondaryColor: "#EF4444", axis: "Acción" },
-  4: { symbol: "Α", color: "#EF4444", secondaryColor: "#F87171", axis: "Acción" },
+  4: { symbol: "□", color: "#DC2626", secondaryColor: "#EF4444", axis: "Acción y resultados" },
+  1: { symbol: "△", color: "#EF4444", secondaryColor: "#F87171", axis: "Acción y resultados" },
+  6: { symbol: "⬭", color: "#06B6D4", secondaryColor: "#22D3EE", axis: "Imaginación y arte" },
+  7: { symbol: "◇", color: "#10B981", secondaryColor: "#34D399", axis: "Imaginación y arte" },
+  8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", axis: "Destreza y proyección" },
+  5: { symbol: "○", color: "#F59E0B", secondaryColor: "#FBBF24", axis: "Destreza y proyección" },
+  2: { symbol: "⬠", color: "#8B5CF6", secondaryColor: "#A78BFA", axis: "Saber y conocimiento" },
+  3: { symbol: "∞", color: "#7C3AED", secondaryColor: "#8B5CF6", axis: "Saber y conocimiento" },
 };
 
 const GENOTIPO_SYMBOLS: Record<number, string> = {
+  4: "□",
   1: "△",
+  6: "⬭",
+  7: "◇",
+  8: "▭",
+  5: "○",
   2: "⬠",
   3: "∞",
-  4: "◇",
-  5: "○",
-  6: "⬭",
-  7: "□",
-  8: "▭",
 };
 
 const NEUROTALENTO_SYMBOLS: Record<number, string> = {
-  1: "Σ",
-  2: "Π",
-  3: "Ψ",
-  4: "α",
-  5: "Ω",
+  4: "Α",
+  1: "Δ",
   6: "Φ",
   7: "Θ",
   8: "Μ",
+  5: "Ω",
+  2: "Π",
+  3: "Ψ",
 };
 
-const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
+const TALENT_ORDER = [4, 1, 6, 7, 8, 5, 2, 3];
 
 function toSafeNumber(value: any, fallback: number = 0): number {
   if (typeof value === 'number' && !isNaN(value)) return value;
@@ -101,7 +102,7 @@ function calculateProfessionalProfile(talents: Array<{ id: number; percentage: n
   return axisAverages;
 }
 
-export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText, summaryText }: Props) {
+export default function TalentWheel({ scores, printMode = false, showFullLabels = false, modelType, centerText, summaryText, minimal = false }: Props) {
   const talents = useMemo(() => {
     return TALENT_ORDER.map((talentId) => {
       const scoreData = scores.find((s) => s.talentId === talentId);
@@ -140,10 +141,10 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
   const professionalProfile = useMemo(() => calculateProfessionalProfile(talents), [talents]);
 
-  const size = 700;
+  const size = 640;
   const center = size / 2;
-  const radius = 230;
-  const innerRadius = 75;
+  const radius = 206;
+  const innerRadius = 72;
 
   const sections = talents.map((talent, index) => {
     const anglePerSection = (Math.PI * 2) / 8;
@@ -188,7 +189,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[550px]">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[500px]">
         <defs>
           {sections.map(({ talent, fillPercentage }) => (
             <radialGradient
@@ -224,22 +225,28 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           );
         })}
 
-        <text x={center} y={center - radius - 15} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#8B5CF6">
-          Conocimiento
+        <text x={center} y={center - radius - 10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#8B5CF6">
+          Acción y resultados
         </text>
-        <text x={center + radius + 15} y={center + 5} textAnchor="start" fontSize="14" fontWeight="bold" fill="#06B6D4">
+        <text x={center + radius + 8} y={center - 2} textAnchor="start" fontSize="10" fontWeight="bold" fill="#06B6D4">
           Imaginación
         </text>
-        <text x={center} y={center + radius + 25} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#DC2626">
-          Acción
+        <text x={center + radius + 8} y={center + 10} textAnchor="start" fontSize="10" fontWeight="bold" fill="#06B6D4">
+          y arte
         </text>
-        <text x={center - radius - 15} y={center + 5} textAnchor="end" fontSize="14" fontWeight="bold" fill="#F59E0B">
-          Desempeño
+        <text x={center} y={center + radius + 18} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#DC2626">
+          Destreza y proyección
+        </text>
+        <text x={center - radius - 8} y={center - 2} textAnchor="end" fontSize="10" fontWeight="bold" fill="#F59E0B">
+          Saber
+        </text>
+        <text x={center - radius - 8} y={center + 10} textAnchor="end" fontSize="10" fontWeight="bold" fill="#F59E0B">
+          y conocimiento
         </text>
 
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelDistance = showFullLabels ? radius + 100 : radius + 50;
+          const labelDistance = showFullLabels ? radius + 58 : radius + 40;
           const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
@@ -266,7 +273,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                   y={percentPos.y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="18"
+                  fontSize="16"
                   fontWeight="bold"
                   fill="white"
                   style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
@@ -280,7 +287,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                 y={labelPos.y - (showFullLabels ? 20 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="24"
+                fontSize="14"
                 fontWeight="700"
                 fill={talent.color}
               >
@@ -293,7 +300,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                     y={labelPos.y + 4}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="10"
+                    fontSize="6.5"
                     fontWeight="600"
                     fill="#333"
                     className="print:text-[9px]"
@@ -306,7 +313,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                       y={labelPos.y + 17}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="10"
+                      fontSize="6.5"
                       fontWeight="600"
                       fill="#333"
                       className="print:text-[9px]"
@@ -355,7 +362,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         </div>
       )}
 
-      {professionalProfile.length > 0 && (
+      {!minimal && professionalProfile.length > 0 && (
         <div className="w-full max-w-2xl print:max-w-full mb-6">
           <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Perfil profesional</h3>
           <div className="flex flex-wrap gap-2">
@@ -376,12 +383,13 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
         </div>
       )}
 
-      <div className="w-full max-w-2xl print:max-w-full">
+      {!minimal && <div className="w-full max-w-2xl print:max-w-full">
         <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3 print:text-black">Detalle por talento</h3>
         <div className="grid gap-2 print:gap-1">
           {talents.map((t) => {
-            const isDanger = t.percentage >= 67;
+            const isDanger = t.percentage > 67;
             const textColor = isDanger ? '#DC2626' : '#000000';
+            const barColor = isDanger ? '#DC2626' : '#111111';
             
             return (
               <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] print:border-gray-300 print:bg-white print:p-2">
@@ -394,14 +402,17 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
                       {t.title}
                     </div>
                     <div className="text-xs text-[var(--muted-foreground)] print:text-gray-600 mb-1">{t.axis}</div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${t.percentage}%`,
-                          backgroundColor: t.color,
-                        }}
-                      />
+                    <div className="w-full">
+                      <div className="mb-1 flex justify-between text-[10px] text-gray-500"><span>0</span><span>60</span><span>100</span></div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${t.percentage}%`,
+                            backgroundColor: barColor,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -414,21 +425,21 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
             );
           })}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
 
 function getTalentTitle(id: number): string {
   const titles: Record<number, string> = {
+    4: "Control y gestión",
     1: "Estrategia y comunicación",
-    2: "Analítico y riguroso",
-    3: "Acompañamiento y docencia",
-    4: "Gestión y organización",
-    5: "Empático y compasivo",
-    6: "Imaginación y creatividad",
-    7: "Profundo e introspectivo",
-    8: "Aplicado y cooperador",
+    6: "Creatividad e inventiva",
+    7: "Introspección y mirada interior",
+    8: "Funcionalidad y cooperación",
+    5: "Trascendencia y intuición",
+    2: "Investigación y ciencia aplicada",
+    3: "Acompañamiento y facilitación",
   };
   return titles[id] || "";
 }

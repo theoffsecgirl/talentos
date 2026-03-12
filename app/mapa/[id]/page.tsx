@@ -122,6 +122,8 @@ export default async function MapaPage({ params }: Props) {
             userName={fullName}
             initialGenotipoSummary={person.genotipoSummary ?? ""}
             initialNeurotalentoSummary={person.neurotalentoSummary ?? ""}
+            rolEscogido={person.campoIdentificado ?? person.identificaCampos ?? ""}
+            rolPensado={person.ideaCarreraTextoFinal ?? person.ideaCarrera ?? ""}
           />
         </div>
 

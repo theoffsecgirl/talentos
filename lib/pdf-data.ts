@@ -16,38 +16,38 @@ export const TALENT_COLORS: Record<string, string> = {
 // SÍMBOLOS — Modelo Geniotipo (formas)
 // ─────────────────────────────────────────────
 export const SYMBOLS_GENOTIPO: Record<string, string> = {
-  estrategia:     '▷',
-  acompanamiento: '∞',
+  gestion:        '□',
+  estrategia:     '△',
+  imaginacion:    '⬯',
+  profundo:       '◇',
   aplicado:       '▭',
   empatico:       '○',
   analitico:      '⬠',
-  profundo:       '□',
-  imaginacion:    '◇',
-  gestion:        '◆',
+  acompanamiento: '∞',
 }
 
 // ─────────────────────────────────────────────
 // SÍMBOLOS — Modelo Neurotalento (letras griegas)
 // ─────────────────────────────────────────────
 export const SYMBOLS_NEUROTALENTO: Record<string, string> = {
-  estrategia:     'Σ',
-  acompanamiento: 'Ψ',
-  aplicado:       'M',
+  gestion:        'Α',
+  estrategia:     'Δ',
+  imaginacion:    'Φ',
+  profundo:       'Θ',
+  aplicado:       'Μ',
   empatico:       'Ω',
   analitico:      'Π',
-  profundo:       'Θ',
-  imaginacion:    'Φ',
-  gestion:        'α',
+  acompanamiento: 'Ψ',
 }
 
 // ─────────────────────────────────────────────
 // EJES de agrupación
 // ─────────────────────────────────────────────
 export const EJES = [
-  { label: 'ACCIÓN Y RESULTADOS',    keys: ['gestion', 'estrategia'] },
-  { label: 'SABER Y CONOCIMIENTO',   keys: ['analitico', 'acompanamiento'] },
-  { label: 'IMAGINACIÓN Y ARTE',     keys: ['imaginacion', 'profundo'] },
-  { label: 'DESTREZA Y PROYECCIÓN',  keys: ['aplicado', 'empatico'] },
+  { label: 'ACCIÓN Y RESULTADOS',   keys: ['gestion', 'estrategia'] },
+  { label: 'IMAGINACIÓN Y ARTE',    keys: ['imaginacion', 'profundo'] },
+  { label: 'DESTREZA Y PROYECCIÓN', keys: ['aplicado', 'empatico'] },
+  { label: 'SABER Y CONOCIMIENTO',  keys: ['analitico', 'acompanamiento'] },
 ]
 
 // ─────────────────────────────────────────────
@@ -86,14 +86,14 @@ export const SOFT_SKILLS_NEUROTALENTO: Record<string, string[]> = {
 // NOMBRES de display por talento
 // ─────────────────────────────────────────────
 export const TALENT_NAMES: Record<string, string> = {
+  gestion:        'Control y gestión',
   estrategia:     'Estrategia y comunicación',
-  acompanamiento: 'Acompañamiento y docencia',
-  aplicado:       'Aplicado y cooperador',
-  empatico:       'Empático y compasivo',
-  analitico:      'Analítico y riguroso',
-  profundo:       'Profundo e introspectivo',
-  imaginacion:    'Imaginación y creatividad',
-  gestion:        'Gestión y organización',
+  imaginacion:    'Creatividad e inventiva',
+  profundo:       'Introspección y mirada interior',
+  aplicado:       'Funcionalidad y cooperación',
+  empatico:       'Trascendencia y intuición',
+  analitico:      'Investigación y ciencia aplicada',
+  acompanamiento: 'Acompañamiento y facilitación',
 }
 
 // ─────────────────────────────────────────────

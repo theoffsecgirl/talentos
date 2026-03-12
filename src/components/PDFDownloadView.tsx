@@ -32,7 +32,7 @@ const GENOTIPO_SYMBOLS: Record<number, string> = {
   3: "∞", // Infinito
   4: "◇", // Rombo
   5: "○", // Círculo
-  6: "⬭", // Elipse
+  6: "⬯", // Elipse contorno
   7: "□", // Cuadrado
   8: "▭", // Rectángulo
 };

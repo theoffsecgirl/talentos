@@ -6,17 +6,17 @@
 type ScoreRow = { talentId: number; score: number; max: number };
 
 const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryColor: string; category: string; categoryLabel: string; title: string }> = {
-  2: { symbol: "Π", color: "#8B5CF6", secondaryColor: "#A78BFA", category: "Conocimiento", categoryLabel: "Ciencia aplicada", title: "Saber" },
-  3: { symbol: "Ψ", color: "#7C3AED", secondaryColor: "#8B5CF6", category: "Conocimiento", categoryLabel: "Ciencia aplicada", title: "Instruir" },
-  5: { symbol: "Ω", color: "#F59E0B", secondaryColor: "#FBBF24", category: "Desempeño", categoryLabel: "Energía", title: "Trascender" },
-  7: { symbol: "Θ", color: "#10B981", secondaryColor: "#34D399", category: "Imaginación", categoryLabel: "Arte", title: "Introspección" },
-  4: { symbol: "Α", color: "#EF4444", secondaryColor: "#F87171", category: "Acción", categoryLabel: "Resultados", title: "Control" },
-  1: { symbol: "Δ", color: "#DC2626", secondaryColor: "#EF4444", category: "Acción", categoryLabel: "Resultados", title: "Estrategia" },
-  6: { symbol: "Φ", color: "#06B6D4", secondaryColor: "#22D3EE", category: "Imaginación", categoryLabel: "Arte", title: "Creatividad" },
-  8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", category: "Desempeño", categoryLabel: "Energía", title: "Hacer" },
+  2: { symbol: "⬟", color: "#8B5CF6", secondaryColor: "#A78BFA", category: "Saber y conocimiento", categoryLabel: "Ciencia aplicada", title: "Investigación y ciencia aplicada" },
+  3: { symbol: "∞", color: "#7C3AED", secondaryColor: "#8B5CF6", category: "Saber y conocimiento", categoryLabel: "Facilitación", title: "Acompañamiento y facilitación" },
+  5: { symbol: "○", color: "#F59E0B", secondaryColor: "#FBBF24", category: "Destreza y proyección", categoryLabel: "Intuición", title: "Trascendencia y intuición" },
+  7: { symbol: "◇", color: "#10B981", secondaryColor: "#34D399", category: "Imaginación y arte", categoryLabel: "Mirada interior", title: "Introspección y mirada interior" },
+  4: { symbol: "□", color: "#EF4444", secondaryColor: "#F87171", category: "Acción y resultados", categoryLabel: "Gestión", title: "Control y gestión" },
+  1: { symbol: "△", color: "#DC2626", secondaryColor: "#EF4444", category: "Acción y resultados", categoryLabel: "Comunicación", title: "Estrategia y comunicación" },
+  6: { symbol: "⬭", color: "#06B6D4", secondaryColor: "#22D3EE", category: "Imaginación y arte", categoryLabel: "Inventiva", title: "Creatividad e inventiva" },
+  8: { symbol: "▭", color: "#D97706", secondaryColor: "#F59E0B", category: "Destreza y proyección", categoryLabel: "Cooperación", title: "Funcionalidad y cooperación" },
 };
 
-const TALENT_ORDER = [2, 3, 5, 7, 6, 8, 1, 4];
+const TALENT_ORDER = [4, 1, 6, 7, 8, 5, 2, 3];
 
 export function generateMapHTML({
   nombre,
@@ -44,7 +44,7 @@ export function generateMapHTML({
 
     return {
       id: talentId,
-      code: `T${talentId}`,
+      code: config.title,
       symbol: config.symbol,
       title: config.title,
       score,
@@ -138,7 +138,7 @@ export function generateMapHTML({
           y="${labelPos.y + 12}"
           text-anchor="middle"
           dominant-baseline="middle"
-          font-size="11"
+          font-size="9"
           fill="#666"
           font-weight="600"
         >${talent.code}</text>
