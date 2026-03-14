@@ -188,12 +188,7 @@ function generateWheelSVG(
     `;
   }).join("");
 
-  const axisLabelMasksSVG = `
-    <rect x="214" y="10" width="132" height="22" fill="#FFFFFF"/>
-    <rect x="0" y="268" width="118" height="24" fill="#FFFFFF"/>
-    <rect x="442" y="268" width="118" height="24" fill="#FFFFFF"/>
-    <rect x="198" y="520" width="164" height="24" fill="#FFFFFF"/>
-  `;
+  const axisLabelMasksSVG = ``;
 
   const cl1 = "MAPA";
   const cl2 = "TALENTOS";
