@@ -804,25 +804,6 @@ export default function StartPage() {
             <div className="grid gap-4">
               <h2 className="text-lg font-semibold text-[var(--foreground)]">Registro completado</h2>
               <p className="text-sm text-[var(--muted-foreground)]">Gracias. Tus respuestas han quedado registradas correctamente.</p>
-
-              <ButtonPrimary
-                type="button"
-                className="w-full"
-                onClick={() => {
-                  setStep(STEP_PRE);
-                  setPre(initialPre);
-                  setPost(initialPost);
-                  setAnswers({});
-                  setError("");
-                  setSaving(false);
-                  setSavedOk(false);
-                  setSelectedCareers([]);
-                  setOtroCareerText("");
-                  submittingRef.current = false;
-                }}
-              >
-                Empezar de nuevo
-              </ButtonPrimary>
             </div>
           )}
 

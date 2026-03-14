@@ -251,6 +251,12 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
   const [openId, setOpenId] = useState<string | null>(null);
   const [tab, setTab] = useState<"resultados" | "mapa">("resultados");
   const [svgReady, setSvgReady] = useState(false);
+  const [localRows, setLocalRows] = useState(rows);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalRows(rows);
+  }, [rows]);
 
   const [form, setForm] = useState<FilterState>({
     q: filters?.q ?? "",
@@ -296,7 +302,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
     return map;
   }, [talents]);
 
-  const selected = openId ? rows.find((r: any) => r.id === openId) : null;
+  const selected = openId ? localRows.find((r: any) => r.id === openId) : null;
   const assessment = selected?.assessments?.[0];
 
   const scores = useMemo(() => getScores(assessment?.scoresJson), [assessment?.scoresJson]);
@@ -346,7 +352,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
         <div>
           <h1 className="text-3xl font-bold text-[var(--foreground)]">Admin</h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Mostrando {rows.length} resultados (máx. 200). Exporta Excel con los filtros actuales.
+            Mostrando {localRows.length} resultados (máx. 200). Exporta Excel con los filtros actuales.
           </p>
         </div>
         <a href={exportHref}>
@@ -378,7 +384,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
               if (!JSZip) { alert('JSZip no está cargado'); return; }
               const zip = new JSZip();
               const fecha = new Date().toISOString().slice(0, 10);
-              for (const r of rows) {
+              for (const r of localRows) {
                 const ans = getRowAnswers(r);
                 if (!ans) continue;
                 await exportTalentModelPDF(calculateRanked(ans), "genotipo", r.nombre, zip, undefined, { rolEscogido: r.campoIdentificado ?? r.identificaCampos ?? "", rolPensado: r.ideaCarreraTextoFinal ?? r.ideaCarrera ?? "" });
@@ -402,7 +408,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
               if (!JSZip) { alert('JSZip no está cargado'); return; }
               const zip = new JSZip();
               const fecha = new Date().toISOString().slice(0, 10);
-              for (const r of rows) {
+              for (const r of localRows) {
                 const ans = getRowAnswers(r);
                 if (!ans) continue;
                 await exportTalentModelPDF(calculateRanked(ans), "neurotalento", r.nombre, zip, undefined, { rolEscogido: r.campoIdentificado ?? r.identificaCampos ?? "", rolPensado: r.ideaCarreraTextoFinal ?? r.ideaCarrera ?? "" });
@@ -433,7 +439,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
         </div>
 
         <div className="divide-y divide-[var(--border)]">
-          {rows.map((r: any) => (
+          {localRows.map((r: any) => (
             <div
               key={r.id}
               className="grid grid-cols-12 px-3 py-3 text-sm items-center hover:bg-black/5 dark:hover:bg-white/5 transition"
@@ -447,7 +453,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
               <div className="col-span-1 whitespace-nowrap text-[var(--foreground)]">{ageFromBirthdate(new Date(r.fechaNacimiento))}</div>
               <div className="col-span-1 whitespace-nowrap text-[var(--foreground)]">{r.curso}</div>
               <div className="col-span-2 whitespace-nowrap text-[var(--foreground)]">{r.modalidad}</div>
-              <div className="col-span-1 flex items-center justify-end">
+              <div className="col-span-1 flex items-center justify-end gap-2">
                 <ButtonGhost
                   type="button"
                   className="px-2 py-1 text-xs"
@@ -458,6 +464,32 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
                 >
                   Ver
                 </ButtonGhost>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-xl border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
+                  disabled={deletingId === r.id}
+                  onClick={async () => {
+                    if (!window.confirm(`¿Eliminar el registro de ${r.nombre} ${r.apellido}? Esta acción no se puede deshacer.`)) return;
+                    try {
+                      setDeletingId(r.id);
+                      const res = await fetch(`/api/submissions?id=${encodeURIComponent(r.id)}`, { method: "DELETE" });
+                      const json = await res.json().catch(() => ({} as any));
+                      if (!res.ok) {
+                        alert(json?.error ?? "No se pudo eliminar el registro.");
+                        return;
+                      }
+                      setLocalRows((prev: any[]) => prev.filter((row: any) => row.id !== r.id));
+                      if (openId === r.id) setOpenId(null);
+                      router.refresh();
+                    } catch {
+                      alert("No se pudo eliminar el registro.");
+                    } finally {
+                      setDeletingId(null);
+                    }
+                  }}
+                >
+                  {deletingId === r.id ? "…" : "Eliminar"}
+                </button>
               </div>
             </div>
           ))}

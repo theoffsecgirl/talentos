@@ -227,7 +227,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
-          const labelDistance = showFullLabels ? radius + 58 : radius + 40;
+          const labelDistance = showFullLabels ? radius + 26 : radius + 40;
           const labelPos = polarToCartesian(midAngle, labelDistance);
           const percentPos = polarToCartesian(midAngle, (fillRadius + innerRadius) / 2);
 
@@ -265,7 +265,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
 
               <text
                 x={labelPos.x}
-                y={labelPos.y - (showFullLabels ? 20 : 0)}
+                y={labelPos.y - (showFullLabels ? 14 : 0)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize="14"
@@ -274,6 +274,35 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
               >
                 {talent.symbol}
               </text>
+
+              {showFullLabels && (
+                <g>
+                  <text
+                    x={labelPos.x}
+                    y={labelPos.y + 2}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize="10"
+                    fontWeight="600"
+                    fill="#111111"
+                  >
+                    {talent.titleLine1}
+                  </text>
+                  {talent.titleLine2 ? (
+                    <text
+                      x={labelPos.x}
+                      y={labelPos.y + 14}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize="10"
+                      fontWeight="600"
+                      fill="#111111"
+                    >
+                      {talent.titleLine2}
+                    </text>
+                  ) : null}
+                </g>
+              )}
             </g>
           );
         })}
