@@ -323,10 +323,6 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rol
               <Text key={i} style={styles.perfilItem}>· {p}</Text>
             ))}
           </View>
-                ))}
-              </View>
-            ))}
-          </View>
 
           {textoResumen ? (
             <View style={styles.resumenBox}>
