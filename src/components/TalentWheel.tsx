@@ -278,6 +278,11 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
           );
         })}
 
+        <rect x={center - 70} y={8} width={140} height={24} fill="white" opacity={1} />
+        <rect x={0} y={center - 12} width={112} height={24} fill="white" opacity={1} />
+        <rect x={size - 112} y={center - 12} width={112} height={24} fill="white" opacity={1} />
+        <rect x={center - 84} y={size - 34} width={168} height={26} fill="white" opacity={1} />
+
         <circle cx={center} cy={center} r={innerRadius} fill="white" stroke="#000" strokeWidth="2" />
         <text
           x={center}

@@ -184,7 +184,12 @@ function generateWheelSVG(
     `;
   }).join("");
 
-  const axisLabelsSVG = "";
+  const axisLabelMasksSVG = `
+    <rect x="214" y="10" width="132" height="22" fill="#FFFFFF"/>
+    <rect x="0" y="268" width="118" height="24" fill="#FFFFFF"/>
+    <rect x="442" y="268" width="118" height="24" fill="#FFFFFF"/>
+    <rect x="198" y="520" width="164" height="24" fill="#FFFFFF"/>
+  `;
 
   const cl1 = "MAPA";
   const cl2 = "TALENTOS";
@@ -198,7 +203,7 @@ function generateWheelSVG(
   <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2"/>
   <text x="${center}" y="${center - 5}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl1}</text>
   <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl2}</text>
-  ${axisLabelsSVG}
+  ${axisLabelMasksSVG}
 </svg>`;
 }
 
