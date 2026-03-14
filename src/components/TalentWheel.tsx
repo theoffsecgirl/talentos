@@ -185,7 +185,7 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
     ].join(" ");
   };
 
-  const displayCenterText = centerText || (modelType === 'genotipo' ? 'Geniotipo' : modelType === 'neurotalento' ? 'Neurotalento' : 'Talentos');
+  const displayCenterText = centerText || (modelType === 'genotipo' ? 'Talentos' : modelType === 'neurotalento' ? 'Neurotalento' : 'Talentos');
 
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
@@ -224,25 +224,6 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
             />
           );
         })}
-
-        <text x={center} y={center - radius - 10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#8B5CF6">
-          Acción y resultados
-        </text>
-        <text x={center + radius + 8} y={center - 2} textAnchor="start" fontSize="10" fontWeight="bold" fill="#06B6D4">
-          Imaginación
-        </text>
-        <text x={center + radius + 8} y={center + 10} textAnchor="start" fontSize="10" fontWeight="bold" fill="#06B6D4">
-          y arte
-        </text>
-        <text x={center} y={center + radius + 18} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#DC2626">
-          Destreza y proyección
-        </text>
-        <text x={center - radius - 8} y={center - 2} textAnchor="end" fontSize="10" fontWeight="bold" fill="#F59E0B">
-          Saber
-        </text>
-        <text x={center - radius - 8} y={center + 10} textAnchor="end" fontSize="10" fontWeight="bold" fill="#F59E0B">
-          y conocimiento
-        </text>
 
         {sections.map(({ talent, startAngle, endAngle, fillRadius }) => {
           const midAngle = (startAngle + endAngle) / 2;
@@ -293,36 +274,6 @@ export default function TalentWheel({ scores, printMode = false, showFullLabels 
               >
                 {talent.symbol}
               </text>
-              {showFullLabels && (
-                <>
-                  <text
-                    x={labelPos.x}
-                    y={labelPos.y + 4}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize="6.5"
-                    fontWeight="600"
-                    fill="#333"
-                    className="print:text-[9px]"
-                  >
-                    {talent.titleLine1}
-                  </text>
-                  {talent.titleLine2 && (
-                    <text
-                      x={labelPos.x}
-                      y={labelPos.y + 17}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontSize="6.5"
-                      fontWeight="600"
-                      fill="#333"
-                      className="print:text-[9px]"
-                    >
-                      {talent.titleLine2}
-                    </text>
-                  )}
-                </>
-              )}
             </g>
           );
         })}

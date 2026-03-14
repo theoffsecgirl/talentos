@@ -118,16 +118,7 @@ export default function PDFDownloadView({ scores, userName, userLastName }: Prop
             modelType="neurotalento"
             centerText="Neurotalento"
           />
-          
-          {/* 4 Ejes */}
-          <div className="mt-6 w-full">
-            <h3 className="text-sm font-semibold mb-2">Ejes Neurocognitivos</h3>
-            <div className="space-y-1 text-xs">
-              <div><strong>Pragmático:</strong> T2, T4, T8</div>
-              <div><strong>Generador:</strong> T1, T3, T6</div>
-              <div><strong>Vínculo:</strong> T5, T7</div>
-            </div>
-          </div>
+
         </div>
 
         {/* Columna derecha: Perfil + Lista */}

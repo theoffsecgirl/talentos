@@ -128,16 +128,16 @@ export default function BothTalentWheels({
               cursor: "pointer",
             }}
           >
-            {t === "genotipo" ? "Mapa Geniotipo" : "Mapa Neurotalento"}
+            {t === "genotipo" ? "Mapa Talentos" : "Mapa Neurotalento"}
           </button>
         ))}
       </div>
 
       {/* Botones de descarga */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px" }}>
-        {btn("🗺️ Mapa Geniotipo",       "mapa-genotipo",       "#0f766e", () => handle("mapa",    "genotipo"))}
+        {btn("🗺️ Mapa Talentos",       "mapa-genotipo",       "#0f766e", () => handle("mapa",    "genotipo"))}
         {btn("🗺️ Mapa Neurotalento",  "mapa-neurotalento",  "#b45309", () => handle("mapa",    "neurotalento"))}
-        {btn("📄 Informe Geniotipo",    "informe-genotipo",   "#1d4ed8", () => handle("informe", "genotipo"))}
+        {btn("📄 Informe Talentos",    "informe-genotipo",   "#1d4ed8", () => handle("informe", "genotipo"))}
         {btn("📄 Informe Neurotalento","informe-neurotalento","#7c3aed", () => handle("informe", "neurotalento"))}
       </div>
 
@@ -147,7 +147,7 @@ export default function BothTalentWheels({
           htmlFor={`summary-${activeTab}`}
           style={{ display: "block", fontSize: "14px", fontWeight: 600, marginBottom: "8px", color: "#374151" }}
         >
-          {activeTab === "genotipo" ? "Resumen genotípico" : "Resumen neurocognitivo"} (opcional)
+          {activeTab === "genotipo" ? "Resumen de talentos" : "Resumen neurocognitivo"} (opcional)
         </label>
         <textarea
           id={`summary-${activeTab}`}
@@ -157,7 +157,7 @@ export default function BothTalentWheels({
               ? setGenotipoSummary(e.target.value)
               : setNeurotalentoSummary(e.target.value)
           }
-          placeholder={`Escribe el ${activeTab === "genotipo" ? "resumen genotípico" : "resumen neurocognitivo"} aquí.`}
+          placeholder={`Escribe el ${activeTab === "genotipo" ? "resumen de talentos" : "resumen neurocognitivo"} aquí.`}
           style={{
             width: "100%",
             minHeight: "80px",
@@ -182,21 +182,6 @@ export default function BothTalentWheels({
         ) : (
           <TalentWheel scores={scores} showFullLabels modelType="neurotalento" summaryText={neurotalentoSummary} />
         )}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "10px", marginTop: "8px" }}>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "10px", background: "#fff" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>Rol escogido</div>
-          <div style={{ marginTop: "4px", fontSize: "14px", color: "#111827" }}>{rolEscogido?.trim() || "No indicado"}</div>
-        </div>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "10px", background: "#fff" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>Rol pensado</div>
-          <div style={{ marginTop: "4px", fontSize: "14px", color: "#111827" }}>{rolPensado?.trim() || "No indicado"}</div>
-        </div>
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "10px", background: "#fff" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumen activo</div>
-          <div style={{ marginTop: "4px", fontSize: "14px", color: "#111827" }}>{(activeTab === "genotipo" ? genotipoSummary : neurotalentoSummary)?.trim() || "Sin resumen"}</div>
-        </div>
       </div>
     </div>
   );

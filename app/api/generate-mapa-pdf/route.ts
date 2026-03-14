@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!nombre || !scores || !modelo)
       return NextResponse.json({ error: 'Faltan campos: nombre, scores, modelo' }, { status: 400 })
     if (!['genotipo','neurotalento'].includes(modelo))
-      return NextResponse.json({ error: 'modelo debe ser geniotipo o neurotalento' }, { status: 400 })
+      return NextResponse.json({ error: 'modelo debe ser talentos o neurotalento' }, { status: 400 })
     const element = React.createElement(MapaPDF, { modelo, nombre, scores, textoResumen, rolEscogido, rolPensado }) as React.ReactElement<any>
     const buffer = await renderToBuffer(element)
     const filename = `${nombre.toLowerCase().replace(/\s+/g,'-')}-mapa-${modelo}.pdf`

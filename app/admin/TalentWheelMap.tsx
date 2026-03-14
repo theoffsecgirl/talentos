@@ -216,15 +216,6 @@ export function TalentWheelMap({
           })}
         </svg>
       </div>
-
-      <div className="grid gap-2">
-        <div className="text-xs text-[var(--muted-foreground)]">
-          Las estrellas representan cada pregunta (1–40). Cuanto más lejos del centro, mayor afinidad.
-        </div>
-        <div className="text-xs text-[var(--muted-foreground)]">
-          Nota: esta rueda es una adaptación visual (no reproduce exactamente el gráfico del proveedor).
-        </div>
-      </div>
     </div>
   );
 }

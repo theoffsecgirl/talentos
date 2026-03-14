@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
 })
 
 function Portada({ nombre, modelo, fecha, textoResumen }: { nombre: string; modelo: 'genotipo'|'neurotalento'; fecha: string; textoResumen?: string }) {
-  const titulo = modelo === 'genotipo' ? 'INFORME DE GENIOTIPOS' : 'INFORME DE NEUROTALENTOS'
-  const modelLabel = modelo === 'genotipo' ? 'Geniotipo' : 'Neurotalento'
+  const titulo = modelo === 'genotipo' ? 'INFORME DE TALENTOS' : 'INFORME DE NEUROTALENTOS'
+  const modelLabel = modelo === 'genotipo' ? 'Talentos' : 'Neurotalento'
   return (
     <Page size="A4" orientation="landscape" style={styles.portada}>
       <Text style={styles.portadaEyebrow}>{titulo}</Text>

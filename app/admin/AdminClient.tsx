@@ -365,7 +365,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <ButtonGhost type="submit">Aplicar filtros</ButtonGhost>
           <ButtonGhost type="button" onClick={onClear}>Limpiar</ButtonGhost>
 
-          {/* Exportar masivo Geniotipo */}
+          {/* Exportar masivo Talentos */}
           <ButtonGhost
             type="button"
             onClick={async () => {
@@ -381,12 +381,12 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
               const content = await zip.generateAsync({ type: "blob" });
               const url = URL.createObjectURL(content);
               const a = document.createElement("a");
-              a.href = url; a.download = `neurotalentos-geniotipo-${fecha}.zip`;
+              a.href = url; a.download = `neurotalentos-talentos-${fecha}.zip`;
               document.body.appendChild(a); a.click(); a.remove();
               URL.revokeObjectURL(url);
             }}
           >
-            Exportar filtrados (Geniotipo)
+            Exportar filtrados (Talentos)
           </ButtonGhost>
 
           {/* Exportar masivo Neurotalento */}

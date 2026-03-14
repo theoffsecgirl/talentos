@@ -107,7 +107,6 @@ export function generateMapHTML({
   const sectionsMarkup = sections
     .map(({ talent, startAngle, endAngle }) => {
       const midAngle = (startAngle + endAngle) / 2;
-      const labelPos = polarToCartesian(midAngle, radius + 40);
 
       return `
       <g>
@@ -124,24 +123,6 @@ export function generateMapHTML({
           stroke-width="2"
           opacity="0.3"
         />
-        <text
-          x="${labelPos.x}"
-          y="${labelPos.y - 12}"
-          text-anchor="middle"
-          dominant-baseline="middle"
-          font-size="28"
-          font-weight="bold"
-          fill="${talent.color}"
-        >${talent.symbol}</text>
-        <text
-          x="${labelPos.x}"
-          y="${labelPos.y + 12}"
-          text-anchor="middle"
-          dominant-baseline="middle"
-          font-size="9"
-          fill="#666"
-          font-weight="600"
-        >${talent.code}</text>
       </g>`;
     })
     .join("\n");
@@ -240,42 +221,6 @@ export function generateMapHTML({
       margin: 24px 0;
     }
 
-    .legend {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      max-width: 500px;
-      margin-top: 24px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-
-    .legend-color {
-      width: 18px;
-      height: 18px;
-      border-radius: 4px;
-    }
-
-    .legend-text {
-      font-size: 13px;
-    }
-
-    .legend-label {
-      font-weight: 800;
-    }
-
-    .legend-sub {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
     @media print {
       body {
         background: #fff;
@@ -295,40 +240,6 @@ export function generateMapHTML({
 
     <div class="map-container">
       ${svgMarkup}
-    </div>
-
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-color" style="background:#EF4444"></div>
-        <div class="legend-text">
-          <div class="legend-label">Acción</div>
-          <div class="legend-sub">Resultados</div>
-        </div>
-      </div>
-      
-      <div class="legend-item">
-        <div class="legend-color" style="background:#8B5CF6"></div>
-        <div class="legend-text">
-          <div class="legend-label">Conocimiento</div>
-          <div class="legend-sub">Ciencia aplicada</div>
-        </div>
-      </div>
-      
-      <div class="legend-item">
-        <div class="legend-color" style="background:#06B6D4"></div>
-        <div class="legend-text">
-          <div class="legend-label">Imaginación</div>
-          <div class="legend-sub">Arte</div>
-        </div>
-      </div>
-      
-      <div class="legend-item">
-        <div class="legend-color" style="background:#F59E0B"></div>
-        <div class="legend-text">
-          <div class="legend-label">Desempeño</div>
-          <div class="legend-sub">Energía</div>
-        </div>
-      </div>
     </div>
   </div>
 </body>

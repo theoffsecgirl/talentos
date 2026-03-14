@@ -1,6 +1,6 @@
 /**
  * Genera HTML estático completo para el informe en PDF
- * Estilo basado en GenioTipo con descripciones neurocientíficas completas
+ * Estilo basado en Talentos con descripciones neurocientíficas completas
  */
 
 type TalentData = {
@@ -33,7 +33,7 @@ type PersonData = {
 
 type AnswersData = Record<string, number>;
 
-// Descripciones completas de ejes (tipo GenioTipo)
+// Descripciones completas de ejes (tipo Talentos)
 const AXIS_DESCRIPTIONS: Record<string, { title: string; description: string; color: string }> = {
   "Acción": {
     title: "EJE ACCIÓN",
@@ -57,7 +57,7 @@ const AXIS_DESCRIPTIONS: Record<string, { title: string; description: string; co
   }
 };
 
-// Descripciones tipo GenioTipo por talento
+// Descripciones tipo Talentos por talento
 const TALENT_GENOTYPE_DATA: Record<number, {
   shape: string;
   geniusType: string;
