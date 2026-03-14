@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import AdminClient from "@/app/admin/AdminClient";
+import AdminClient from "../../admin/AdminClient";
 import { TALENTS } from "@/lib/talents";
 import { SANCRISTOBAL_BRANDING, SANCRISTOBAL_CENTER } from "@/lib/branding";
 
