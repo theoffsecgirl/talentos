@@ -244,7 +244,7 @@ function topN(talents: any[], scoresJson: any, n: number) {
   });
 }
 
-export default function AdminClient({ rows, exportHref, talents, filters }: any) {
+export default function AdminClient({ rows, exportHref, talents, filters, branding, fixedCenter }: any) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -269,7 +269,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
     e.preventDefault();
     const params = new URLSearchParams();
     const entries: Array<[keyof FilterState, string]> = [
-      ["q", form.q], ["genero", form.genero], ["centro", form.centro],
+      ["q", form.q], ["genero", form.genero], ["centro", fixedCenter || form.centro],
       ["curso", form.curso], ["modalidad", form.modalidad], ["idea", form.idea],
     ];
     for (const [k, v] of entries) {
@@ -281,8 +281,8 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
   }
 
   function onClear() {
-    setForm({ q: "", genero: "", centro: "", curso: "", modalidad: "", idea: "" });
-    router.push(pathname);
+    setForm({ q: "", genero: "", centro: fixedCenter || "", curso: "", modalidad: "", idea: "" });
+    router.push(fixedCenter ? `${pathname}?centro=${encodeURIComponent(fixedCenter)}` : pathname);
   }
 
   const QUESTION_MAP = useMemo(() => {
@@ -337,6 +337,11 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10 bg-[var(--background)] text-[var(--foreground)]">
+      {branding ? (
+        <div className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+          <img src={branding.logoSrc} alt={branding.name} className="h-24 w-auto object-contain" />
+        </div>
+      ) : null}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[var(--foreground)]">Admin</h1>
@@ -356,7 +361,7 @@ export default function AdminClient({ rows, exportHref, talents, filters }: any)
           <option value="Femenino">Femenino</option>
           <option value="Masculino">Masculino</option>
         </Select>
-        <Input name="centro" placeholder="Centro" value={form.centro} onChange={(e) => update("centro", e.target.value)} />
+        <Input name="centro" placeholder="Centro" value={fixedCenter || form.centro} onChange={(e) => update("centro", e.target.value)} disabled={!!fixedCenter} />
         <Input name="curso" placeholder="Curso" value={form.curso} onChange={(e) => update("curso", e.target.value)} />
         <Input name="modalidad" placeholder="Modalidad" value={form.modalidad} onChange={(e) => update("modalidad", e.target.value)} />
 

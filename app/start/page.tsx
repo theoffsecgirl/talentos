@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TALENTS } from "@/lib/talents";
 import TalentWheel from "@/components/TalentWheel";
+import { SANCRISTOBAL_BRANDING, SANCRISTOBAL_CENTER } from "@/lib/branding";
+import { usePathname } from "next/navigation";
 
 type PreData = {
   nombre: string;
@@ -210,6 +212,19 @@ export default function StartPage() {
   const [selectedCareers, setSelectedCareers] = useState<string[]>([]);
   const [otroCareerText, setOtroCareerText] = useState<string>("");
 
+  const pathname = usePathname();
+  const isSanCristobal = pathname?.startsWith("/sancristobal");
+  const branding = isSanCristobal ? SANCRISTOBAL_BRANDING : null;
+
+  useEffect(() => {
+    if (!isSanCristobal) return;
+    setPost((prev) =>
+      prev.centroEducativo === SANCRISTOBAL_CENTER
+        ? prev
+        : { ...prev, centroEducativo: SANCRISTOBAL_CENTER }
+    );
+  }, [isSanCristobal]);
+
   const submittingRef = useRef(false);
 
   const isQuestionStep = step >= STEP_Q_START && step <= STEP_Q_END;
@@ -396,6 +411,11 @@ export default function StartPage() {
     return (
       <main className="min-h-screen bg-[var(--background)]">
         <div className="max-w-4xl mx-auto px-4 py-12">
+          {branding ? (
+            <div className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+              <img src={branding.logoSrc} alt={branding.name} className="h-20 w-auto object-contain" />
+            </div>
+          ) : null}
           <header className="flex items-end justify-between gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-[var(--foreground)]">Tus Resultados</h1>
@@ -446,6 +466,11 @@ export default function StartPage() {
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <div className="max-w-2xl mx-auto px-4 py-12">
+        {branding ? (
+          <div className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+            <img src={branding.logoSrc} alt={branding.name} className="h-24 w-auto object-contain" />
+          </div>
+        ) : null}
         <header className="flex items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-xs text-[var(--muted-foreground)] shadow-sm">
@@ -594,11 +619,12 @@ export default function StartPage() {
               </div>
 
               <div>
-                <Label>Centro educativo (opcional)</Label>
+                <Label>{isSanCristobal ? "Centro educativo" : "Centro educativo (opcional)"}</Label>
                 <Input
-                  value={post.centroEducativo}
+                  value={isSanCristobal ? SANCRISTOBAL_CENTER : post.centroEducativo}
                   onChange={(e) => updatePost("centroEducativo", e.target.value)}
                   placeholder="IES / Colegio / Universidad…"
+                  disabled={isSanCristobal}
                 />
               </div>
             </div>
