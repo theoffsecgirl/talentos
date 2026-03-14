@@ -143,6 +143,7 @@ function generateWheelSVG(
     const endAngle   = startAngle + aps;
     const midAngle   = (startAngle + endAngle) / 2;
     const percentPos = polarToCartesian(center, center, midAngle, (fillRadius + innerRadius) / 2);
+    const labelPos   = polarToCartesian(center, center, midAngle, radius + 46);
     const talent     = TALENTS.find(t => t.id === talentId);
     const fullTitle  = talent?.reportTitle ?? "";
     const symbol     = symbolMap[talentId] ?? "?";
@@ -155,7 +156,7 @@ function generateWheelSVG(
       const w = fullTitle.split(" "), m = Math.ceil(w.length / 2);
       line1 = w.slice(0, m).join(" "); line2 = w.slice(m).join(" ");
     }
-    return { talentId, color, percentage, fillRadius, fillPct, startAngle, endAngle, percentPos, symbol, line1, line2 };
+    return { talentId, color, percentage, fillRadius, fillPct, startAngle, endAngle, labelPos, percentPos, symbol, line1, line2 };
   });
 
   const defs = sections.map(s => `
@@ -181,6 +182,9 @@ function generateWheelSVG(
       <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
       <path d="${outerPath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3"/>
       ${pctText}
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 12).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#222">${s.symbol}</text>
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 4).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${s.line1}</text>
+      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${s.line2}</text>` : ""}
     `;
   }).join("");
 
