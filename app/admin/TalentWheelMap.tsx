@@ -157,28 +157,6 @@ export function TalentWheelMap({
             );
           })}
 
-          {/* Etiquetas de sectores */}
-          {ordered.map((t, i) => {
-            const mid = startDeg + i * sectorSpan + sectorSpan / 2;
-            const p = polar(cx, cy, (rOuter + rInner) / 2, mid);
-            // giro del texto para que siga el anillo, sin complicar: solo rotamos ligeramente.
-            const rot = mid + 90;
-            return (
-              <text
-                key={`lbl-${t.id}`}
-                x={p.x}
-                y={p.y}
-                fill="rgba(255,255,255,0.95)"
-                fontSize={12}
-                fontWeight={700}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                transform={`rotate(${rot.toFixed(2)} ${p.x.toFixed(2)} ${p.y.toFixed(2)})`}
-              >
-                {t.code}
-              </text>
-            );
-          })}
 
           {/* Estrellas */}
           {points.map((p) => {

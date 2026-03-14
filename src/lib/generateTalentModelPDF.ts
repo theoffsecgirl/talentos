@@ -142,7 +142,6 @@ function generateWheelSVG(
     const startAngle = index * aps - Math.PI / 2;
     const endAngle   = startAngle + aps;
     const midAngle   = (startAngle + endAngle) / 2;
-    const labelPos   = polarToCartesian(center, center, midAngle, radius + 72);
     const percentPos = polarToCartesian(center, center, midAngle, (fillRadius + innerRadius) / 2);
     const talent     = TALENTS.find(t => t.id === talentId);
     const fullTitle  = talent?.reportTitle ?? "";
@@ -156,7 +155,7 @@ function generateWheelSVG(
       const w = fullTitle.split(" "), m = Math.ceil(w.length / 2);
       line1 = w.slice(0, m).join(" "); line2 = w.slice(m).join(" ");
     }
-    return { talentId, color, percentage, fillRadius, fillPct, startAngle, endAngle, labelPos, percentPos, symbol, line1, line2 };
+    return { talentId, color, percentage, fillRadius, fillPct, startAngle, endAngle, percentPos, symbol, line1, line2 };
   });
 
   const defs = sections.map(s => `
@@ -182,16 +181,10 @@ function generateWheelSVG(
       <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
       <path d="${outerPath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3"/>
       ${pctText}
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 14).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="bold" fill="#222">${s.symbol}</text>
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 3).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.4" font-weight="600" fill="#333">${s.line1}</text>
-      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.4" font-weight="600" fill="#333">${s.line2}</text>` : ""}
     `;
   }).join("");
 
-  const axisLabelsSVG = AXIS_LABELS.map(al => {
-    const transform = al.rotate !== 0 ? `transform="rotate(${al.rotate}, ${al.x}, ${al.y})"` : "";
-    return `<text x="${al.x}" y="${al.y}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#444" letter-spacing="0.5" ${transform}>${al.name}</text>`;
-  }).join("");
+  const axisLabelsSVG = "";
 
   const cl1 = "MAPA";
   const cl2 = "TALENTOS";
@@ -302,7 +295,9 @@ function generatePDFHTML(
       </div>
       <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
         ${profileSection}
-        
+        <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:10px;">
+          ${talentListRows}
+        </div>
       </div>
     </div>
   </div>

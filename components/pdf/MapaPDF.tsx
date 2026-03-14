@@ -297,6 +297,7 @@ export interface MapaPDFProps {
 export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rolPensado }: MapaPDFProps) {
   const symbols: Record<string, string> = { ...SYMBOLS_GENOTIPO, analitico: '⬠' }
   const titulo = modelo === 'genotipo' ? 'MAPA DE TALENTOS' : 'MAPA DE NEUROTALENTOS'
+  const ejeLabelText = (label: string) => label.replace(' Y ', '\n')
   const modelLabel = modelo === 'genotipo' ? 'TALENTOS' : 'NEUROTALENTO'
   const dominante = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'gestion'
   const dominanteData = NEUROCOGNITIVE_DATA[dominante]
@@ -321,6 +322,22 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rol
             <Text style={[styles.perfilTitulo, { color: dominanteColor }]}>{TALENT_NAMES[dominante].toUpperCase()}</Text>
             {dominanteData?.perfilPuntos?.map((p, i) => (
               <Text key={i} style={styles.perfilItem}>· {p}</Text>
+            ))}
+          </View>
+
+          <View style={styles.ejesGrid}>
+            {EJES.map((eje) => (
+              <View key={eje.label} style={styles.ejeBlock}>
+                <Text style={styles.ejeLabel}>{ejeLabelText(eje.label)}</Text>
+                {eje.keys.map((key) => (
+                  <View key={key} style={styles.talentRow}>
+                    <Text style={styles.talentSymbol}>{symbols[key] ?? ''}</Text>
+                    <Text style={styles.talentScore}>{Math.round(scores[key] ?? 0)}</Text>
+                    <Text style={styles.talentName}>{TALENT_NAMES[key] ?? key}</Text>
+                    <BarTalent score={scores[key] ?? 0} />
+                  </View>
+                ))}
+              </View>
             ))}
           </View>
 
