@@ -1,6 +1,6 @@
 import React from 'react'
 import { Document, Page, View, Text, Svg, Circle, Path, StyleSheet } from '@react-pdf/renderer'
-import { TALENT_COLORS, SYMBOLS_GENOTIPO, EJES, TALENT_NAMES, NEUROCOGNITIVE_DATA } from '@/lib/pdf-data'
+import { TALENT_COLORS, SYMBOLS_GENOTIPO, EJES, TALENT_NAMES, NEUROCOGNITIVE_DATA } from '../../lib/pdf-data'
 
 const BG = '#0B0B1A'
 const BG2 = '#0F0F20'
@@ -20,11 +20,11 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
     width: 841.89,
     height: 595.28,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   colLeft: {
-    width: '44%',
+    width: '36%',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 10,
@@ -32,10 +32,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   colRight: {
-    width: '56%',
+    width: '64%',
     backgroundColor: BG2,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderRadius: 10,
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   headerNombre: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14.5,
     fontWeight: 'bold',
     letterSpacing: 1.2,
   },
@@ -75,19 +75,19 @@ const styles = StyleSheet.create({
   },
   perfilTitulo: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 8.2,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   perfilItem: {
     color: '#C7CED8',
-    fontSize: 6.5,
-    marginBottom: 2.5,
+    fontSize: 6.0,
+    marginBottom: 2,
     lineHeight: 1.35,
   },
   rolesRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 4,
     marginTop: 6,
   },
   rolBox: {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 6,
     flex: 1,
-    minHeight: 34,
+    minHeight: 30,
   },
   rolLabel: {
     color: '#6B7280',
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   rolText: {
     color: '#E5E7EB',
-    fontSize: 6.8,
+    fontSize: 6.2,
     marginTop: 2,
     lineHeight: 1.2,
   },
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
   },
   ejeLabel: {
     color: '#7B8192',
-    fontSize: 5.4,
-    letterSpacing: 1.1,
+    fontSize: 4.5,
+    letterSpacing: 0.7,
     textTransform: 'uppercase',
     marginBottom: 2.5,
   },
@@ -133,27 +133,27 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   talentSymbol: {
-    fontSize: 8.5,
+    fontSize: 6.6,
     width: 12,
     textAlign: 'center',
     color: SYMBOL_COLOR,
   },
   talentScore: {
     color: SCORE_COLOR,
-    fontSize: 6.2,
+    fontSize: 5.4,
     fontWeight: 'bold',
-    width: 18,
+    width: 16,
     marginLeft: 2,
   },
   talentName: {
     color: '#C7CED8',
-    fontSize: 5.8,
-    width: 110,
+    fontSize: 4.35,
+    width: 120,
     lineHeight: 1.15,
-    marginRight: 4,
+    marginRight: 3,
   },
   barBg: {
-    width: 58,
+    width: 42,
     height: 3,
     backgroundColor: BORDER,
     borderRadius: 2,
@@ -173,13 +173,13 @@ const styles = StyleSheet.create({
   },
   resumenText: {
     color: '#D1D5DB',
-    fontSize: 6.5,
-    lineHeight: 1.35,
+    fontSize: 6.0,
+    lineHeight: 1.3,
   },
 })
 
 function BarTalent({ score }: { score: number }) {
-  const totalWidth = 58
+  const totalWidth = 42
   const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0
   const w = Math.max(1, (safeScore / 100) * totalWidth)
   const color = safeScore > 67 ? BAR_RED : BAR_DARK
@@ -321,10 +321,6 @@ export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rol
             <Text style={[styles.perfilTitulo, { color: dominanteColor }]}>{TALENT_NAMES[dominante].toUpperCase()}</Text>
             {dominanteData?.perfilPuntos?.map((p, i) => (
               <Text key={i} style={styles.perfilItem}>· {p}</Text>
-            ))}
-          </View>
-                ))}
-              </View>
             ))}
           </View>
 
