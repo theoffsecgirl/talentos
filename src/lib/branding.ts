@@ -1,4 +1,4 @@
-export const SANCRISTOBAL_CENTER = "IES San Cristóbal de los Ángeles";
+export const SANCRISTOBAL_CENTER = "Centro Educativo San Cristóbal de los Ángeles";
 
 export const SANCRISTOBAL_BRANDING = {
   slug: "sancristobal",
