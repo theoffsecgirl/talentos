@@ -1,7 +1,0 @@
-# Vercel deployment trigger
-Deployment timestamp: 2026-03-03T18:10:45Z
-FIXED: SVG capture for HTML downloads
-- TalentWheel now renders in hidden container
-- Buttons disabled until SVG is ready (300ms)
-- Both Mapa and Informe HTML will include diagram
-Ready for production

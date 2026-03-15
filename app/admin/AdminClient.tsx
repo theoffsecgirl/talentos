@@ -22,6 +22,13 @@ const TALENT_CONFIG: Record<number, { symbol: string; color: string; secondaryCo
 
 const TALENT_ORDER = [4, 1, 6, 7, 8, 5, 2, 3];
 
+function handleBrandLogoError(event: React.SyntheticEvent<HTMLImageElement, Event>) {
+  const img = event.currentTarget;
+  if (img.dataset.logoFallbackApplied === "true") return;
+  img.dataset.logoFallbackApplied = "true";
+  img.src = "/sancristobal-logo.png";
+}
+
 function calculateRanked(answers: Record<string, number>): RankedTalent[] {
   return TALENTS.map((t) => {
     const score = t.items.reduce((sum, item) => sum + (answers[item.id] ?? 0), 0);
@@ -345,7 +352,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
     <main className="max-w-6xl mx-auto px-4 py-10 bg-[var(--background)] text-[var(--foreground)]">
       {branding ? (
         <div className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-          <img src={branding.logoSrc} alt={branding.name} className="h-24 w-auto object-contain" />
+          <img src={branding.logoSrc} alt={branding.name} className="h-24 w-auto object-contain" onError={handleBrandLogoError} />
         </div>
       ) : null}
       <div className="flex items-start justify-between gap-4">

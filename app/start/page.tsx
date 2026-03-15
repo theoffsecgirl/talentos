@@ -54,6 +54,13 @@ const initialPost: PostData = {
 
 const STEM = "ME GUSTAN LAS ACTIVIDADES O PIENSO EN UNA PROFESIÓN DONDE...";
 
+function handleBrandLogoError(event: React.SyntheticEvent<HTMLImageElement, Event>) {
+  const img = event.currentTarget;
+  if (img.dataset.logoFallbackApplied === "true") return;
+  img.dataset.logoFallbackApplied = "true";
+  img.src = "/sancristobal-logo.png";
+}
+
 function normalizeItemText(s: any): string {
   if (typeof s !== "string") return "";
   const t = s.trim();
@@ -413,7 +420,7 @@ export default function StartPage() {
         <div className="max-w-4xl mx-auto px-4 py-12">
           {branding ? (
             <div className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-              <img src={branding.logoSrc} alt={branding.name} className="h-20 w-auto object-contain" />
+              <img src={branding.logoSrc} alt={branding.name} className="h-20 w-auto object-contain" onError={handleBrandLogoError} />
             </div>
           ) : null}
           <header className="flex items-end justify-between gap-4 mb-8">
@@ -468,7 +475,7 @@ export default function StartPage() {
       <div className="max-w-2xl mx-auto px-4 py-12">
         {branding ? (
           <div className="mb-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-            <img src={branding.logoSrc} alt={branding.name} className="h-24 w-auto object-contain" />
+            <img src={branding.logoSrc} alt={branding.name} className="h-24 w-auto object-contain" onError={handleBrandLogoError} />
           </div>
         ) : null}
         <header className="flex items-center justify-between gap-4">
