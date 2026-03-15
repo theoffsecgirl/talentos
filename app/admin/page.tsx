@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import AdminClient from "./AdminClient";
 import { TALENTS } from "@/lib/talents";
 import type { ReadonlyURLSearchParams } from "next/navigation";
+import AdminLogin from "./AdminLogin";
+import { hasAdminCredentialsConfigured, isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +38,14 @@ export default async function AdminPage({
   // ✅ Next 16: puede venir como Promise o como URLSearchParams
   searchParams: unknown;
 }) {
+  if (!hasAdminCredentialsConfigured()) {
+    return <AdminLogin setupMissing />;
+  }
+
+  if (!(await isAdminAuthenticated())) {
+    return <AdminLogin />;
+  }
+
   const sp = await unwrapSearchParams(searchParams);
 
   const q = getParam(sp, "q").trim();
@@ -94,7 +104,7 @@ export default async function AdminPage({
   if (modalidad) params.set("modalidad", modalidad);
   if (idea) params.set("idea", idea);
 
-  const exportHref = `/api/admin/export?${params.toString()}`;
+  const exportHref = `/api/admin/private/export?${params.toString()}`;
 
   return (
     <AdminClient
@@ -102,6 +112,8 @@ export default async function AdminPage({
       talents={TALENTS}
       filters={{ q, genero, centro, curso, modalidad, idea }}
       exportHref={exportHref}
+      deleteEndpoint="/api/admin/private/submissions"
+      showLogout
     />
   );
 }

@@ -251,7 +251,7 @@ function topN(talents: any[], scoresJson: any, n: number) {
   });
 }
 
-export default function AdminClient({ rows, exportHref, talents, filters, branding, fixedCenter }: any) {
+export default function AdminClient({ rows, exportHref, talents, filters, branding, fixedCenter, deleteEndpoint = "/api/submissions", showLogout = false }: any) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -362,9 +362,22 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
             Mostrando {localRows.length} resultados (máx. 200). Exporta Excel con los filtros actuales.
           </p>
         </div>
-        <a href={exportHref}>
-          <ButtonPrimary type="button">Exportar Excel (.xlsx)</ButtonPrimary>
-        </a>
+        <div className="flex items-center gap-2">
+          {showLogout ? (
+            <ButtonGhost
+              type="button"
+              onClick={async () => {
+                await fetch("/api/admin/auth/logout", { method: "POST" });
+                window.location.href = "/admin";
+              }}
+            >
+              Cerrar sesión
+            </ButtonGhost>
+          ) : null}
+          <a href={exportHref}>
+            <ButtonPrimary type="button">Exportar Excel (.xlsx)</ButtonPrimary>
+          </a>
+        </div>
       </div>
 
       <form className="mt-6 grid gap-3 md:grid-cols-6" onSubmit={onSubmit}>
@@ -479,7 +492,7 @@ export default function AdminClient({ rows, exportHref, talents, filters, brandi
                     if (!window.confirm(`¿Eliminar el registro de ${r.nombre} ${r.apellido}? Esta acción no se puede deshacer.`)) return;
                     try {
                       setDeletingId(r.id);
-                      const res = await fetch(`/api/submissions?id=${encodeURIComponent(r.id)}`, { method: "DELETE" });
+                      const res = await fetch(`${deleteEndpoint}?id=${encodeURIComponent(r.id)}`, { method: "DELETE" });
                       const json = await res.json().catch(() => ({} as any));
                       if (!res.ok) {
                         alert(json?.error ?? "No se pudo eliminar el registro.");
