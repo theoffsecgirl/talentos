@@ -529,28 +529,28 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
           <Path d={s.bgPath} fill={hex2rgba(s.color, 0.14)} stroke={s.color} strokeWidth={1.2} />
           <Path d={s.fillPath} fill={s.color} />
           {s.value > 0 ? (
-            <SvgText x={s.pctPos.x} y={s.pctPos.y + 4} fontSize={11} fontWeight={800} fill="#FFFFFF" textAnchor="middle">
+            <SvgText x={s.pctPos.x} y={s.pctPos.y + 4} style={{ fontSize: 11, fontWeight: 800, fill: "#FFFFFF", textAnchor: "middle" }}>
               {String(s.value)}
             </SvgText>
           ) : null}
-          <SvgText x={s.labelPos.x} y={s.labelPos.y - 6} fontSize={10.5} fontWeight={800} fill="#222222" textAnchor="middle">
+          <SvgText x={s.labelPos.x} y={s.labelPos.y - 6} style={{ fontSize: 10.5, fontWeight: 800, fill: "#222222", textAnchor: "middle" }}>
             {s.symbol}
           </SvgText>
-          <SvgText x={s.labelPos.x} y={s.labelPos.y + 8} fontSize={5.5} fontWeight={700} fill="#333333" textAnchor="middle">
+          <SvgText x={s.labelPos.x} y={s.labelPos.y + 8} style={{ fontSize: 5.5, fontWeight: 700, fill: "#333333", textAnchor: "middle" }}>
             {s.line1}
           </SvgText>
           {s.line2 ? (
-            <SvgText x={s.labelPos.x} y={s.labelPos.y + 15} fontSize={5.5} fontWeight={700} fill="#333333" textAnchor="middle">
+            <SvgText x={s.labelPos.x} y={s.labelPos.y + 15} style={{ fontSize: 5.5, fontWeight: 700, fill: "#333333", textAnchor: "middle" }}>
               {s.line2}
             </SvgText>
           ) : null}
         </React.Fragment>
       ))}
       <Circle cx={center} cy={center} r={innerRadius} fill="#FFFFFF" stroke="#111111" strokeWidth={1.5} />
-      <SvgText x={center} y={center - 4} fontSize={8} fontWeight={800} fill="#475569" textAnchor="middle">
+      <SvgText x={center} y={center - 4} style={{ fontSize: 8, fontWeight: 800, fill: "#475569", textAnchor: "middle" }}>
         MAPA
       </SvgText>
-      <SvgText x={center} y={center + 8} fontSize={8} fontWeight={800} fill="#475569" textAnchor="middle">
+      <SvgText x={center} y={center + 8} style={{ fontSize: 8, fontWeight: 800, fill: "#475569", textAnchor: "middle" }}>
         {modelo === 'genotipo' ? 'TALENTOS' : 'NEUROTALENTOS'}
       </SvgText>
     </Svg>
