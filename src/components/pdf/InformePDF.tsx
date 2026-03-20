@@ -628,74 +628,82 @@ function BatteryBar({ value }: { value: number }) {
 }
 
 function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
-  const symbols = modelSymbols(modelo)
   const size = 360
   const center = size / 2
   const radius = 118
   const innerRadius = 42
+  const step = (Math.PI * 2) / ID_ORDER.length
   const sections = ID_ORDER.map((key, index) => {
     const color = TALENT_COLORS[key]
     const value = clamp(scores[key] ?? 0)
     const fillRadius = innerRadius + (radius - innerRadius) * (value / 100)
-    const step = (Math.PI * 2) / ID_ORDER.length
     const startAngle = index * step - Math.PI / 2
     const endAngle = startAngle + step
     const mid = (startAngle + endAngle) / 2
-    const pctPos = polarToCartesian(center, center, mid, (fillRadius + innerRadius) / 2)
+    const pctPos = polarToCartesian(center, center, mid, innerRadius + (fillRadius - innerRadius) * 0.58)
     const labelPos = polarToCartesian(center, center, mid, radius + 34)
     const [line1, line2] = splitLabel(TALENT_NAMES[key])
+
+    const fillSteps = [1, 0.82, 0.66].map((factor, fillIndex) => ({
+      key: `${key}-${fillIndex}`,
+      opacity: [0.18, 0.3, 0.48][fillIndex],
+      d: createArcPath(
+        center,
+        center,
+        startAngle,
+        endAngle,
+        innerRadius + (fillRadius - innerRadius) * factor,
+        innerRadius,
+      ),
+    }))
+
     return {
       key,
       color,
       value,
-      symbol: symbols[key],
-      startAngle,
-      endAngle,
-      fillRadius,
       pctPos,
       labelPos,
       line1,
       line2,
-      bgPath: createArcPath(center, center, startAngle, endAngle, radius, innerRadius),
-      fillPath: createArcPath(center, center, startAngle, endAngle, fillRadius, innerRadius),
+      outlinePath: createArcPath(center, center, startAngle, endAngle, radius, innerRadius),
+      fillSteps,
     }
   })
 
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#111111" strokeWidth={1.5} />
-      <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#111111" strokeWidth={1.5} />
+      <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#232323" strokeWidth={1.4} />
+      <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#232323" strokeWidth={1.4} />
       {[1, 3, 5, 7].map((idx) => {
         const angle = (idx * Math.PI * 2) / ID_ORDER.length - Math.PI / 2
         const outer = polarToCartesian(center, center, angle, radius)
-        return <Line key={idx} x1={center} y1={center} x2={outer.x} y2={outer.y} stroke="#8A94A6" strokeWidth={1} />
+        return <Line key={idx} x1={center} y1={center} x2={outer.x} y2={outer.y} stroke="#6B7280" strokeWidth={0.9} />
       })}
       {sections.map((s) => (
         <React.Fragment key={s.key}>
-          <Path d={s.bgPath} fill={hex2rgba(s.color, 0.14)} stroke={s.color} strokeWidth={1.2} />
-          <Path d={s.fillPath} fill={s.color} />
+          <Path d={s.outlinePath} fill="none" stroke={hex2rgba(s.color, 0.34)} strokeWidth={1.15} />
+          {s.fillSteps.map((layer) => (
+            <Path key={layer.key} d={layer.d} fill={hex2rgba(s.color, layer.opacity)} />
+          ))}
           {s.value > 0 ? (
             <SvgText x={s.pctPos.x} y={s.pctPos.y + 4} textAnchor="middle" style={{ fontSize: 11, fontWeight: 800, fill: "#FFFFFF" }}>
               {String(s.value)}
             </SvgText>
           ) : null}
-          <PositionedSymbol talentKey={s.key} modelo={modelo} color="#222222" size={16} x={s.labelPos.x} y={s.labelPos.y - 8} />
-          <SvgText x={s.labelPos.x} y={s.labelPos.y + 8} textAnchor="middle" style={{ fontSize: 5.5, fontWeight: 700, fill: "#333333" }}>
+          <PositionedSymbol talentKey={s.key} modelo={modelo} color={s.color} size={15} x={s.labelPos.x} y={s.labelPos.y - 8} />
+          <SvgText x={s.labelPos.x} y={s.labelPos.y + 8} textAnchor="middle" style={{ fontSize: 5.5, fontWeight: 700, fill: "#222222" }}>
             {s.line1}
           </SvgText>
           {s.line2 ? (
-            <SvgText x={s.labelPos.x} y={s.labelPos.y + 15} textAnchor="middle" style={{ fontSize: 5.5, fontWeight: 700, fill: "#333333" }}>
+            <SvgText x={s.labelPos.x} y={s.labelPos.y + 15} textAnchor="middle" style={{ fontSize: 5.5, fontWeight: 700, fill: "#222222" }}>
               {s.line2}
             </SvgText>
           ) : null}
         </React.Fragment>
       ))}
       <Circle cx={center} cy={center} r={innerRadius} fill="#FFFFFF" stroke="#111111" strokeWidth={1.5} />
-      <SvgText x={center} y={center - 4} textAnchor="middle" style={{ fontSize: 8, fontWeight: 800, fill: "#475569" }}>
-        MAPA
-      </SvgText>
-      <SvgText x={center} y={center + 8} textAnchor="middle" style={{ fontSize: 8, fontWeight: 800, fill: "#475569" }}>
-        {modelo === 'genotipo' ? 'TALENTOS' : 'NEUROTALENTOS'}
+      <SvgText x={center} y={center + 5} textAnchor="middle" style={{ fontSize: modelo === 'genotipo' ? 11 : 10, fontWeight: 800, fill: "#555555" }}>
+        {modelo === 'genotipo' ? 'Talentos' : 'Neurotalento'}
       </SvgText>
     </Svg>
   )
