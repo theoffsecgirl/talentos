@@ -501,7 +501,8 @@ function generateSoftSkillsPageHTML(
     : `<tr><td colspan="6" style="padding:20px;font-size:14px;color:#666;text-align:center;">No hay baterías destacadas para mostrar soft skills.</td></tr>`;
 
   return `
-    <section class="report-page landscape-page softskills-page">
+    <section class="report-page interior-page softskills-page">
+      <div class="page-shell">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;">
         <div>
           <div style="font-size:20px;font-weight:900;color:#111;line-height:1;">SOFT SKILLS DESTACADAS</div>
@@ -524,6 +525,7 @@ function generateSoftSkillsPageHTML(
           </tbody>
         </table>
       </div>
+      </div>
     </section>`;
 }
 
@@ -538,22 +540,21 @@ function generateInformeHTML(
     .filter(item => !!item.key)
     .sort((a, b) => b.percentage - a.percentage);
 
-  const sectionPages: string[] = [];
-  for (let i = 0; i < orderedKeys.length; i += 2) {
-    const chunk = orderedKeys.slice(i, i + 2);
-    const sections = chunk.map(item => generateTalentSectionHTML(item.key, item.rd, modelType)).join('<div style="height:12px"></div>');
-    sectionPages.push(`
-      <section class="report-page landscape-page">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+  const sectionPages = orderedKeys.map((item, index) => `
+    <section class="report-page interior-page">
+      <div class="page-shell">
+        <div class="page-header">
           <div>
-            <div style="font-size:18px;font-weight:900;color:#111;line-height:1;">INFORME DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
-            <div style="font-size:11px;color:#666;margin-top:5px;">${userName}</div>
+            <div class="page-title">INFORME DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
+            <div class="page-subtitle">${userName}</div>
           </div>
-          <div style="font-size:9px;color:#888;font-weight:700;">Baterías ordenadas por puntuación</div>
+          <div class="page-meta">Batería ${index + 1} de ${orderedKeys.length}</div>
         </div>
-        ${sections}
-      </section>`);
-  }
+        <div class="section-wrap">
+          ${generateTalentSectionHTML(item.key, item.rd, modelType)}
+        </div>
+      </div>
+    </section>`).join("");
 
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
 <style>
@@ -561,13 +562,21 @@ function generateInformeHTML(
   body { font-family:Arial,Helvetica,sans-serif; background:#fff; color:#111; }
   .report-page { width:980px; min-height:694px; padding:18px 22px; page-break-after:always; background:#fff; overflow:hidden; }
   .report-page:last-child { page-break-after:auto; }
+  .interior-page { padding:20px 24px; }
+  .page-shell { width:100%; min-height:554px; border:1px solid #e5e7eb; border-radius:18px; padding:18px 20px; display:flex; flex-direction:column; justify-content:flex-start; }
+  .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+  .page-title { font-size:18px; font-weight:900; color:#111; line-height:1; }
+  .page-subtitle { font-size:11px; color:#666; margin-top:5px; }
+  .page-meta { font-size:9px; color:#888; font-weight:700; }
+  .section-wrap { flex:1; display:flex; align-items:center; }
+  .section-wrap > section { width:100%; }
   ul li { margin-bottom:4px; }
   table tbody tr:nth-child(even) { background:#fcfcfd; }
   table tbody tr td { border-top:1px solid #eef2f7; }
 </style>
 </head><body>
   ${generateMapPageHTML(ranked, modelType, userName, summaryText)}
-  ${sectionPages.join("")}
+  ${sectionPages}
   ${generateSoftSkillsPageHTML(ranked, modelType)}
 </body></html>`;
 }
