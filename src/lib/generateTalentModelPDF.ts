@@ -317,129 +317,317 @@ function hex2rgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function nl2br(value: string): string {
+  return escapeHtml(value).replace(/\n/g, "<br/>");
+}
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+}
+
+function percentageFromRanked(talent?: RankedTalent): number {
+  if (!talent || talent.max <= 0) return 0;
+  return Math.round((talent.score / talent.max) * 100);
+}
+
+function scoreToBatteryValue(score: number, max: number): number {
+  if (!max) return 0;
+  return Math.round((score * 15) / max);
+}
+
+const GENERIC_SOFT_SKILLS = [
+  "Creatividad",
+  "Comunicación",
+  "Inteligencia emocional",
+  "Liderazgo",
+] as const;
+
 function generateInformeHTML(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
   summaryText?: string
 ): string {
-  const symMap    = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
-  const softMap   = modelType === "genotipo" ? SOFT_SKILLS_GENOTIPO : SOFT_SKILLS_NEUROTALENTO;
-  const titulo    = modelType === "genotipo" ? "INFORME DE TALENTOS" : "INFORME DE NEUROTALENTOS";
-  const BG        = "#0B0B1A";
-  const fecha     = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+  const mapSymbolMap = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
+  const sectionSymbolMap = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
+  const modelLabel = modelType === "genotipo" ? "Talentos" : "Neurotalentos";
+  const winner = ranked[0];
+  const winnerKey = winner ? ID_TO_KEY[winner.id] : undefined;
+  const winnerData = winnerKey ? NEUROCOGNITIVE_DATA[winnerKey] : undefined;
+  const winnerColor = winnerKey ? INFORME_COLORS[winnerKey] ?? "#CC0000" : "#CC0000";
+  const winnerTitle = winner?.reportTitle ?? winner?.quizTitle ?? "Perfil profesional";
+  const winnerRole = winnerData?.rol ?? (winner?.exampleRoles?.[0] ?? "No disponible");
 
-  // Mini wheel SVG para portada (220px)
-  const miniWheel = generateWheelSVG(ranked, modelType)
-    .replace('width="560" height="560"', 'width="220" height="220"');
+  const svgContent = generateWheelSVG(ranked, modelType).replace('width="560" height="560"', 'width="430" height="430"');
+  const safeUserName = escapeHtml((userName || "Perfil sin nombre").trim());
+  const safeSummary = summaryText?.trim() ? nl2br(summaryText.trim()) : "";
 
-  // Portada
-  const portadaResumen = summaryText?.trim()
-    ? `<div style="margin-top:28px;border:1px solid #1E1E36;border-radius:8px;padding:16px;width:60%;text-align:left;">
-        <div style="color:#6B7280;font-size:7px;letter-spacing:2px;margin-bottom:6px;">RESUMEN DEL EVALUADOR</div>
-        <div style="color:#D1D5DB;font-size:9px;line-height:1.6;">${summaryText}</div>
-      </div>`
+  const orderedTalentIds = ranked.map((talent) => talent.id);
+  const mapSidebar = AXIS_GROUPS.map((group) => {
+    const rows = group.talents.map((talentId) => {
+      const talent = ranked.find((item) => item.id === talentId);
+      const percentage = percentageFromRanked(talent);
+      const color = percentage > 67 ? "#DC2626" : "#111111";
+      const symbol = mapSymbolMap[talentId] ?? "?";
+      const name = talent?.reportTitle ?? talent?.quizTitle ?? "Batería";
+      return `
+        <div class="map-row">
+          <div class="map-row-label">
+            <span class="map-row-symbol">${escapeHtml(symbol)}</span>
+            <span>${percentage} - ${escapeHtml(name)}</span>
+          </div>
+          <div class="map-row-bar-scale"><span>0</span><span>60</span><span>100</span></div>
+          <div class="map-row-bar-track"><div class="map-row-bar-fill" style="width:${percentage}%;background:${color};"></div></div>
+        </div>`;
+    }).join("");
+    return `
+      <div class="side-card compact">
+        <div class="side-card-section-title">${escapeHtml(group.name)}</div>
+        ${rows}
+      </div>`;
+  }).join("");
+
+  const profileBullets = (winnerData?.perfilPuntos ?? []).slice(0, 4).map((item) => `
+    <div class="profile-bullet"><span class="profile-bullet-dot">•</span><span>${escapeHtml(item)}</span></div>`
+  ).join("");
+
+  const summaryBanner = safeSummary
+    ? `<div class="summary-banner">${safeSummary}</div>`
     : "";
 
   const portada = `
-  <div class="pagina" style="background:${BG};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;">
-    <div style="color:#6B7280;font-size:8px;letter-spacing:4px;margin-bottom:18px;">${titulo}</div>
-    <div style="color:#fff;font-size:38px;font-weight:bold;letter-spacing:3px;">${userName.toUpperCase()}</div>
-    <div style="width:60px;height:2px;background:#1E1E36;margin:20px 0;"></div>
-    <div style="color:#374151;font-size:9px;letter-spacing:2px;">${fecha}</div>
-    <div style="color:#374151;font-size:7px;letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Modelo ${modelType}</div>
-    ${portadaResumen}
-    <div style="margin-top:32px;opacity:0.6;">${miniWheel}</div>
-  </div>`;
+    <section class="report-page report-page-cover">
+      <div class="page-header">
+        <div>
+          <div class="page-title">MAPA DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
+          <div class="page-subtitle">${safeUserName} - Modelo ${modelLabel}</div>
+        </div>
+        <div class="page-kicker">Basado en neurociencia aplicada</div>
+      </div>
+      <div class="cover-layout">
+        <div class="cover-map-column">
+          <div class="cover-map-wrap">${svgContent}</div>
+          ${summaryBanner}
+        </div>
+        <div class="cover-side-column">
+          <div class="side-card profile-card">
+            <div class="eyebrow">Perfil profesional</div>
+            <div class="profile-title">${escapeHtml(winnerTitle)}</div>
+            ${profileBullets}
+            <div class="role-card" style="border-color:${winnerColor};">
+              <div class="role-card-label">Rol sugerido</div>
+              <div class="role-card-value">${escapeHtml(winnerRole)}</div>
+            </div>
+          </div>
+          ${mapSidebar}
+        </div>
+      </div>
+      <div class="page-number">1</div>
+    </section>`;
 
-  // Ordenar por score desc
-  const ordenado = [...EJES.flatMap(e => e.keys)].sort((a, b) => {
-    const rdA = ranked.find(r => ID_TO_KEY[r.id] === a);
-    const rdB = ranked.find(r => ID_TO_KEY[r.id] === b);
-    const pA = rdA && rdA.max > 0 ? rdA.score / rdA.max : 0;
-    const pB = rdB && rdB.max > 0 ? rdB.score / rdB.max : 0;
-    return pB - pA;
+  const orderedKeys = orderedTalentIds
+    .map((talentId) => ID_TO_KEY[talentId])
+    .filter((key): key is string => Boolean(key));
+
+  const sectionMarkup = orderedKeys.map((key) => {
+    const rankedTalent = ranked.find((item) => ID_TO_KEY[item.id] === key);
+    const data = NEUROCOGNITIVE_DATA[key];
+    const color = INFORME_COLORS[key] ?? "#444444";
+    const symbol = sectionSymbolMap[key] ?? "?";
+    const points = rankedTalent ? scoreToBatteryValue(rankedTalent.score, rankedTalent.max) : 0;
+    const percentage = percentageFromRanked(rankedTalent);
+    const ambitos = data.ambitos.map((ambito) => `<li>${escapeHtml(ambito)}</li>`).join("");
+    return `
+      <article class="talent-section">
+        <div class="talent-main">
+          <div class="talent-heading-row">
+            <div>
+              <h2 class="talent-title">${escapeHtml(TALENT_NAMES[key])}</h2>
+              <div class="talent-axis" style="color:${color};">${escapeHtml(EJES.find((eje) => eje.keys.includes(key))?.label ?? data.eje)}</div>
+            </div>
+            <div class="talent-symbol" style="color:${color};">${escapeHtml(symbol)}</div>
+          </div>
+
+          <div class="talent-block-title">Resumen neurocognitivo</div>
+          <p class="talent-summary">${escapeHtml(data.resumen)}</p>
+          <ul class="detail-list"><li>${escapeHtml(data.detalle)}</li></ul>
+
+          <div class="talent-block-title">Ámbitos profesionales</div>
+          <ul class="ambits-list">${ambitos}</ul>
+
+          <div class="role-strip" style="border-left-color:${color};">
+            <div class="role-strip-label">Rol sugerido</div>
+            <div class="role-strip-value">${escapeHtml(data.rol)}</div>
+          </div>
+        </div>
+
+        <aside class="talent-score-column">
+          <div class="score-panel">
+            <div class="score-label">Puntuación</div>
+            <div class="score-value" style="color:${color};">${points}</div>
+            <div class="score-battery">Batería ${escapeHtml(TALENT_NAMES[key])}</div>
+            <div class="score-bar-track"><div class="score-bar-fill" style="width:${percentage}%;background:${color};"></div></div>
+            <div class="score-percentage">${percentage}%</div>
+          </div>
+        </aside>
+      </article>`;
   });
 
-  // Páginas de talento
-  const talentPages = ordenado.map((key, i) => {
-    const rd      = ranked.find(r => ID_TO_KEY[r.id] === key);
-    const color   = INFORME_COLORS[key] ?? "#888";
-    const symbol  = symMap[key] ?? "?";
-    const name    = TALENT_NAMES[key] ?? key;
-    const data    = NEUROCOGNITIVE_DATA[key];
-    const soft    = softMap[key] ?? [];
-    const score   = rd && rd.max > 0 ? rd.score : 0;
-    const max     = rd?.max ?? 15;
-    const pts15   = Math.round(score * 15 / (max || 15));
-    const pct     = max > 0 ? Math.round((score / max) * 100) : 0;
+  const contentPages = chunkArray(sectionMarkup, 2).map((sections, index) => `
+    <section class="report-page report-page-content">
+      ${sections.join("\n")}
+      <div class="page-number">${index + 2}</div>
+    </section>`).join("");
 
-    const ambitoTags = data.ambitos.map(a =>
-      `<span style="background:${hex2rgba(color, 0.15)};color:${color};border-radius:4px;padding:3px 8px;font-size:7px;font-weight:bold;margin:0 4px 4px 0;display:inline-block;">${a}</span>`
-    ).join("");
+  const qualifiedTalents = ranked
+    .map((talent) => {
+      const key = ID_TO_KEY[talent.id];
+      if (!key) return null;
+      const percentage = percentageFromRanked(talent);
+      if (percentage <= 67) return null;
+      return {
+        key,
+        percentage,
+        symbol: sectionSymbolMap[key] ?? "?",
+        name: TALENT_NAMES[key] ?? talent.reportTitle ?? talent.quizTitle,
+        color: INFORME_COLORS[key] ?? "#444444",
+        skills: SOFT_SKILLS_GENOTIPO[key] ?? [],
+      };
+    })
+    .filter((item): item is { key: string; percentage: number; symbol: string; name: string; color: string; skills: string[] } => Boolean(item));
 
-    const softTags = soft.map(s =>
-      `<span style="border:1px solid ${hex2rgba(color, 0.4)};color:${color};border-radius:4px;padding:3px 7px;font-size:7px;margin:0 4px 4px 0;display:inline-block;">${s}</span>`
-    ).join("");
-
-    const perfilPuntos = (data.perfilPuntos ?? []).map(p =>
-      `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;">
-        <span style="color:${color};font-size:10px;flex-shrink:0;line-height:1.2;">&#9658;</span>
-        <span style="color:#D1D5DB;font-size:8.5px;line-height:1.5;">${p}</span>
-      </div>`
-    ).join("");
-
+  const softSkillColumns = GENERIC_SOFT_SKILLS.map((skill) => {
+    const matches = qualifiedTalents.filter((talent) => talent.skills.includes(skill));
+    if (!matches.length) return "";
+    const items = matches.map((talent) => `
+      <div class="soft-item" style="border-color:${hex2rgba(talent.color, 0.25)}; background:${hex2rgba(talent.color, 0.08)};">
+        <span class="soft-item-symbol" style="color:${talent.color};">${escapeHtml(talent.symbol)}</span>
+        <div>
+          <div class="soft-item-name">${escapeHtml(talent.name)}</div>
+          <div class="soft-item-score">${talent.percentage}%</div>
+        </div>
+      </div>`).join("");
     return `
-  <div class="pagina" style="background:${BG};display:flex;flex-direction:row;">
-    <!-- Columna izquierda -->
-    <div style="width:36%;padding:38px;display:flex;flex-direction:column;justify-content:space-between;background:${hex2rgba(color, 0.07)};">
-      <div>
-        <div style="font-size:72px;font-weight:bold;color:${color};line-height:1;">${symbol}</div>
-        <div style="color:#fff;font-size:18px;font-weight:bold;margin-top:6px;">${name}</div>
-        <div style="color:#6B7280;font-size:6.5px;letter-spacing:1.5px;margin-top:5px;line-height:1.4;">${data.eje}</div>
-      </div>
-      <div>
-        <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:18px;">Puntuación</div>
-        <div style="display:flex;align-items:baseline;margin-top:2px;">
-          <span style="font-size:44px;font-weight:bold;color:${color};line-height:1;">${pts15}</span>
-          <span style="color:#374151;font-size:18px;margin-left:4px;">/15</span>
-        </div>
-        <div style="height:5px;border-radius:3px;margin-top:6px;background:#1E1E36;overflow:hidden;">
-          <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>
-        </div>
-      </div>
-      ${soft.length > 0 ? `<div>
-        <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:14px;margin-bottom:5px;">Soft Skills</div>
-        <div style="display:flex;flex-wrap:wrap;">${softTags}</div>
-      </div>` : ""}
-    </div>
-    <!-- Columna derecha -->
-    <div style="width:64%;padding:38px;background:#0F0F20;display:flex;flex-direction:column;">
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">Resumen Neurocognitivo</div>
-      <div style="color:#D1D5DB;font-size:8.5px;line-height:1.6;">${data.resumen}</div>
-      <div style="color:#9CA3AF;font-size:7.5px;line-height:1.5;margin-top:8px;">${data.detalle}</div>
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:14px;margin-bottom:5px;">Perfil</div>
-      ${perfilPuntos}
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:12px;margin-bottom:5px;">Ámbitos Profesionales</div>
-      <div style="display:flex;flex-wrap:wrap;">${ambitoTags}</div>
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:12px;margin-bottom:4px;">Rol sugerido</div>
-      <div style="color:${color};font-size:8px;font-weight:600;">${data.rol}</div>
-    </div>
-    <div style="position:absolute;bottom:16px;right:24px;color:#1F2937;font-size:7px;">${i + 2} / ${ordenado.length + 1}</div>
-  </div>`;
-  }).join("");
+      <div class="soft-column">
+        <div class="soft-column-title">${skill}</div>
+        <div class="soft-column-items">${items}</div>
+      </div>`;
+  }).filter(Boolean).join("");
 
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
-<style>
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:Arial,Helvetica,sans-serif; background:#0B0B1A; }
-  .pagina { width:841px; height:595px; position:relative; page-break-after:always; overflow:hidden; }
-  .pagina:last-child { page-break-after:auto; }
-</style>
-</head><body>
-  ${portada}
-  ${talentPages}
-</body></html>`;
+  const softSkillsPage = `
+    <section class="report-page report-page-softskills">
+      <div class="soft-header">
+        <div>
+          <div class="page-title">SOFT SKILLS</div>
+          <div class="page-subtitle">Solo se muestran las baterías con puntuación superior al 67%</div>
+        </div>
+      </div>
+      <div class="soft-matrix ${softSkillColumns ? "" : "soft-matrix-empty"}">
+        ${softSkillColumns || `<div class="soft-empty">No hay soft skills activas por encima del umbral establecido.</div>`}
+      </div>
+      <div class="page-number">${chunkArray(sectionMarkup, 2).length + 2}</div>
+    </section>`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; background: #f4f4f4; color: #111827; }
+    .report-root { width: 794px; }
+    .report-page {
+      width: 794px;
+      height: 1123px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+      padding: 44px 44px 58px;
+    }
+    .report-page:last-child { page-break-after: auto; }
+    .page-header, .soft-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 16px; border-bottom: 3px solid #111827; }
+    .page-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+    .page-subtitle { margin-top: 4px; color: #666; font-size: 11px; }
+    .page-kicker { color: #8a8a8a; font-size: 10px; font-weight: 700; margin-top: 6px; }
+    .cover-layout { display: flex; gap: 28px; margin-top: 24px; }
+    .cover-map-column { width: 52%; display: flex; flex-direction: column; align-items: center; }
+    .cover-map-wrap { width: 100%; display: flex; justify-content: center; }
+    .cover-side-column { width: 48%; display: flex; flex-direction: column; gap: 16px; }
+    .side-card { border: 1px solid #d5d5d5; border-radius: 14px; padding: 16px 18px; background: #fafafa; }
+    .side-card.compact { padding: 14px 16px; }
+    .eyebrow { color: #8b8b8b; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+    .profile-title { font-size: 19px; line-height: 1.18; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
+    .profile-bullet { display: flex; gap: 8px; margin-bottom: 7px; color: #3d3d3d; font-size: 11px; line-height: 1.45; }
+    .profile-bullet-dot { color: #cc0000; font-weight: 700; }
+    .role-card { margin-top: 12px; border: 2px solid #cc0000; border-radius: 10px; padding: 10px 12px; background: #fff5f5; }
+    .role-card-label, .role-strip-label { color: #cc0000; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 4px; }
+    .role-card-value, .role-strip-value { font-size: 12px; color: #333; line-height: 1.35; }
+    .side-card-section-title { font-size: 11px; font-weight: 800; color: #5c5c5c; letter-spacing: 1px; border-bottom: 1px solid #dddddd; padding-bottom: 6px; margin-bottom: 10px; text-transform: uppercase; }
+    .map-row { margin-bottom: 9px; }
+    .map-row:last-child { margin-bottom: 0; }
+    .map-row-label { display: flex; align-items: flex-start; gap: 7px; font-size: 11px; font-weight: 700; color: #222; line-height: 1.3; }
+    .map-row-symbol { width: 12px; text-align: center; flex-shrink: 0; font-size: 13px; }
+    .map-row-bar-scale { display: flex; justify-content: space-between; font-size: 8px; color: #888; margin: 4px 0 3px 19px; }
+    .map-row-bar-track { margin-left: 19px; height: 9px; background: #d1d5db; border-radius: 999px; overflow: hidden; }
+    .map-row-bar-fill { height: 100%; border-radius: 999px; }
+    .summary-banner { margin-top: 18px; padding: 10px 16px; border-radius: 999px; background: #111827; color: #ffffff; font-size: 10px; line-height: 1.45; text-align: center; width: 100%; }
+    .report-page-content { display: flex; flex-direction: column; gap: 36px; }
+    .talent-section { display: grid; grid-template-columns: 1fr 132px; gap: 22px; min-height: 470px; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; }
+    .talent-section:last-of-type { border-bottom: none; }
+    .talent-heading-row { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+    .talent-title { font-size: 22px; line-height: 1.18; font-weight: 800; color: #111827; max-width: 480px; }
+    .talent-axis { margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; }
+    .talent-symbol { font-size: 42px; line-height: 1; font-weight: 700; }
+    .talent-block-title { margin-top: 28px; margin-bottom: 8px; font-size: 15px; font-weight: 800; color: #111827; }
+    .talent-summary { font-size: 13px; line-height: 1.48; color: #6b7280; }
+    .detail-list, .ambits-list { margin-top: 10px; margin-left: 20px; }
+    .detail-list li { font-size: 13px; line-height: 1.72; color: #111111; margin-bottom: 6px; }
+    .ambits-list li { font-size: 13px; line-height: 1.6; color: #6b7280; margin-bottom: 2px; }
+    .role-strip { margin-top: 18px; padding: 12px 0 0 14px; border-left: 4px solid #cc0000; }
+    .talent-score-column { display: flex; justify-content: flex-end; }
+    .score-panel { text-align: center; padding-top: 38px; }
+    .score-label { font-size: 13px; font-weight: 700; color: #6b7280; margin-bottom: 10px; }
+    .score-value { font-size: 48px; line-height: 1; font-weight: 800; }
+    .score-battery { margin-top: 6px; font-size: 11px; line-height: 1.35; color: #6b7280; }
+    .score-bar-track { width: 100%; height: 8px; background: #e5e7eb; border-radius: 999px; margin-top: 14px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 999px; }
+    .score-percentage { margin-top: 7px; font-size: 11px; font-weight: 700; color: #6b7280; }
+    .report-page-softskills { display: flex; flex-direction: column; }
+    .soft-matrix { margin-top: 28px; border: 1px solid #d5d5d5; border-radius: 18px; overflow: hidden; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+    .soft-column { min-height: 760px; border-right: 1px solid #e5e7eb; background: #fbfbfb; }
+    .soft-column:last-child { border-right: none; }
+    .soft-column-title { padding: 18px 16px; background: #111827; color: #ffffff; font-size: 14px; font-weight: 800; text-align: center; }
+    .soft-column-items { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .soft-item { border: 1px solid #e5e7eb; border-radius: 14px; padding: 12px; display: flex; gap: 10px; align-items: flex-start; }
+    .soft-item-symbol { font-size: 22px; font-weight: 700; line-height: 1; width: 24px; text-align: center; }
+    .soft-item-name { font-size: 12px; font-weight: 700; color: #111827; line-height: 1.35; }
+    .soft-item-score { margin-top: 4px; font-size: 11px; color: #6b7280; }
+    .soft-empty { padding: 24px; font-size: 13px; color: #6b7280; }
+    .soft-matrix-empty { display: block; }
+    .page-number { position: absolute; right: 44px; bottom: 26px; font-size: 11px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="report-root">
+    ${portada}
+    ${contentPages}
+    ${softSkillsPage}
+  </div>
+</body>
+</html>`;
 }
 
 function runHtml2Pdf(
@@ -474,7 +662,7 @@ function runHtml2Pdf(
           filename: fileName,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-          jsPDF: { unit: "px", format: pageFormat, orientation: "landscape" },
+          jsPDF: { unit: "px", format: pageFormat, orientation: pageFormat[0] >= pageFormat[1] ? "landscape" : "portrait" },
         })
         .from(target);
 
@@ -512,5 +700,5 @@ export function exportInformePDF(
 ): Promise<void> {
   const html     = generateInformeHTML(ranked, modelType, userName, summaryText);
   const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}informe-${modelType}.pdf`;
-  return runHtml2Pdf(html, fileName, [841, 595], undefined);
+  return runHtml2Pdf(html, fileName, [794, 1123], undefined);
 }
