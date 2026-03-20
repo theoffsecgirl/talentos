@@ -142,8 +142,8 @@ function generateWheelSVG(
     const startAngle = index * aps - Math.PI / 2;
     const endAngle   = startAngle + aps;
     const midAngle   = (startAngle + endAngle) / 2;
-    const labelPos   = polarToCartesian(center, center, midAngle, radius + 72);
     const percentPos = polarToCartesian(center, center, midAngle, (fillRadius + innerRadius) / 2);
+    const labelPos   = polarToCartesian(center, center, midAngle, radius + 46);
     const talent     = TALENTS.find(t => t.id === talentId);
     const fullTitle  = talent?.reportTitle ?? "";
     const symbol     = symbolMap[talentId] ?? "?";
@@ -182,19 +182,16 @@ function generateWheelSVG(
       <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
       <path d="${outerPath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3"/>
       ${pctText}
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 14).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="bold" fill="#222">${s.symbol}</text>
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 3).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.4" font-weight="600" fill="#333">${s.line1}</text>
-      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.4" font-weight="600" fill="#333">${s.line2}</text>` : ""}
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 12).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#222">${s.symbol}</text>
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 4).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${s.line1}</text>
+      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${s.line2}</text>` : ""}
     `;
   }).join("");
 
-  const axisLabelsSVG = AXIS_LABELS.map(al => {
-    const transform = al.rotate !== 0 ? `transform="rotate(${al.rotate}, ${al.x}, ${al.y})"` : "";
-    return `<text x="${al.x}" y="${al.y}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#444" letter-spacing="0.5" ${transform}>${al.name}</text>`;
-  }).join("");
+  const axisLabelMasksSVG = ``;
 
   const cl1 = "MAPA";
-  const cl2 = "TALENTOS";
+  const cl2 = modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS";
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>${defs}</defs>
@@ -205,7 +202,7 @@ function generateWheelSVG(
   <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2"/>
   <text x="${center}" y="${center - 5}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl1}</text>
   <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl2}</text>
-  ${axisLabelsSVG}
+  ${axisLabelMasksSVG}
 </svg>`;
 }
 
@@ -230,7 +227,7 @@ function generatePDFHTML(
   meta?: ExportProfileMeta
 ): string {
   const symbolMap  = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
-  const modelLabel = modelType === "genotipo" ? "Modelo Geniotipo" : "Modelo Neurotalento";
+  const modelLabel = modelType === "genotipo" ? "Modelo Talentos" : "Modelo Neurotalento";
   const winner     = ranked[0];
   const winnerFull = TALENTS.find(t => t.id === winner?.id);
 
@@ -250,14 +247,6 @@ function generatePDFHTML(
     `<div style="margin-top:8px;border:2px solid #CC0000;border-radius:5px;padding:6px;background:#fff3f3;">
         <div style="font-size:7px;font-weight:700;color:#CC0000;letter-spacing:0.5px;margin-bottom:2px;">ROL SUGERIDO</div>
         <div style="font-size:9px;color:#333;line-height:1.35;">${topRole || "No indicado"}</div>
-      </div>`,
-    `<div style="margin-top:8px;border:1.5px solid #111;border-radius:5px;padding:6px;background:#fff;">
-        <div style="font-size:7px;font-weight:700;color:#111;letter-spacing:0.5px;margin-bottom:2px;">ROL ESCOGIDO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${meta?.rolEscogido?.trim() || "No indicado"}</div>
-      </div>`,
-    `<div style="margin-top:8px;border:1.5px solid #666;border-radius:5px;padding:6px;background:#fafafa;">
-        <div style="font-size:7px;font-weight:700;color:#555;letter-spacing:0.5px;margin-bottom:2px;">ROL PENSADO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${meta?.rolPensado?.trim() || "No indicado"}</div>
       </div>`,
   ].join("");
 
@@ -288,12 +277,6 @@ function generatePDFHTML(
     </div>`;
   }).join("");
 
-  const talentListSection = `
-    <div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:12px;">
-      <div style="font-size:7px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:6px;">TALENTOS POR EJE</div>
-      ${talentListRows}
-    </div>`;
-
   const summaryBanner = summaryText?.trim()
     ? `<div style="width:100%;max-width:560px;margin:8px auto 0;padding:8px 16px;background:#000;color:#fff;border-radius:40px;font-size:7px;line-height:1.4;text-align:center;">${summaryText}</div>`
     : "";
@@ -304,7 +287,7 @@ function generatePDFHTML(
   <div style="width:1000px;padding:25px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:8px;">
       <div>
-        <div style="font-size:16px;font-weight:700;">MAPA DE ${modelType === "genotipo" ? "GENIOTIPOS" : "NEUROTALENTOS"}</div>
+        <div style="font-size:16px;font-weight:700;">MAPA DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
         <div style="font-size:10px;color:#555;">${userName ? userName + " \u2014 " : ""}${modelLabel}</div>
       </div>
       <div style="font-size:9px;color:#888;">Basado en neurociencia aplicada</div>
@@ -316,7 +299,9 @@ function generatePDFHTML(
       </div>
       <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
         ${profileSection}
-        ${talentListSection}
+        <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:10px;">
+          ${talentListRows}
+        </div>
       </div>
     </div>
   </div>
@@ -332,129 +317,758 @@ function hex2rgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+
+function getSkillDescription(skill: string, modelType: "genotipo" | "neurotalento"): string {
+  const descriptions: Record<string, string> = modelType === "genotipo"
+    ? {
+        "Creatividad": "Capacidad para generar ideas originales, soluciones nuevas y enfoques poco convencionales.",
+        "Comunicación": "Facilidad para transmitir ideas, conectar con otras personas y expresar el pensamiento con claridad.",
+        "Inteligencia emocional": "Lectura de las emociones propias y ajenas, empatía y regulación del vínculo interpersonal.",
+        "Liderazgo": "Capacidad de influencia, guía y movilización de otras personas hacia objetivos concretos.",
+      }
+    : {
+        "Pensamiento estratégico": "Visión de conjunto para anticipar escenarios, ordenar prioridades y orientar decisiones.",
+        "Influencia": "Capacidad para movilizar a otras personas y generar adhesión a través del criterio y la presencia.",
+        "Pensamiento creativo": "Generación de enfoques alternativos, soluciones originales y mirada innovadora.",
+        "Comunicación empática": "Facilidad para comprender al otro, escuchar y comunicar desde el vínculo.",
+        "Gestión emocional": "Capacidad para interpretar, contener y gestionar emociones en contextos complejos.",
+        "Liderazgo pedagógico": "Capacidad para acompañar, enseñar y hacer crecer a otras personas desde la referencia.",
+        "Escucha activa": "Presencia atenta, comprensión profunda y capacidad de acompañamiento desde la escucha.",
+        "Influencia positiva": "Capacidad de orientar relaciones y decisiones desde una presencia constructiva.",
+        "Pensamiento divergente": "Facilidad para explorar alternativas, conexiones no evidentes y soluciones no lineales.",
+        "Comunicación": "Expresión clara de ideas y facilidad para transmitir sentido a otras personas.",
+        "Liderazgo innovador": "Impulso para activar cambios, abrir caminos y liderar desde la novedad.",
+      };
+
+  return descriptions[skill] ?? "Competencia transversal identificada a partir de las baterías con mayor intensidad en el perfil.";
+}
+
+function chunkItems<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
+}
+
 function generateInformeHTML(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
   summaryText?: string
 ): string {
-  const symMap    = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
-  const softMap   = modelType === "genotipo" ? SOFT_SKILLS_GENOTIPO : SOFT_SKILLS_NEUROTALENTO;
-  const titulo    = modelType === "genotipo" ? "INFORME DE GENIOTIPOS" : "INFORME DE NEUROTALENTOS";
-  const BG        = "#0B0B1A";
-  const fecha     = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+  const symMap = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
+  const softMap = modelType === "genotipo" ? SOFT_SKILLS_GENOTIPO : SOFT_SKILLS_NEUROTALENTO;
+  const titulo = modelType === "genotipo" ? "INFORME DE TALENTOS" : "INFORME DE NEUROTALENTOS";
+  const subtitulo = modelType === "genotipo" ? "Mapa e informe de baterías dominantes" : "Mapa e informe neurocognitivo";
+  const fecha = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
 
-  // Mini wheel SVG para portada (220px)
-  const miniWheel = generateWheelSVG(ranked, modelType)
-    .replace('width="560" height="560"', 'width="220" height="220"');
+  const orderedEntries = ranked
+    .map((rd) => {
+      const key = ID_TO_KEY[rd.id];
+      if (!key) return null;
+      const pct = rd.max > 0 ? Math.round((rd.score / rd.max) * 100) : 0;
+      const data = NEUROCOGNITIVE_DATA[key];
+      return {
+        id: rd.id,
+        key,
+        score: rd.score,
+        max: rd.max,
+        pct,
+        color: INFORME_COLORS[key] ?? "#64748B",
+        symbol: symMap[key] ?? "?",
+        name: TALENT_NAMES[key] ?? rd.reportTitle ?? rd.quizTitle,
+        title: rd.reportTitle ?? rd.quizTitle,
+        data,
+        softSkills: softMap[key] ?? [],
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+    .sort((a, b) => b.pct - a.pct || b.score - a.score);
 
-  // Portada
+  const dominant = orderedEntries[0];
+  const coverWheel = generateWheelSVG(ranked, modelType)
+    .replace('width="560" height="560"', 'width="430" height="430"');
+
+  const topBatteries = orderedEntries.slice(0, 4).map((entry, index) => `
+    <div class="top-battery-row">
+      <div class="top-battery-rank">0${index + 1}</div>
+      <div class="top-battery-main">
+        <div class="top-battery-title"><span class="symbol-chip" style="background:${hex2rgba(entry.color, 0.16)};color:${entry.color};">${entry.symbol}</span>${entry.name}</div>
+        <div class="top-battery-axis">${entry.data.eje}</div>
+      </div>
+      <div class="top-battery-score">
+        <strong>${entry.score}</strong>
+        <span>${entry.pct}%</span>
+      </div>
+    </div>
+  `).join("");
+
   const portadaResumen = summaryText?.trim()
-    ? `<div style="margin-top:28px;border:1px solid #1E1E36;border-radius:8px;padding:16px;width:60%;text-align:left;">
-        <div style="color:#6B7280;font-size:7px;letter-spacing:2px;margin-bottom:6px;">RESUMEN DEL EVALUADOR</div>
-        <div style="color:#D1D5DB;font-size:9px;line-height:1.6;">${summaryText}</div>
+    ? `
+      <div class="cover-note">
+        <div class="section-label">Resumen de orientación</div>
+        <p>${summaryText}</p>
       </div>`
     : "";
 
-  const portada = `
-  <div class="pagina" style="background:${BG};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;">
-    <div style="color:#6B7280;font-size:8px;letter-spacing:4px;margin-bottom:18px;">${titulo}</div>
-    <div style="color:#fff;font-size:38px;font-weight:bold;letter-spacing:3px;">${userName.toUpperCase()}</div>
-    <div style="width:60px;height:2px;background:#1E1E36;margin:20px 0;"></div>
-    <div style="color:#374151;font-size:9px;letter-spacing:2px;">${fecha}</div>
-    <div style="color:#374151;font-size:7px;letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Modelo ${modelType}</div>
-    ${portadaResumen}
-    <div style="margin-top:32px;opacity:0.6;">${miniWheel}</div>
-  </div>`;
+  const cover = `
+    <section class="pagina cover-page">
+      <div class="cover-header">
+        <div>
+          <div class="eyebrow">${titulo}</div>
+          <h1>${userName}</h1>
+          <div class="cover-subtitle">${subtitulo}</div>
+        </div>
+        <div class="cover-date">${fecha}</div>
+      </div>
 
-  // Ordenar por score desc
-  const ordenado = [...EJES.flatMap(e => e.keys)].sort((a, b) => {
-    const rdA = ranked.find(r => ID_TO_KEY[r.id] === a);
-    const rdB = ranked.find(r => ID_TO_KEY[r.id] === b);
-    const pA = rdA && rdA.max > 0 ? rdA.score / rdA.max : 0;
-    const pB = rdB && rdB.max > 0 ? rdB.score / rdB.max : 0;
-    return pB - pA;
-  });
+      <div class="cover-grid">
+        <div class="map-panel card">
+          <div class="section-label">Mapa correspondiente al modelo exportado</div>
+          <div class="map-wrapper">${coverWheel}</div>
+          <div class="map-footnote">Representación visual de las ocho baterías del modelo ${modelType === "genotipo" ? "Talentos" : "Neurotalentos"}.</div>
+        </div>
 
-  // Páginas de talento
-  const talentPages = ordenado.map((key, i) => {
-    const rd      = ranked.find(r => ID_TO_KEY[r.id] === key);
-    const color   = INFORME_COLORS[key] ?? "#888";
-    const symbol  = symMap[key] ?? "?";
-    const name    = TALENT_NAMES[key] ?? key;
-    const data    = NEUROCOGNITIVE_DATA[key];
-    const soft    = softMap[key] ?? [];
-    const score   = rd && rd.max > 0 ? rd.score : 0;
-    const max     = rd?.max ?? 15;
-    const pts15   = Math.round(score * 15 / (max || 15));
-    const pct     = max > 0 ? Math.round((score / max) * 100) : 0;
+        <div class="summary-panel">
+          <div class="card dominant-card" style="border-top: 6px solid ${dominant?.color ?? "#0F172A"};">
+            <div class="section-label">Perfil dominante</div>
+            <div class="dominant-title">${dominant?.name ?? "—"}</div>
+            <div class="dominant-axis">${dominant?.data.eje ?? ""}</div>
+            <div class="dominant-score-row">
+              <div>
+                <div class="score-hero">${dominant?.score ?? 0}</div>
+                <div class="score-caption">Batería ${dominant?.max ?? 15}</div>
+              </div>
+              <div class="score-meta">
+                <div class="score-percent">${dominant?.pct ?? 0}%</div>
+                <div class="score-role">${dominant?.data.rol ?? ""}</div>
+              </div>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width:${dominant?.pct ?? 0}%;background:${dominant?.color ?? "#0F172A"};"></div></div>
+          </div>
 
-    const ambitoTags = data.ambitos.map(a =>
-      `<span style="background:${hex2rgba(color, 0.15)};color:${color};border-radius:4px;padding:3px 8px;font-size:7px;font-weight:bold;margin:0 4px 4px 0;display:inline-block;">${a}</span>`
-    ).join("");
+          <div class="card ranking-card">
+            <div class="section-label">Baterías más altas</div>
+            ${topBatteries}
+          </div>
 
-    const softTags = soft.map(s =>
-      `<span style="border:1px solid ${hex2rgba(color, 0.4)};color:${color};border-radius:4px;padding:3px 7px;font-size:7px;margin:0 4px 4px 0;display:inline-block;">${s}</span>`
-    ).join("");
+          ${portadaResumen}
+        </div>
+      </div>
+    </section>`;
 
-    const perfilPuntos = (data.perfilPuntos ?? []).map(p =>
-      `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;">
-        <span style="color:${color};font-size:10px;flex-shrink:0;line-height:1.2;">&#9658;</span>
-        <span style="color:#D1D5DB;font-size:8.5px;line-height:1.5;">${p}</span>
-      </div>`
-    ).join("");
+  const talentPages = orderedEntries.map((entry, index) => {
+    const activeLocalSkills = entry.softSkills.filter(() => entry.pct > 67);
+    const skillChips = activeLocalSkills.length > 0
+      ? activeLocalSkills.map((skill) => `<span class="skill-chip" style="background:${hex2rgba(entry.color, 0.12)};color:${entry.color};border-color:${hex2rgba(entry.color, 0.28)};">${skill}</span>`).join("")
+      : `<span class="skill-empty">No supera el umbral del 67% para activar soft skills asociadas.</span>`;
+
+    const ambitos = entry.data.ambitos.map((ambito) => `<li>${ambito}</li>`).join("");
+    const bullets = (entry.data.perfilPuntos ?? []).map((point) => `<li>${point}</li>`).join("");
 
     return `
-  <div class="pagina" style="background:${BG};display:flex;flex-direction:row;">
-    <!-- Columna izquierda -->
-    <div style="width:36%;padding:38px;display:flex;flex-direction:column;justify-content:space-between;background:${hex2rgba(color, 0.07)};">
-      <div>
-        <div style="font-size:72px;font-weight:bold;color:${color};line-height:1;">${symbol}</div>
-        <div style="color:#fff;font-size:18px;font-weight:bold;margin-top:6px;">${name}</div>
-        <div style="color:#6B7280;font-size:6.5px;letter-spacing:1.5px;margin-top:5px;line-height:1.4;">${data.eje}</div>
-      </div>
-      <div>
-        <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:18px;">Puntuación</div>
-        <div style="display:flex;align-items:baseline;margin-top:2px;">
-          <span style="font-size:44px;font-weight:bold;color:${color};line-height:1;">${pts15}</span>
-          <span style="color:#374151;font-size:18px;margin-left:4px;">/15</span>
+      <section class="pagina detail-page">
+        <div class="detail-shell card">
+          <aside class="talent-sidebar" style="background:${hex2rgba(entry.color, 0.08)};border-right:1px solid ${hex2rgba(entry.color, 0.18)};">
+            <div>
+              <div class="sidebar-symbol" style="background:${hex2rgba(entry.color, 0.12)};color:${entry.color};border-color:${hex2rgba(entry.color, 0.25)};">${entry.symbol}</div>
+              <div class="section-label">Batería</div>
+              <h2 class="talent-name">${entry.name}</h2>
+              <div class="talent-axis">${entry.data.eje}</div>
+            </div>
+
+            <div class="score-card" style="border-color:${hex2rgba(entry.color, 0.2)};">
+              <div class="section-label">Puntuación</div>
+              <div class="score-number" style="color:${entry.color};">${entry.score}</div>
+              <div class="score-battery">Batería ${entry.max}</div>
+              <div class="progress-track"><div class="progress-fill" style="width:${entry.pct}%;background:${entry.color};"></div></div>
+              <div class="score-percent-inline">${entry.pct}%</div>
+            </div>
+
+            <div>
+              <div class="section-label">Soft skills asociadas</div>
+              <div class="skills-block">${skillChips}</div>
+            </div>
+          </aside>
+
+          <main class="talent-content">
+            <div class="text-card">
+              <div class="section-label">Resumen neurocognitivo</div>
+              <p class="lead">${entry.data.resumen}</p>
+              <div class="quote-box" style="border-left-color:${entry.color};">
+                ${entry.data.detalle}
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="text-card compact">
+                <div class="section-label">Indicadores del perfil</div>
+                <ul class="bullet-list">${bullets}</ul>
+              </div>
+              <div class="text-card compact">
+                <div class="section-label">Ámbitos profesionales</div>
+                <ul class="bullet-list">${ambitos}</ul>
+                <div class="role-box" style="background:${hex2rgba(entry.color, 0.08)};border-color:${hex2rgba(entry.color, 0.18)};">
+                  <div class="role-label">Rol sugerido</div>
+                  <div class="role-value" style="color:${entry.color};">${entry.data.rol}</div>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <div class="page-counter">${index + 2} / ${orderedEntries.length + 2}</div>
         </div>
-        <div style="height:5px;border-radius:3px;margin-top:6px;background:#1E1E36;overflow:hidden;">
-          <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>
-        </div>
-      </div>
-      ${soft.length > 0 ? `<div>
-        <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:14px;margin-bottom:5px;">Soft Skills</div>
-        <div style="display:flex;flex-wrap:wrap;">${softTags}</div>
-      </div>` : ""}
-    </div>
-    <!-- Columna derecha -->
-    <div style="width:64%;padding:38px;background:#0F0F20;display:flex;flex-direction:column;">
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">Resumen Neurocognitivo</div>
-      <div style="color:#D1D5DB;font-size:8.5px;line-height:1.6;">${data.resumen}</div>
-      <div style="color:#9CA3AF;font-size:7.5px;line-height:1.5;margin-top:8px;">${data.detalle}</div>
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:14px;margin-bottom:5px;">Perfil</div>
-      ${perfilPuntos}
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:12px;margin-bottom:5px;">Ámbitos Profesionales</div>
-      <div style="display:flex;flex-wrap:wrap;">${ambitoTags}</div>
-      <div style="color:#6B7280;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:12px;margin-bottom:4px;">Rol sugerido</div>
-      <div style="color:${color};font-size:8px;font-weight:600;">${data.rol}</div>
-    </div>
-    <div style="position:absolute;bottom:16px;right:24px;color:#1F2937;font-size:7px;">${i + 2} / ${ordenado.length + 1}</div>
-  </div>`;
+      </section>`;
   }).join("");
 
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
-<style>
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:Arial,Helvetica,sans-serif; background:#0B0B1A; }
-  .pagina { width:841px; height:595px; position:relative; page-break-after:always; overflow:hidden; }
-  .pagina:last-child { page-break-after:auto; }
-</style>
-</head><body>
-  ${portada}
-  ${talentPages}
-</body></html>`;
+  const activeTalents = orderedEntries.filter((entry) => entry.pct > 67);
+  const allSkills = Array.from(new Set(Object.values(softMap).flat()));
+  const activeSkills = allSkills.filter((skill) => activeTalents.some((entry) => entry.softSkills.includes(skill)));
+
+  const skillColumns = activeSkills.map((skill) => `<th>${skill}</th>`).join("");
+  const matrixRows = activeTalents.map((entry) => {
+    const cells = activeSkills.map((skill) => {
+      const hasSkill = entry.softSkills.includes(skill);
+      return `<td class="matrix-mark ${hasSkill ? "is-active" : ""}" style="color:${hasSkill ? entry.color : "#CBD5E1"};">${hasSkill ? "×" : "—"}</td>`;
+    }).join("");
+
+    return `
+      <tr>
+        <td class="matrix-battery-cell">
+          <div class="matrix-battery-title"><span class="symbol-chip" style="background:${hex2rgba(entry.color, 0.16)};color:${entry.color};">${entry.symbol}</span>${entry.name}</div>
+          <div class="matrix-battery-meta">${entry.score} · ${entry.pct}%</div>
+        </td>
+        ${cells}
+      </tr>`;
+  }).join("");
+
+  const skillCards = activeSkills.map((skill) => {
+    const owners = activeTalents.filter((entry) => entry.softSkills.includes(skill));
+    const ownerChips = owners.map((entry) => `<span class="skill-chip" style="background:${hex2rgba(entry.color, 0.12)};color:${entry.color};border-color:${hex2rgba(entry.color, 0.28)};">${entry.symbol} ${entry.name}</span>`).join("");
+    return `
+      <div class="skill-summary-card card">
+        <div class="skill-summary-title">${skill}</div>
+        <p>${getSkillDescription(skill, modelType)}</p>
+        <div class="skill-summary-owners">${ownerChips}</div>
+      </div>`;
+  }).join("");
+
+  const softSkillsPage = `
+    <section class="pagina softskills-page">
+      <div class="softskills-shell card">
+        <div class="softskills-header">
+          <div>
+            <div class="eyebrow">SOFT SKILLS DESTACADAS</div>
+            <h2>Cuadro final de competencias activas</h2>
+            <p>Solo se muestran las soft skills activadas por baterías que superan el 67%.</p>
+          </div>
+          <div class="softskills-badge">${activeTalents.length} baterías activas</div>
+        </div>
+
+        ${activeSkills.length > 0 ? `
+          <div class="matrix-card">
+            <table class="softskills-matrix">
+              <thead>
+                <tr>
+                  <th>Batería</th>
+                  ${skillColumns}
+                </tr>
+              </thead>
+              <tbody>
+                ${matrixRows}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="skill-summary-grid">
+            ${skillCards}
+          </div>` : `
+          <div class="empty-softskills">
+            Ninguna batería supera actualmente el umbral del 67%, por lo que no se muestran soft skills activas en este informe.
+          </div>`}
+      </div>
+    </section>`;
+
+  return `<!DOCTYPE html>
+  <html lang="es">
+    <head>
+      <meta charset="UTF-8" />
+      <style>
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          font-family: Arial, Helvetica, sans-serif;
+          color: #0F172A;
+          background: #E9EEF5;
+        }
+        .pagina {
+          width: 841px;
+          height: 595px;
+          position: relative;
+          overflow: hidden;
+          page-break-after: always;
+          padding: 22px;
+          background: linear-gradient(180deg, #F7FAFC 0%, #EEF3F8 100%);
+        }
+        .pagina:last-child { page-break-after: auto; }
+        .card {
+          background: rgba(255,255,255,0.92);
+          border: 1px solid #DCE5F0;
+          border-radius: 24px;
+          box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+        .eyebrow {
+          font-size: 10px;
+          letter-spacing: 2px;
+          font-weight: 700;
+          color: #64748B;
+          text-transform: uppercase;
+        }
+        .section-label {
+          font-size: 10px;
+          letter-spacing: 1.4px;
+          font-weight: 700;
+          color: #64748B;
+          text-transform: uppercase;
+          margin-bottom: 8px;
+        }
+        .cover-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 18px;
+          padding: 4px 4px 0;
+        }
+        .cover-header h1 {
+          margin: 6px 0 4px;
+          font-size: 32px;
+          line-height: 1.05;
+          color: #0F172A;
+        }
+        .cover-subtitle,
+        .cover-date {
+          color: #64748B;
+          font-size: 14px;
+        }
+        .cover-grid {
+          display: grid;
+          grid-template-columns: 1.12fr 0.88fr;
+          gap: 18px;
+          height: calc(100% - 92px);
+        }
+        .map-panel {
+          padding: 22px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        .map-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: 1;
+        }
+        .map-footnote {
+          color: #64748B;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+        .summary-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .dominant-card,
+        .ranking-card,
+        .cover-note {
+          padding: 18px 20px;
+        }
+        .dominant-title {
+          font-size: 22px;
+          line-height: 1.15;
+          font-weight: 700;
+          margin-bottom: 6px;
+        }
+        .dominant-axis {
+          color: #475569;
+          font-size: 12px;
+          line-height: 1.45;
+          min-height: 34px;
+        }
+        .dominant-score-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 16px;
+          align-items: flex-end;
+          margin: 14px 0 12px;
+        }
+        .score-hero {
+          font-size: 48px;
+          line-height: 0.95;
+          font-weight: 700;
+          color: #0F172A;
+        }
+        .score-caption,
+        .score-role,
+        .top-battery-axis,
+        .cover-note p,
+        .lead,
+        .quote-box,
+        .bullet-list,
+        .softskills-header p,
+        .skill-summary-card p,
+        .empty-softskills {
+          color: #475569;
+        }
+        .score-caption { font-size: 13px; }
+        .score-meta { text-align: right; }
+        .score-percent {
+          font-size: 24px;
+          font-weight: 700;
+          color: #0F172A;
+        }
+        .score-role {
+          font-size: 12px;
+          line-height: 1.4;
+          max-width: 180px;
+        }
+        .progress-track {
+          width: 100%;
+          height: 10px;
+          background: #E2E8F0;
+          border-radius: 999px;
+          overflow: hidden;
+        }
+        .progress-fill {
+          height: 100%;
+          border-radius: 999px;
+        }
+        .top-battery-row {
+          display: grid;
+          grid-template-columns: 36px 1fr auto;
+          gap: 10px;
+          align-items: center;
+          padding: 10px 0;
+          border-top: 1px solid #E5EDF5;
+        }
+        .top-battery-row:first-of-type { border-top: none; padding-top: 2px; }
+        .top-battery-rank {
+          width: 30px;
+          height: 30px;
+          border-radius: 999px;
+          background: #EFF4FA;
+          border: 1px solid #D8E3EF;
+          color: #334155;
+          font-size: 12px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .top-battery-title,
+        .matrix-battery-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #0F172A;
+          line-height: 1.3;
+        }
+        .top-battery-score {
+          text-align: right;
+          min-width: 64px;
+        }
+        .top-battery-score strong {
+          display: block;
+          font-size: 18px;
+          color: #0F172A;
+        }
+        .top-battery-score span,
+        .matrix-battery-meta {
+          font-size: 12px;
+          color: #64748B;
+        }
+        .symbol-chip {
+          width: 30px;
+          height: 30px;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 16px;
+          flex-shrink: 0;
+        }
+        .detail-shell {
+          display: grid;
+          grid-template-columns: 245px 1fr;
+          height: 100%;
+          overflow: hidden;
+        }
+        .talent-sidebar {
+          padding: 24px 20px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        .sidebar-symbol {
+          width: 70px;
+          height: 70px;
+          border-radius: 22px;
+          border: 1px solid;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 34px;
+          font-weight: 700;
+          margin-bottom: 14px;
+        }
+        .talent-name {
+          margin: 0 0 8px;
+          font-size: 24px;
+          line-height: 1.08;
+          color: #0F172A;
+        }
+        .talent-axis {
+          font-size: 12px;
+          line-height: 1.45;
+          color: #475569;
+        }
+        .score-card {
+          margin: 18px 0;
+          padding: 14px;
+          border-radius: 18px;
+          border: 1px solid;
+          background: rgba(255,255,255,0.68);
+        }
+        .score-number {
+          font-size: 54px;
+          line-height: 0.95;
+          font-weight: 700;
+          margin: 4px 0 6px;
+        }
+        .score-battery,
+        .score-percent-inline {
+          font-size: 13px;
+          color: #475569;
+        }
+        .score-percent-inline {
+          margin-top: 8px;
+          font-weight: 700;
+        }
+        .skills-block {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .skill-chip {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 28px;
+          padding: 6px 10px;
+          border: 1px solid;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 700;
+          line-height: 1.2;
+        }
+        .skill-empty {
+          display: block;
+          font-size: 12px;
+          line-height: 1.5;
+          color: #64748B;
+        }
+        .talent-content {
+          padding: 24px;
+          display: grid;
+          grid-template-rows: auto 1fr;
+          gap: 16px;
+        }
+        .text-card {
+          background: rgba(255,255,255,0.72);
+          border: 1px solid #E2E8F0;
+          border-radius: 20px;
+          padding: 18px 20px;
+        }
+        .lead {
+          font-size: 14px;
+          line-height: 1.62;
+          margin: 0;
+        }
+        .quote-box {
+          margin-top: 14px;
+          padding: 14px 16px;
+          border-left: 4px solid;
+          background: #F8FBFE;
+          border-radius: 14px;
+          font-size: 12px;
+          line-height: 1.62;
+        }
+        .detail-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        .text-card.compact {
+          padding: 16px 18px;
+        }
+        .bullet-list {
+          margin: 0;
+          padding-left: 18px;
+          font-size: 12px;
+          line-height: 1.58;
+        }
+        .bullet-list li + li {
+          margin-top: 5px;
+        }
+        .role-box {
+          margin-top: 16px;
+          padding: 12px 14px;
+          border: 1px solid;
+          border-radius: 16px;
+        }
+        .role-label {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 1.2px;
+          text-transform: uppercase;
+          color: #64748B;
+          margin-bottom: 5px;
+        }
+        .role-value {
+          font-size: 13px;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+        .page-counter {
+          position: absolute;
+          right: 24px;
+          bottom: 20px;
+          font-size: 11px;
+          color: #94A3B8;
+          font-weight: 700;
+        }
+        .softskills-shell {
+          height: 100%;
+          padding: 22px;
+          display: flex;
+          flex-direction: column;
+        }
+        .softskills-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 20px;
+          margin-bottom: 16px;
+        }
+        .softskills-header h2 {
+          margin: 6px 0 8px;
+          font-size: 28px;
+          line-height: 1.1;
+          color: #0F172A;
+        }
+        .softskills-header p {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .softskills-badge {
+          padding: 10px 14px;
+          border-radius: 999px;
+          background: #EFF4FA;
+          border: 1px solid #D8E3EF;
+          color: #334155;
+          font-size: 12px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .matrix-card {
+          border: 1px solid #E2E8F0;
+          border-radius: 20px;
+          overflow: hidden;
+          background: rgba(248, 250, 252, 0.95);
+          margin-bottom: 16px;
+        }
+        .softskills-matrix {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+        }
+        .softskills-matrix thead th {
+          background: #F1F5F9;
+          color: #475569;
+          text-align: left;
+          padding: 12px 14px;
+          border-bottom: 1px solid #E2E8F0;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.9px;
+        }
+        .softskills-matrix tbody td {
+          padding: 12px 14px;
+          border-top: 1px solid #E2E8F0;
+          vertical-align: middle;
+        }
+        .matrix-battery-cell {
+          min-width: 210px;
+        }
+        .matrix-mark {
+          text-align: center;
+          font-size: 18px;
+          font-weight: 700;
+        }
+        .matrix-mark.is-active {
+          background: rgba(15, 23, 42, 0.03);
+        }
+        .skill-summary-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          margin-top: auto;
+        }
+        .skill-summary-card {
+          padding: 16px 18px;
+        }
+        .skill-summary-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #0F172A;
+          margin-bottom: 8px;
+        }
+        .skill-summary-card p {
+          margin: 0 0 12px;
+          font-size: 12px;
+          line-height: 1.55;
+        }
+        .skill-summary-owners {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .empty-softskills {
+          height: 100%;
+          border: 1px dashed #CBD5E1;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 30px;
+          font-size: 14px;
+          line-height: 1.6;
+          background: rgba(248, 250, 252, 0.9);
+        }
+      </style>
+    </head>
+    <body>
+      ${cover}
+      ${talentPages}
+      ${softSkillsPage}
+    </body>
+  </html>`;
 }
 
 function runHtml2Pdf(
@@ -515,7 +1129,7 @@ export function exportTalentModelPDF(
   meta?: ExportProfileMeta
 ): Promise<void> {
   const html     = generatePDFHTML(ranked, modelType, userName, summaryText, meta);
-  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "geniotipos" : "neurotalentos"}.pdf`;
+  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "talentos" : "neurotalentos"}.pdf`;
   return runHtml2Pdf(html, fileName, [1000, 707], zip);
 }
 
