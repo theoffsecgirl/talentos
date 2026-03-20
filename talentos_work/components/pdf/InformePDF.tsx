@@ -733,7 +733,7 @@ function SoftSkillsPage({ modelo, scores, pageIndex, totalPages }: { modelo: 'ge
 
         <View style={[styles.card, { borderRadius: 16, paddingHorizontal: 18, paddingVertical: 6, flex: 1 }]}> 
           {rows.length ? rows.map((row, idx) => (
-            <View style={[styles.softRow, idx === rows.length - 1 ? { borderBottomWidth: 0 } : null]} key={row.key}>
+            <View style={[styles.softRow, idx === rows.length - 1 ? { borderBottomWidth: 0 } : {}]} key={row.key}>
               <View style={styles.softBatteryCol}>
                 <View style={styles.softBatteryWrap}>
                   <View style={[styles.softSymbolBox, { backgroundColor: hex2rgba(row.color, 0.12) }]}>
