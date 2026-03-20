@@ -1,11 +1,9 @@
 import { TALENTS } from "@/lib/talents";
 import {
   TALENT_COLORS as INFORME_COLORS,
-  SYMBOLS_GENOTIPO,
-  SYMBOLS_NEUROTALENTO,
-  SOFT_SKILLS_GENOTIPO,
-  TALENT_NAMES,
-  NEUROCOGNITIVE_DATA,
+  SYMBOLS_GENOTIPO, SYMBOLS_NEUROTALENTO,
+  SOFT_SKILLS_GENOTIPO, SOFT_SKILLS_NEUROTALENTO,
+  TALENT_NAMES, NEUROCOGNITIVE_DATA, EJES,
 } from "@/lib/pdf-data";
 import type JSZip from "jszip";
 
@@ -36,6 +34,7 @@ export type ExportProfileMeta = {
   rolPensado?: string;
 };
 
+// talentId (1-8) -> key de pdf-data
 const ID_TO_KEY: Record<number, string> = {
   1: "estrategia",
   2: "analitico",
@@ -48,25 +47,25 @@ const ID_TO_KEY: Record<number, string> = {
 };
 
 const GENOTIPO_SYMBOLS: Record<number, string> = {
-  4: "□",
-  1: "△",
-  6: "⬯",
-  7: "◇",
-  8: "▭",
-  5: "○",
-  2: "⬠",
-  3: "∞",
+  4: "\u25a1",
+  1: "\u25b3",
+  6: "\u2B2F",
+  7: "\u25c7",
+  8: "\u25ad",
+  5: "\u25cb",
+  2: "\u2B20",
+  3: "\u221e",
 };
 
 const NEUROTALENTO_SYMBOLS: Record<number, string> = {
-  4: "Α",
-  1: "Δ",
-  6: "Φ",
-  7: "Θ",
-  8: "Μ",
-  5: "Ω",
-  2: "Π",
-  3: "Ψ",
+  4: "\u0391",
+  1: "\u0394",
+  6: "\u03a6",
+  7: "\u0398",
+  8: "\u039c",
+  5: "\u03a9",
+  2: "\u03a0",
+  3: "\u03a8",
 };
 
 const TALENT_COLORS: Record<number, string> = {
@@ -83,35 +82,22 @@ const TALENT_COLORS: Record<number, string> = {
 const TALENT_ORDER = [4, 1, 6, 7, 8, 5, 2, 3];
 
 const AXIS_GROUPS = [
-  { name: "ACCIÓN Y RESULTADOS", talents: [4, 1] },
-  { name: "IMAGINACIÓN Y ARTE", talents: [6, 7] },
-  { name: "DESTREZA Y PROYECCIÓN", talents: [8, 5] },
+  { name: "ACCI\u00d3N Y RESULTADOS", talents: [4, 1] },
+  { name: "IMAGINACI\u00d3N Y ARTE", talents: [6, 7] },
+  { name: "DESTREZA Y PROYECCI\u00d3N", talents: [8, 5] },
   { name: "SABER Y CONOCIMIENTO", talents: [2, 3] },
 ];
 
-const REPORT_SKILL_COLUMNS = [
-  "Creatividad",
-  "Comunicación",
-  "Inteligencia emocional",
-  "Liderazgo",
-] as const;
+const AXIS_LABELS: Array<{ name: string; x: number; y: number; rotate: number }> = [
+  { name: "ACCI\u00d3N Y RESULTADOS", x: 280, y: 22, rotate: 0 },
+  { name: "IMAGINACI\u00d3N Y ARTE", x: 538, y: 280, rotate: 0 },
+  { name: "DESTREZA Y PROYECCI\u00d3N", x: 280, y: 538, rotate: 0 },
+  { name: "SABER Y CONOCIMIENTO", x: 22, y: 280, rotate: 0 },
+];
 
 function toSafeNumber(value: unknown, fallback = 0): number {
-  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "number" && !isNaN(value)) return value;
   return fallback;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function percentageOf(score: number, max: number): number {
-  return max > 0 ? Math.round((score / max) * 100) : 0;
 }
 
 function polarToCartesian(cx: number, cy: number, angle: number, r: number) {
@@ -119,133 +105,93 @@ function polarToCartesian(cx: number, cy: number, angle: number, r: number) {
 }
 
 function createArcPath(
-  cx: number,
-  cy: number,
-  startAngle: number,
-  endAngle: number,
-  outerR: number,
-  innerR: number,
+  cx: number, cy: number,
+  startAngle: number, endAngle: number,
+  outerR: number, innerR: number
 ): string {
-  const start = polarToCartesian(cx, cy, startAngle, outerR);
-  const end = polarToCartesian(cx, cy, endAngle, outerR);
+  const start      = polarToCartesian(cx, cy, startAngle, outerR);
+  const end        = polarToCartesian(cx, cy, endAngle,   outerR);
   const innerStart = polarToCartesian(cx, cy, startAngle, innerR);
-  const innerEnd = polarToCartesian(cx, cy, endAngle, innerR);
-  const laf = endAngle - startAngle > Math.PI ? 1 : 0;
+  const innerEnd   = polarToCartesian(cx, cy, endAngle,   innerR);
+  const laf        = endAngle - startAngle > Math.PI ? 1 : 0;
   return [
     `M ${start.x} ${start.y}`,
     `A ${outerR} ${outerR} 0 ${laf} 1 ${end.x} ${end.y}`,
     `L ${innerEnd.x} ${innerEnd.y}`,
     `A ${innerR} ${innerR} 0 ${laf} 0 ${innerStart.x} ${innerStart.y}`,
-    "Z",
+    `Z`,
   ].join(" ");
 }
 
-function generateWheelSVG(ranked: RankedTalent[], modelType: "genotipo" | "neurotalento"): string {
-  const size = 560;
-  const center = size / 2;
-  const radius = 184;
-  const innerRadius = 60;
+function generateWheelSVG(
+  ranked: RankedTalent[],
+  modelType: "genotipo" | "neurotalento"
+): string {
+  const size = 560, center = size / 2, radius = 184, innerRadius = 60;
   const symbolMap = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
 
   const sections = TALENT_ORDER.map((talentId, index) => {
-    const rd = ranked.find((r) => r.id === talentId);
-    const color = TALENT_COLORS[talentId] ?? "#999";
-    const score = toSafeNumber(rd?.score, 0);
-    const max = toSafeNumber(rd?.max, 15);
-    const percentage = percentageOf(score, max);
-    const fillPct = percentage / 100;
+    const rd         = ranked.find(r => r.id === talentId);
+    const color      = TALENT_COLORS[talentId] ?? "#999";
+    const score      = toSafeNumber(rd?.score, 0);
+    const max        = toSafeNumber(rd?.max, 15);
+    const percentage = max > 0 ? Math.round((score / max) * 100) : 0;
+    const fillPct    = percentage / 100;
     const fillRadius = innerRadius + (radius - innerRadius) * fillPct;
-    const aps = (Math.PI * 2) / 8;
+    const aps        = (Math.PI * 2) / 8;
     const startAngle = index * aps - Math.PI / 2;
-    const endAngle = startAngle + aps;
-    const midAngle = (startAngle + endAngle) / 2;
+    const endAngle   = startAngle + aps;
+    const midAngle   = (startAngle + endAngle) / 2;
     const percentPos = polarToCartesian(center, center, midAngle, (fillRadius + innerRadius) / 2);
-    const labelPos = polarToCartesian(center, center, midAngle, radius + 46);
-    const talent = TALENTS.find((t) => t.id === talentId);
-    const fullTitle = talent?.reportTitle ?? "";
-    const symbol = symbolMap[talentId] ?? "?";
-    let line1 = fullTitle;
-    let line2 = "";
-
+    const labelPos   = polarToCartesian(center, center, midAngle, radius + 46);
+    const talent     = TALENTS.find(t => t.id === talentId);
+    const fullTitle  = talent?.reportTitle ?? "";
+    const symbol     = symbolMap[talentId] ?? "?";
+    let line1 = fullTitle, line2 = "";
     if (fullTitle.includes(" y ")) {
-      const p = fullTitle.split(" y ");
-      if (p.length === 2) {
-        line1 = `${p[0]} y`;
-        line2 = p[1];
-      }
+      const p = fullTitle.split(" y "); if (p.length === 2) { line1 = p[0] + " y"; line2 = p[1]; }
     } else if (fullTitle.includes(" e ")) {
-      const p = fullTitle.split(" e ");
-      if (p.length === 2) {
-        line1 = `${p[0]} e`;
-        line2 = p[1];
-      }
+      const p = fullTitle.split(" e "); if (p.length === 2) { line1 = p[0] + " e"; line2 = p[1]; }
     } else {
-      const w = fullTitle.split(" ");
-      const m = Math.ceil(w.length / 2);
-      line1 = w.slice(0, m).join(" ");
-      line2 = w.slice(m).join(" ");
+      const w = fullTitle.split(" "), m = Math.ceil(w.length / 2);
+      line1 = w.slice(0, m).join(" "); line2 = w.slice(m).join(" ");
     }
-
-    return {
-      talentId,
-      color,
-      percentage,
-      fillRadius,
-      fillPct,
-      startAngle,
-      endAngle,
-      labelPos,
-      percentPos,
-      symbol,
-      line1,
-      line2,
-    };
+    return { talentId, color, percentage, fillRadius, fillPct, startAngle, endAngle, labelPos, percentPos, symbol, line1, line2 };
   });
 
-  const defs = sections
-    .map(
-      (s) => `
+  const defs = sections.map(s => `
     <radialGradient id="pdf-g-${s.talentId}" cx="50%" cy="50%">
       <stop offset="0%" stop-color="${s.color}" stop-opacity="${Math.min(s.fillPct * 1.2, 1)}"/>
       <stop offset="${s.fillPct * 100}%" stop-color="${s.color}" stop-opacity="0.6"/>
       <stop offset="100%" stop-color="${s.color}" stop-opacity="0.1"/>
-    </radialGradient>`,
-    )
-    .join("");
+    </radialGradient>`).join("");
 
-  const diagonals = [1, 3, 5, 7]
-    .map((idx) => {
-      const angle = (idx * Math.PI * 2) / 8 - Math.PI / 2;
-      const outer = polarToCartesian(center, center, angle, radius);
-      return `<line x1="${center}" y1="${center}" x2="${outer.x.toFixed(2)}" y2="${outer.y.toFixed(2)}" stroke="#666" stroke-width="1" stroke-dasharray="4 4"/>`;
-    })
-    .join("");
+  const diagonals = [1, 3, 5, 7].map(idx => {
+    const angle = (idx * Math.PI * 2) / 8 - Math.PI / 2;
+    const outer = polarToCartesian(center, center, angle, radius);
+    return `<line x1="${center}" y1="${center}" x2="${outer.x.toFixed(2)}" y2="${outer.y.toFixed(2)}" stroke="#666" stroke-width="1" stroke-dasharray="4 4"/>`;
+  }).join("");
 
-  const sectorSVG = sections
-    .map((s) => {
-      const fillPath = createArcPath(center, center, s.startAngle, s.endAngle, s.fillRadius, innerRadius);
-      const outerPath = createArcPath(center, center, s.startAngle, s.endAngle, radius, innerRadius);
-      const pctText =
-        s.percentage > 15
-          ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="white">${s.percentage}</text>`
-          : "";
-      return `
-      <path d="${fillPath}" fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
+  const sectorSVG = sections.map(s => {
+    const fillPath  = createArcPath(center, center, s.startAngle, s.endAngle, s.fillRadius, innerRadius);
+    const outerPath = createArcPath(center, center, s.startAngle, s.endAngle, radius, innerRadius);
+    const pctText   = s.percentage > 15
+      ? `<text x="${s.percentPos.x.toFixed(2)}" y="${s.percentPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="bold" fill="white">${s.percentage}</text>`
+      : "";
+    return `
+      <path d="${fillPath}"  fill="url(#pdf-g-${s.talentId})" stroke="${s.color}" stroke-width="1"/>
       <path d="${outerPath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3"/>
       ${pctText}
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 12).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#222">${escapeHtml(s.symbol)}</text>
-      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 4).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${escapeHtml(s.line1)}</text>
-      ${
-        s.line2
-          ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${escapeHtml(s.line2)}</text>`
-          : ""
-      }
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 12).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#222">${s.symbol}</text>
+      <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 4).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${s.line1}</text>
+      ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333">${s.line2}</text>` : ""}
     `;
-    })
-    .join("");
+  }).join("");
 
-  const centerLine1 = "MAPA";
-  const centerLine2 = modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS";
+  const axisLabelMasksSVG = ``;
+
+  const cl1 = "MAPA";
+  const cl2 = modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS";
 
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>${defs}</defs>
@@ -254,8 +200,9 @@ function generateWheelSVG(ranked: RankedTalent[], modelType: "genotipo" | "neuro
   ${diagonals}
   ${sectorSVG}
   <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="white" stroke="#000" stroke-width="2"/>
-  <text x="${center}" y="${center - 5}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${centerLine1}</text>
-  <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${centerLine2}</text>
+  <text x="${center}" y="${center - 5}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl1}</text>
+  <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#444">${cl2}</text>
+  ${axisLabelMasksSVG}
 </svg>`;
 }
 
@@ -277,54 +224,53 @@ function generatePDFHTML(
   modelType: "genotipo" | "neurotalento",
   userName: string,
   summaryText?: string,
-  meta?: ExportProfileMeta,
+  meta?: ExportProfileMeta
 ): string {
-  const symbolMap = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
-  const modelLabel = modelType === "genotipo" ? "Modelo Talentos" : "Modelo Neurotalentos";
-  const winner = ranked[0];
-  const winnerFull = TALENTS.find((t) => t.id === winner?.id);
+  const symbolMap  = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
+  const modelLabel = modelType === "genotipo" ? "Modelo Talentos" : "Modelo Neurotalento";
+  const winner     = ranked[0];
+  const winnerFull = TALENTS.find(t => t.id === winner?.id);
+
   const svgContent = generateWheelSVG(ranked, modelType);
 
   const competencies = winnerFull?.competencies ?? [];
-  const topRole = meta?.rolEscogido || meta?.rolPensado || winnerFull?.exampleRoles?.[0] || "";
-  const profileTitle = winner?.reportTitle ?? winner?.quizTitle ?? "—";
+  const topRole      = winnerFull?.exampleRoles?.[0] ?? "";
+  const profileTitle = winner?.reportTitle ?? winner?.quizTitle ?? "\u2014";
 
-  const bulletItems = competencies
-    .map(
-      (c) => `
+  const bulletItems = competencies.map(c => `
     <div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:4px;">
       <span style="color:#CC0000;font-weight:bold;flex-shrink:0;font-size:9px;">&bull;</span>
-      <span style="font-size:9px;color:#333;line-height:1.3;">${escapeHtml(c)}</span>
-    </div>`,
-    )
-    .join("");
+      <span style="font-size:9px;color:#333;line-height:1.3;">${c}</span>
+    </div>`).join("");
+
+  const roleCards = [
+    `<div style="margin-top:8px;border:2px solid #CC0000;border-radius:5px;padding:6px;background:#fff3f3;">
+        <div style="font-size:7px;font-weight:700;color:#CC0000;letter-spacing:0.5px;margin-bottom:2px;">ROL SUGERIDO</div>
+        <div style="font-size:9px;color:#333;line-height:1.35;">${topRole || "No indicado"}</div>
+      </div>`,
+  ].join("");
 
   const profileSection = `
     <div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:12px;">
       <div style="font-size:7px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:5px;">PERFIL PROFESIONAL</div>
-      <div style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;text-transform:uppercase;">${escapeHtml(profileTitle)}</div>
+      <div style="font-size:12px;font-weight:700;color:#111;margin-bottom:8px;text-transform:uppercase;">${profileTitle}</div>
       ${bulletItems}
-      <div style="margin-top:8px;border:2px solid #CC0000;border-radius:5px;padding:6px;background:#fff3f3;">
-        <div style="font-size:7px;font-weight:700;color:#CC0000;letter-spacing:0.5px;margin-bottom:2px;">ROL SUGERIDO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${escapeHtml(topRole || "No indicado")}</div>
-      </div>
+      ${roleCards}
     </div>`;
 
-  const talentListRows = AXIS_GROUPS.map((group) => {
-    const rows = group.talents
-      .map((talentId) => {
-        const rd = ranked.find((r) => r.id === talentId);
-        const pct = rd && rd.max > 0 ? percentageOf(rd.score, rd.max) : 0;
-        const sym = symbolMap[talentId] ?? "?";
-        const nam = rd?.reportTitle ?? "";
-        const bar = generateBatteryBar(pct);
-        return `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;">
-        <div style="font-size:10px;font-weight:700;color:#222;width:14px;text-align:center;flex-shrink:0;line-height:1.2;">${escapeHtml(sym)}</div>
-        <div style="font-size:7px;font-weight:600;color:#333;width:110px;flex-shrink:0;line-height:1.25;word-break:break-word;">${pct} - ${escapeHtml(nam)}</div>
+  const talentListRows = AXIS_GROUPS.map(group => {
+    const rows = group.talents.map(talentId => {
+      const rd  = ranked.find(r => r.id === talentId);
+      const pct = rd && rd.max > 0 ? Math.round((rd.score / rd.max) * 100) : 0;
+      const sym = symbolMap[talentId] ?? "?";
+      const nam = rd?.reportTitle ?? "";
+      const bar = generateBatteryBar(pct);
+      return `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;">
+        <div style="font-size:10px;font-weight:700;color:#222;width:14px;text-align:center;flex-shrink:0;line-height:1.2;">${sym}</div>
+        <div style="font-size:7px;font-weight:600;color:#333;width:110px;flex-shrink:0;line-height:1.25;word-break:break-word;">${pct} - ${nam}</div>
         <div style="flex:1;min-width:0;">${bar}</div>
       </div>`;
-      })
-      .join("");
+    }).join("");
     return `<div style="margin-bottom:8px;">
       <div style="font-size:7px;font-weight:700;color:#555;letter-spacing:0.5px;border-bottom:1px solid #ddd;padding-bottom:2px;margin-bottom:4px;">${group.name}</div>
       ${rows}
@@ -332,7 +278,7 @@ function generatePDFHTML(
   }).join("");
 
   const summaryBanner = summaryText?.trim()
-    ? `<div style="width:100%;max-width:560px;margin:8px auto 0;padding:8px 16px;background:#000;color:#fff;border-radius:40px;font-size:7px;line-height:1.4;text-align:center;">${escapeHtml(summaryText)}</div>`
+    ? `<div style="width:100%;max-width:560px;margin:8px auto 0;padding:8px 16px;background:#000;color:#fff;border-radius:40px;font-size:7px;line-height:1.4;text-align:center;">${summaryText}</div>`
     : "";
 
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
@@ -342,7 +288,7 @@ function generatePDFHTML(
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:8px;">
       <div>
         <div style="font-size:16px;font-weight:700;">MAPA DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
-        <div style="font-size:10px;color:#555;">${escapeHtml(userName ? userName + " — " : "")}${modelLabel}</div>
+        <div style="font-size:10px;color:#555;">${userName ? userName + " \u2014 " : ""}${modelLabel}</div>
       </div>
       <div style="font-size:9px;color:#888;">Basado en neurociencia aplicada</div>
     </div>
@@ -362,95 +308,219 @@ function generatePDFHTML(
 </body></html>`;
 }
 
-function groupIntoPages<T>(items: T[], size: number): T[][] {
-  const pages: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    pages.push(items.slice(i, i + size));
-  }
-  return pages;
+// ─── Informe multi-página (portada + 8 páginas de talento) ───────────────────
+
+function hex2rgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function renderScoreBox(points: number, percentage: number, color: string): string {
-  return `<div style="width:120px;border:1px solid #e5e7eb;border-radius:14px;padding:14px 12px;text-align:center;background:#fff;">
-    <div style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:0.04em;">Puntuación</div>
-    <div style="font-size:42px;line-height:1;font-weight:800;color:${color};margin-top:8px;">${points}</div>
-    <div style="font-size:12px;color:#6b7280;margin-top:6px;">Batería 15</div>
-    <div style="font-size:14px;font-weight:700;color:#111827;margin-top:6px;">${percentage}%</div>
-  </div>`;
+
+function scoreToPercentage(rd?: RankedTalent): number {
+  if (!rd || !rd.max) return 0;
+  return Math.round((rd.score / rd.max) * 100);
 }
 
-function generateSoftSkillsPage(
-  ranked: RankedTalent[],
-  symbolMap: Record<number, string>,
+function scoreToDisplay(rd?: RankedTalent): number {
+  return rd ? Math.round(rd.score) : 0;
+}
+
+function generateBatteryRowForKey(
+  key: string,
+  rd: RankedTalent | undefined,
+  modelType: "genotipo" | "neurotalento",
+  options?: { compact?: boolean; highlight?: boolean }
 ): string {
-  const activeRows = ranked
-    .map((rd) => {
-      const key = ID_TO_KEY[rd.id];
-      const percentage = percentageOf(rd.score, rd.max);
-      return {
-        rd,
-        key,
-        percentage,
-        title: TALENT_NAMES[key] ?? rd.reportTitle ?? rd.quizTitle,
-        skills: SOFT_SKILLS_GENOTIPO[key] ?? [],
-        symbol: symbolMap[rd.id] ?? "?",
-      };
-    })
-    .filter((row) => row.percentage > 67)
-    .sort((a, b) => b.percentage - a.percentage);
-
-  const visibleSkills = REPORT_SKILL_COLUMNS.filter((skill) => activeRows.some((row) => row.skills.includes(skill)));
-
-  const summaryChips = visibleSkills.length
-    ? visibleSkills
-        .map(
-          (skill) => `<span style="display:inline-block;border:1px solid #d1d5db;border-radius:999px;padding:8px 12px;margin:0 8px 8px 0;font-size:12px;font-weight:600;color:#111827;background:#f9fafb;">${skill}</span>`,
-        )
-        .join("")
-    : '<div style="font-size:14px;color:#6b7280;">No hay soft skills con baterías por encima del 67%.</div>';
-
-  const rowsHtml = activeRows.length
-    ? activeRows
-        .map((row) => {
-          const cells = REPORT_SKILL_COLUMNS.map((skill) => {
-            const mark = row.skills.includes(skill) ? "X" : "";
-            return `<td style="padding:12px 10px;border:1px solid #d1d5db;text-align:center;font-size:15px;font-weight:700;color:${mark ? "#111827" : "#9ca3af"};">${mark}</td>`;
-          }).join("");
-          return `<tr>
-            <td style="padding:12px 10px;border:1px solid #d1d5db;font-size:14px;font-weight:700;color:#111827;width:58px;text-align:center;">${escapeHtml(row.symbol)}</td>
-            <td style="padding:12px 14px;border:1px solid #d1d5db;font-size:13px;color:#374151;font-weight:600;">${escapeHtml(row.title)}</td>
-            ${cells}
-          </tr>`;
-        })
-        .join("")
-    : `<tr><td colspan="6" style="padding:22px;border:1px solid #d1d5db;text-align:center;color:#6b7280;font-size:14px;">No hay baterías activas con porcentaje superior al 67%.</td></tr>`;
+  const compact = options?.compact ?? false;
+  const highlight = options?.highlight ?? false;
+  const symbolMap = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
+  const symbol = symbolMap[key] ?? "?";
+  const percentage = scoreToPercentage(rd);
+  const title = TALENT_NAMES[key] ?? rd?.reportTitle ?? rd?.quizTitle ?? key;
+  const bar = generateBatteryBar(percentage);
 
   return `
-  <section class="page">
-    <div class="page-inner">
-      <div class="header-band">
-        <div>
-          <div class="eyebrow">Cierre del informe</div>
-          <h1 class="report-title">Soft skills activas</h1>
+    <div style="display:flex;align-items:flex-start;gap:${compact ? 8 : 10}px;${highlight ? 'padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;' : ''}">
+      <div style="font-size:${compact ? 15 : 16}px;font-weight:700;color:#111;width:${compact ? 16 : 18}px;text-align:center;line-height:1.1;flex-shrink:0;">${symbol}</div>
+      <div style="font-size:${compact ? 10 : 12}px;font-weight:700;color:#222;width:${compact ? 175 : 210}px;line-height:1.25;flex-shrink:0;">${percentage} - ${title}</div>
+      <div style="flex:1;min-width:0;">${bar}</div>
+    </div>`;
+}
+
+function generateMapPageHTML(
+  ranked: RankedTalent[],
+  modelType: "genotipo" | "neurotalento",
+  userName: string,
+  summaryText?: string
+): string {
+  const symbolMap = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
+  const winner = [...ranked].sort((a, b) => (b.score / (b.max || 1)) - (a.score / (a.max || 1)))[0];
+  const winnerFull = TALENTS.find(t => t.id === winner?.id);
+  const competencies = winnerFull?.competencies ?? [];
+  const topRole = winnerFull?.exampleRoles?.[0] ?? "";
+  const profileTitle = winner?.reportTitle ?? winner?.quizTitle ?? "—";
+  const svgContent = generateWheelSVG(ranked, modelType);
+  const modelLabel = modelType === "genotipo" ? "Modelo Talentos" : "Modelo Neurotalentos";
+
+  const bulletItems = competencies.map(c => `
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:7px;">
+      <span style="color:#CC0000;font-weight:bold;flex-shrink:0;font-size:10px;line-height:1.1;">•</span>
+      <span style="font-size:10px;color:#333;line-height:1.4;">${c}</span>
+    </div>`).join("");
+
+  const profileSection = `
+    <div style="background:#fafafa;border:1px solid #d9d9d9;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:#888;letter-spacing:2px;margin-bottom:10px;">PERFIL PROFESIONAL</div>
+      <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:12px;text-transform:uppercase;line-height:1.2;">${profileTitle}</div>
+      ${bulletItems}
+      <div style="margin-top:12px;border:2px solid #CC0000;border-radius:8px;padding:10px 12px;background:#fff7f7;">
+        <div style="font-size:10px;font-weight:800;color:#CC0000;letter-spacing:1.5px;margin-bottom:4px;">ROL SUGERIDO</div>
+        <div style="font-size:10px;color:#333;line-height:1.4;">${topRole || "No indicado"}</div>
+      </div>
+    </div>`;
+
+  const talentListRows = AXIS_GROUPS.map(group => {
+    const rows = group.talents.map(talentId => {
+      const rd = ranked.find(r => r.id === talentId);
+      const key = ID_TO_KEY[talentId];
+      return generateBatteryRowForKey(key, rd, modelType, { compact: true });
+    }).join('<div style="height:8px"></div>');
+
+    return `<div style="margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:800;color:#555;letter-spacing:1px;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:8px;">${group.name}</div>
+      ${rows}
+    </div>`;
+  }).join("");
+
+  const summaryBanner = summaryText?.trim()
+    ? `<div style="width:100%;margin-top:12px;padding:10px 14px;background:#111;color:#fff;border-radius:999px;font-size:10px;line-height:1.45;text-align:center;">${summaryText}</div>`
+    : "";
+
+  return `
+  <section class="report-page landscape-page map-page">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:12px;border-bottom:3px solid #111;">
+      <div>
+        <div style="font-size:24px;font-weight:900;color:#111;line-height:1;">MAPA DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
+        <div style="font-size:14px;color:#666;margin-top:6px;">${userName ? `${userName} — ` : ""}${modelLabel}</div>
+      </div>
+      <div style="font-size:13px;color:#888;font-weight:700;">Basado en neurociencia aplicada</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns: 1.18fr 0.82fr;gap:26px;align-items:start;">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
+        <div style="width:100%;display:flex;justify-content:center;transform:scale(1.03);transform-origin:top center;">${svgContent}</div>
+        ${summaryBanner}
+      </div>
+      <div>
+        ${profileSection}
+        <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px 18px;">
+          ${talentListRows}
         </div>
       </div>
+    </div>
+  </section>`;
+}
 
-      <div class="intro-card" style="margin-bottom:18px;">
-        <p>Se muestran únicamente las soft skills asociadas a las baterías que superan el 67%.</p>
+function generateTalentSectionHTML(
+  key: string,
+  rd: RankedTalent | undefined,
+  modelType: "genotipo" | "neurotalento"
+): string {
+  const symMap = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
+  const color = INFORME_COLORS[key] ?? "#888";
+  const symbol = symMap[key] ?? "?";
+  const name = TALENT_NAMES[key] ?? rd?.reportTitle ?? rd?.quizTitle ?? key;
+  const data = NEUROCOGNITIVE_DATA[key];
+  const scoreValue = scoreToDisplay(rd);
+  const percentage = scoreToPercentage(rd);
+  const batteryRow = generateBatteryRowForKey(key, rd, modelType, { compact: false, highlight: true });
+  const ambitos = data.ambitos.map(a => `<li>${a}</li>`).join("");
+  const bullets = (data.perfilPuntos ?? []).map(p => `<li>${p}</li>`).join("");
+
+  return `
+    <section style="border:1px solid #e5e7eb;border-radius:18px;padding:22px 24px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.03);break-inside:avoid;">
+      <div style="display:grid;grid-template-columns: 130px 1fr 270px;gap:20px;align-items:start;">
+        <div>
+          <div style="font-size:34px;font-weight:800;color:${color};line-height:1;">${symbol}</div>
+          <div style="font-size:12px;font-weight:700;color:#777;letter-spacing:1.4px;margin-top:12px;text-transform:uppercase;">Puntuación</div>
+          <div style="font-size:48px;font-weight:900;color:${color};line-height:1;margin-top:2px;">${scoreValue}</div>
+          <div style="font-size:14px;color:#666;font-weight:700;margin-top:6px;">${percentage}%</div>
+        </div>
+
+        <div>
+          <div style="font-size:26px;font-weight:900;color:#111;line-height:1.15;">${name}</div>
+          <div style="font-size:14px;font-weight:800;color:${color};letter-spacing:.8px;text-transform:uppercase;margin-top:8px;">${data.eje}</div>
+          <div style="font-size:13px;font-weight:800;color:#111;margin-top:20px;">Resumen neurocognitivo</div>
+          <div style="font-size:13px;color:#5f6b7a;line-height:1.55;margin-top:6px;">${data.resumen}</div>
+          <ul style="margin:12px 0 0 18px;font-size:13px;color:#222;line-height:1.55;">${bullets}</ul>
+          <div style="font-size:13px;font-weight:800;color:#111;margin-top:18px;">Ámbitos profesionales</div>
+          <ul style="margin:8px 0 0 18px;font-size:13px;color:#5f6b7a;line-height:1.55;">${ambitos}</ul>
+          <div style="font-size:13px;font-weight:800;color:#111;margin-top:18px;">Rol sugerido</div>
+          <div style="font-size:13px;color:#222;line-height:1.5;margin-top:6px;">${data.rol}</div>
+        </div>
+
+        <div>
+          <div style="font-size:12px;font-weight:800;color:#777;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:8px;">Batería correspondiente</div>
+          ${batteryRow}
+          <div style="font-size:12px;font-weight:800;color:#777;letter-spacing:1.4px;text-transform:uppercase;margin-top:18px;">Orientación</div>
+          <div style="margin-top:8px;border-left:4px solid ${color};padding-left:10px;font-size:13px;color:#4b5563;line-height:1.55;">${data.detalle}</div>
+        </div>
+      </div>
+    </section>`;
+}
+
+function generateSoftSkillsPageHTML(
+  ranked: RankedTalent[],
+  modelType: "genotipo" | "neurotalento"
+): string {
+  const genericSoftMap = SOFT_SKILLS_GENOTIPO;
+  const symMap = modelType === "genotipo" ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO;
+  const columns = ["Creatividad", "Comunicación", "Inteligencia emocional", "Liderazgo"];
+
+  const activeRows = Object.entries(ID_TO_KEY)
+    .map(([id, key]) => {
+      const rd = ranked.find(r => r.id === Number(id));
+      const percentage = scoreToPercentage(rd);
+      return { key, rd, percentage };
+    })
+    .filter(item => item.percentage > 67)
+    .sort((a, b) => b.percentage - a.percentage);
+
+  const rowsHtml = activeRows.length > 0
+    ? activeRows.map(({ key, rd, percentage }) => {
+        const title = TALENT_NAMES[key] ?? rd?.reportTitle ?? rd?.quizTitle ?? key;
+        const symbol = symMap[key] ?? "?";
+        const skills = genericSoftMap[key] ?? [];
+        const checks = columns.map(col => `<td style="text-align:center;padding:12px 8px;font-size:16px;font-weight:800;color:${skills.includes(col) ? '#111' : '#cbd5e1'};">${skills.includes(col) ? 'X' : '—'}</td>`).join("");
+        return `<tr>
+          <td style="padding:12px 12px;font-size:16px;font-weight:800;color:#111;width:44px;text-align:center;">${symbol}</td>
+          <td style="padding:12px 14px;font-size:14px;font-weight:700;color:#222;">${title}</td>
+          <td style="padding:12px 10px;font-size:14px;font-weight:800;color:#dc2626;text-align:center;width:76px;">${percentage}%</td>
+          ${checks}
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="7" style="padding:20px;font-size:14px;color:#666;text-align:center;">No hay baterías por encima del 67% para mostrar soft skills destacadas.</td></tr>`;
+
+  return `
+    <section class="report-page landscape-page softskills-page">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;">
+        <div>
+          <div style="font-size:28px;font-weight:900;color:#111;line-height:1;">SOFT SKILLS DESTACADAS</div>
+          <div style="font-size:14px;color:#666;margin-top:8px;">Solo se muestran las baterías con puntuación superior al 67%.</div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:#888;">Matriz final del informe</div>
       </div>
 
-      <div style="margin-bottom:20px;">${summaryChips}</div>
-
-      <div class="matrix-wrap">
-        <table class="matrix-table">
+      <div style="border:1px solid #d1d5db;border-radius:16px;overflow:hidden;background:#fff;">
+        <table style="width:100%;border-collapse:collapse;">
           <thead>
-            <tr>
-              <th style="width:58px;">Símbolo</th>
-              <th style="text-align:left;">Batería</th>
-              <th>Creatividad</th>
-              <th>Comunicación</th>
-              <th>Inteligencia emocional</th>
-              <th>Liderazgo</th>
+            <tr style="background:#f8fafc;">
+              <th style="padding:14px 10px;border-bottom:1px solid #e5e7eb;width:44px;"></th>
+              <th style="padding:14px 14px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px;letter-spacing:1px;color:#6b7280;text-transform:uppercase;">Batería</th>
+              <th style="padding:14px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:13px;letter-spacing:1px;color:#6b7280;text-transform:uppercase;">%</th>
+              ${columns.map(col => `<th style="padding:14px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:13px;letter-spacing:1px;color:#6b7280;text-transform:uppercase;">${col}</th>`).join("")}
             </tr>
           </thead>
           <tbody>
@@ -458,288 +528,76 @@ function generateSoftSkillsPage(
           </tbody>
         </table>
       </div>
-    </div>
-  </section>`;
+    </section>`;
 }
 
 function generateInformeHTML(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
-  summaryText?: string,
-  meta?: ExportProfileMeta,
+  summaryText?: string
 ): string {
-  const symbolMap = modelType === "genotipo" ? GENOTIPO_SYMBOLS : NEUROTALENTO_SYMBOLS;
-  const modelLabel = modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS";
-  const modelSubtitle = modelType === "genotipo" ? "Mapa e informe de baterías dominantes" : "Mapa e informe neurocognitivo";
-  const today = new Date().toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const orderedKeys = ranked
+    .map(rd => ({ rd, key: ID_TO_KEY[rd.id], percentage: scoreToPercentage(rd) }))
+    .filter(item => !!item.key)
+    .sort((a, b) => b.percentage - a.percentage);
 
-  const sorted = [...ranked].sort((a, b) => {
-    const pa = percentageOf(a.score, a.max);
-    const pb = percentageOf(b.score, b.max);
-    return pb - pa;
-  });
-
-  const winner = sorted[0];
-  const winnerKey = winner ? ID_TO_KEY[winner.id] : "acompanamiento";
-  const winnerColor = INFORME_COLORS[winnerKey] ?? "#7B2D8B";
-  const winnerTalent = TALENTS.find((t) => t.id === winner?.id);
-  const winnerPct = winner ? percentageOf(winner.score, winner.max) : 0;
-  const winnerPoints = winner ? Math.round(winner.score) : 0;
-  const mapSvg = generateWheelSVG(sorted, modelType);
-
-  const topCompetencies = (winnerTalent?.competencies ?? []).slice(0, 4);
-  const topRole = meta?.rolEscogido || meta?.rolPensado || winnerTalent?.exampleRoles?.[0] || winner?.exampleRoles?.[0] || "No indicado";
-
-  const groupedBars = AXIS_GROUPS.map((group) => {
-    const rows = group.talents
-      .map((talentId) => {
-        const rd = sorted.find((item) => item.id === talentId);
-        const pct = rd ? percentageOf(rd.score, rd.max) : 0;
-        const name = rd?.reportTitle ?? rd?.quizTitle ?? "";
-        const symbol = symbolMap[talentId] ?? "?";
-        const barColor = pct > 67 ? "#dc2626" : "#111827";
-        return `<div class="cover-bar-row">
-          <div class="cover-bar-label"><span class="cover-symbol">${escapeHtml(symbol)}</span><span>${pct} - ${escapeHtml(name)}</span></div>
-          <div class="cover-bar-scale"><span>0</span><span>60</span><span>100</span></div>
-          <div class="cover-bar-track"><div class="cover-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
-        </div>`;
-      })
-      .join("");
-
-    return `<div class="cover-axis-group">
-      <div class="cover-axis-title">${group.name}</div>
-      ${rows}
-    </div>`;
-  }).join("");
-
-  const coverSummary = summaryText?.trim()
-    ? `<div class="intro-card" style="margin-top:14px;"><strong>Observación:</strong> ${escapeHtml(summaryText)}</div>`
-    : "";
-
-  const coverPage = `
-  <section class="page">
-    <div class="page-inner cover-page">
-      <div class="top-meta">
-        <div>
-          <h1 class="cover-title">INFORME DE ${modelLabel}</h1>
-          <div class="cover-user">${escapeHtml(userName)}</div>
-          <div class="cover-subtitle">${modelSubtitle}</div>
-          <div class="cover-date">${today}</div>
-          <div class="cover-note">Mapa correspondiente al modelo exportado</div>
-        </div>
-        <div class="cover-tag">Basado en neurociencia aplicada</div>
-      </div>
-
-      <div class="cover-layout">
-        <div class="cover-map-card">
-          <div class="cover-map-inner">${mapSvg}</div>
-          <div class="map-caption">Representación visual de las ocho baterías del modelo ${modelType === "genotipo" ? "Talentos" : "Neurotalentos"}.</div>
-        </div>
-
-        <div class="cover-side">
-          <div class="profile-card">
-            <div class="eyebrow">Perfil dominante</div>
-            <h2 style="margin-bottom:8px;">${escapeHtml(winner?.reportTitle ?? winner?.quizTitle ?? "Sin resultado")}</h2>
-            <div class="axis-line" style="color:${winnerColor};">${escapeHtml(NEUROCOGNITIVE_DATA[winnerKey]?.eje ?? "")}</div>
-            <div style="margin-top:12px;">
-              ${topCompetencies.map((item) => `<div class="bullet-line"><span class="bullet-dot">•</span><span>${escapeHtml(item)}</span></div>`).join("")}
-            </div>
-            <div class="role-box">
-              <div class="role-label">Rol sugerido</div>
-              <div class="role-value">${escapeHtml(topRole)}</div>
-            </div>
-            <div style="margin-top:14px;">${renderScoreBox(winnerPoints, winnerPct, winnerColor)}</div>
+  const sectionPages: string[] = [];
+  for (let i = 0; i < orderedKeys.length; i += 2) {
+    const chunk = orderedKeys.slice(i, i + 2);
+    const sections = chunk.map(item => generateTalentSectionHTML(item.key, item.rd, modelType)).join('<div style="height:18px"></div>');
+    sectionPages.push(`
+      <section class="report-page landscape-page">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+          <div>
+            <div style="font-size:24px;font-weight:900;color:#111;line-height:1;">INFORME DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
+            <div style="font-size:14px;color:#666;margin-top:6px;">${userName}</div>
           </div>
-
-          <div class="bars-card">
-            ${groupedBars}
-          </div>
-
-          ${coverSummary}
+          <div style="font-size:12px;color:#888;font-weight:700;">Baterías ordenadas por puntuación</div>
         </div>
-      </div>
-    </div>
-  </section>`;
+        ${sections}
+      </section>`);
+  }
 
-  const detailPages = groupIntoPages(sorted, 2)
-    .map((pageItems) => {
-      const sections = pageItems
-        .map((rd) => {
-          const key = ID_TO_KEY[rd.id];
-          const data = NEUROCOGNITIVE_DATA[key];
-          const color = INFORME_COLORS[key] ?? "#7B2D8B";
-          const symbol = symbolMap[rd.id] ?? "?";
-          const title = TALENT_NAMES[key] ?? rd.reportTitle ?? rd.quizTitle;
-          const percentage = percentageOf(rd.score, rd.max);
-          const points = Math.round(rd.score);
-          const ambitos = (data?.ambitos ?? []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
-          const role = meta?.rolEscogido && rd.id === winner?.id ? meta.rolEscogido : data?.rol || rd.exampleRoles?.[0] || "No indicado";
-
-          return `
-          <article class="detail-section">
-            <div class="detail-head">
-              <div>
-                <div class="detail-symbol" style="color:${color};">${escapeHtml(symbol)}</div>
-                <h2 class="detail-title">${escapeHtml(title)}</h2>
-                <div class="axis-line" style="color:${color};">${escapeHtml(data?.eje ?? "")}</div>
-              </div>
-              ${renderScoreBox(points, percentage, color)}
-            </div>
-
-            <div class="section-block">
-              <div class="section-title">Resumen neurocognitivo</div>
-              <p class="paragraph">${escapeHtml(data?.resumen ?? rd.reportSummary ?? "")}</p>
-              <ul class="detail-list">
-                <li>${escapeHtml(data?.detalle ?? rd.reportSummary ?? "")}</li>
-              </ul>
-            </div>
-
-            <div class="section-block">
-              <div class="section-title">Ámbitos profesionales</div>
-              <ul class="ambitos-list">${ambitos}</ul>
-            </div>
-
-            <div class="section-block">
-              <div class="section-title">Batería y orientación</div>
-              <div class="orientation-row">
-                <div class="orientation-pill">${points} · Batería 15</div>
-                <div class="orientation-pill muted-pill">${percentage}%</div>
-                <div class="orientation-pill role-pill">${escapeHtml(role)}</div>
-              </div>
-            </div>
-          </article>`;
-        })
-        .join("");
-
-      return `<section class="page"><div class="page-inner detail-page">${sections}</div></section>`;
-    })
-    .join("");
-
-  const softSkillsPage = generateSoftSkillsPage(sorted, symbolMap);
-
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>${escapeHtml(userName)} - Informe ${modelLabel}</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; color: #111827; background: #f3f4f6; }
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page {
-      width: 794px;
-      min-height: 1123px;
-      margin: 0 auto;
-      background: #ffffff;
-      page-break-after: always;
-      break-after: page;
-      overflow: hidden;
-      position: relative;
-    }
-    .page:last-child { page-break-after: auto; break-after: auto; }
-    .page-inner { padding: 48px 52px; }
-    .cover-page { padding-top: 42px; }
-    .top-meta { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; border-bottom: 4px solid #111827; padding-bottom: 14px; }
-    .cover-title { font-size: 26px; line-height: 1.05; margin: 0; font-weight: 800; letter-spacing: -0.02em; }
-    .cover-user { margin-top: 10px; font-size: 18px; font-weight: 700; }
-    .cover-subtitle, .cover-date, .cover-note { margin-top: 6px; font-size: 14px; color: #4b5563; }
-    .cover-tag { font-size: 14px; color: #6b7280; font-weight: 600; padding-top: 6px; }
-    .cover-layout { display: flex; gap: 28px; margin-top: 24px; align-items: flex-start; }
-    .cover-map-card { flex: 1 1 52%; }
-    .cover-map-inner { border: 1px solid #e5e7eb; border-radius: 18px; padding: 18px 14px; background: #ffffff; display: flex; justify-content: center; }
-    .cover-map-inner svg { width: 100%; max-width: 420px; height: auto; }
-    .map-caption { margin-top: 12px; font-size: 13px; line-height: 1.45; color: #374151; border-top: 6px solid #7b2d8b; padding-top: 10px; }
-    .cover-side { width: 43%; }
-    .profile-card, .bars-card, .intro-card { border: 1px solid #d1d5db; border-radius: 14px; padding: 18px; background: #ffffff; }
-    .bars-card { margin-top: 18px; }
-    .eyebrow { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 10px; }
-    h2 { font-size: 16px; line-height: 1.2; margin: 0; font-weight: 800; }
-    .axis-line { font-size: 12px; line-height: 1.35; font-weight: 700; text-transform: uppercase; }
-    .bullet-line { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; font-size: 13px; line-height: 1.45; color: #374151; }
-    .bullet-dot { color: #dc2626; font-weight: 800; }
-    .role-box { margin-top: 16px; border: 2px solid #dc2626; border-radius: 12px; padding: 12px; background: #fff8f8; }
-    .role-label { font-size: 11px; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.12em; }
-    .role-value { margin-top: 8px; font-size: 14px; line-height: 1.35; color: #374151; font-weight: 700; }
-    .cover-axis-group + .cover-axis-group { margin-top: 14px; }
-    .cover-axis-title { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; color: #4b5563; text-transform: uppercase; margin-bottom: 8px; }
-    .cover-bar-row + .cover-bar-row { margin-top: 10px; }
-    .cover-bar-label { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 700; color: #374151; line-height: 1.3; }
-    .cover-symbol { width: 18px; text-align: center; color: #111827; }
-    .cover-bar-scale { display: flex; justify-content: space-between; font-size: 10px; color: #9ca3af; margin: 4px 0 4px 26px; }
-    .cover-bar-track { margin-left: 26px; height: 10px; background: #d1d5db; border-radius: 999px; overflow: hidden; }
-    .cover-bar-fill { height: 100%; border-radius: 999px; }
-    .detail-page { padding-top: 36px; }
-    .detail-section { padding: 4px 0 24px; }
-    .detail-section + .detail-section { border-top: 1px solid #e5e7eb; padding-top: 30px; }
-    .detail-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
-    .detail-symbol { font-size: 28px; line-height: 1; font-weight: 800; margin-bottom: 8px; }
-    .detail-title { font-size: 22px; line-height: 1.15; margin: 0; font-weight: 800; }
-    .section-block { margin-top: 20px; }
-    .section-title { font-size: 16px; line-height: 1.2; margin-bottom: 8px; font-weight: 800; }
-    .paragraph { font-size: 13px; line-height: 1.62; color: #6b7280; margin: 0; }
-    .detail-list, .ambitos-list { margin: 12px 0 0 0; padding-left: 24px; }
-    .detail-list li, .ambitos-list li { font-size: 14px; line-height: 1.72; color: #111827; margin-bottom: 6px; }
-    .ambitos-list li { color: #6b7280; }
-    .orientation-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .orientation-pill { display: inline-flex; align-items: center; min-height: 34px; padding: 7px 12px; background: #111827; color: #ffffff; border-radius: 999px; font-size: 13px; font-weight: 700; }
-    .muted-pill { background: #f3f4f6; color: #111827; }
-    .role-pill { background: #fef2f2; color: #991b1b; }
-    .matrix-wrap { border: 1px solid #d1d5db; border-radius: 16px; overflow: hidden; }
-    .matrix-table { width: 100%; border-collapse: collapse; }
-    .matrix-table thead th { padding: 14px 10px; background: #f3f4f6; border: 1px solid #d1d5db; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: #374151; }
-    .intro-card p { margin: 0; font-size: 14px; line-height: 1.6; color: #374151; }
-  </style>
-</head>
-<body>
-  ${coverPage}
-  ${detailPages}
-  ${softSkillsPage}
-</body>
-</html>`;
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:Arial,Helvetica,sans-serif; background:#fff; color:#111; }
+  .report-page { width:1000px; min-height:707px; padding:28px 34px; page-break-after:always; background:#fff; overflow:hidden; }
+  .report-page:last-child { page-break-after:auto; }
+  ul li { margin-bottom:4px; }
+  table tbody tr:nth-child(even) { background:#fcfcfd; }
+  table tbody tr td { border-top:1px solid #eef2f7; }
+</style>
+</head><body>
+  ${generateMapPageHTML(ranked, modelType, userName, summaryText)}
+  ${sectionPages.join("")}
+  ${generateSoftSkillsPageHTML(ranked, modelType)}
+</body></html>`;
 }
-
 function runHtml2Pdf(
   htmlContent: string,
   fileName: string,
   pageFormat: [number, number],
-  zip?: JSZip,
+  zip?: JSZip
 ): Promise<void> {
   return new Promise((resolve) => {
-    if (typeof window === "undefined") {
-      resolve();
-      return;
-    }
-
+    if (typeof window === "undefined") { resolve(); return; }
     const html2pdf = (window as unknown as { html2pdf?: Html2PdfFn }).html2pdf;
-    if (!html2pdf) {
-      if (!zip) window.print();
-      resolve();
-      return;
-    }
+    if (!html2pdf) { if (!zip) window.print(); resolve(); return; }
 
     const container = document.createElement("div");
-    container.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${pageFormat[0]}px;background:#fff;`;
+    container.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:" + pageFormat[0] + "px;";
     document.body.appendChild(container);
 
     const iframe = document.createElement("iframe");
-    iframe.style.cssText = `width:${pageFormat[0]}px;height:${pageFormat[1]}px;border:none;background:#fff;`;
+    iframe.style.cssText = `width:${pageFormat[0]}px;height:${pageFormat[1]}px;border:none;`;
     container.appendChild(iframe);
 
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!iframeDoc) {
-      document.body.removeChild(container);
-      resolve();
-      return;
-    }
+    if (!iframeDoc) { document.body.removeChild(container); resolve(); return; }
 
-    iframeDoc.open();
-    iframeDoc.write(htmlContent);
-    iframeDoc.close();
+    iframeDoc.open(); iframeDoc.write(htmlContent); iframeDoc.close();
 
     setTimeout(() => {
       const target = iframeDoc.body as HTMLElement;
@@ -748,44 +606,22 @@ function runHtml2Pdf(
           margin: 0,
           filename: fileName,
           image: { type: "jpeg", quality: 0.98 },
-          pagebreak: { mode: ["css", "legacy"] },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff",
-            scrollX: 0,
-            scrollY: 0,
-          },
-          jsPDF: { unit: "px", format: pageFormat, orientation: pageFormat[0] > pageFormat[1] ? "landscape" : "portrait" },
+          html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+          pagebreak: { mode: ['css', 'legacy'] },
+          jsPDF: { unit: "px", format: pageFormat, orientation: "landscape" },
         })
         .from(target);
 
       if (zip) {
-        instance
-          .output("blob")
-          .then((blob: Blob) => {
-            zip.file(fileName, blob);
-            document.body.removeChild(container);
-            resolve();
-          })
-          .catch(() => {
-            document.body.removeChild(container);
-            resolve();
-          });
+        instance.output("blob")
+          .then((blob: Blob) => { zip.file(fileName, blob); document.body.removeChild(container); resolve(); })
+          .catch(() => { document.body.removeChild(container); resolve(); });
       } else {
-        instance
-          .save()
-          .then(() => {
-            document.body.removeChild(container);
-            resolve();
-          })
-          .catch(() => {
-            document.body.removeChild(container);
-            resolve();
-          });
+        instance.save()
+          .then(() => { document.body.removeChild(container); resolve(); })
+          .catch(() => { document.body.removeChild(container); resolve(); });
       }
-    }, 700);
+    }, 400);
   });
 }
 
@@ -795,9 +631,9 @@ export function exportTalentModelPDF(
   userName: string,
   zip?: JSZip,
   summaryText?: string,
-  meta?: ExportProfileMeta,
+  meta?: ExportProfileMeta
 ): Promise<void> {
-  const html = generatePDFHTML(ranked, modelType, userName, summaryText, meta);
+  const html     = generatePDFHTML(ranked, modelType, userName, summaryText, meta);
   const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "talentos" : "neurotalentos"}.pdf`;
   return runHtml2Pdf(html, fileName, [1000, 707], zip);
 }
@@ -806,12 +642,9 @@ export function exportInformePDF(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
-  summaryText?: string,
-  meta?: ExportProfileMeta,
+  summaryText?: string
 ): Promise<void> {
-  const html = generateInformeHTML(ranked, modelType, userName, summaryText, meta);
-  const suffix = modelType === "genotipo" ? "informe-talentos" : "informe-neurotalentos";
-  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${suffix}.pdf`;
-  return runHtml2Pdf(html, fileName, [794, 1123], undefined);
+  const html     = generateInformeHTML(ranked, modelType, userName, summaryText);
+  const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}informe-${modelType}.pdf`;
+  return runHtml2Pdf(html, fileName, [841, 595], undefined);
 }
-
