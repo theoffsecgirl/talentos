@@ -742,13 +742,44 @@ export function exportTalentModelPDF(
   return runHtml2Pdf(html, fileName, [1000, 707], zip);
 }
 
-export function exportInformePDF(
+export async function exportInformePDF(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
   summaryText?: string,
 ): Promise<void> {
-  const html = generateInformeHTML(ranked, modelType, userName, summaryText);
+  if (typeof window === "undefined") return;
+
+  const scores = Object.fromEntries(
+    ranked
+      .map((rd) => [ID_TO_KEY[rd.id], getPercent(rd)] as const)
+      .filter((entry): entry is readonly [string, number] => Boolean(entry[0])),
+  );
+
+  const res = await fetch("/api/generate-informe-pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nombre: userName || "Resultado",
+      scores,
+      textoResumen: summaryText || "",
+      modelo: modelType,
+      fecha: new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" }),
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error("No se pudo generar el informe PDF");
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
   const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}informe-${modelType}.pdf`;
-  return runHtml2Pdf(html, fileName, [794, 1123], undefined, { orientation: "portrait", useA4: true });
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }
