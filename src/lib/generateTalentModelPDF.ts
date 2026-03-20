@@ -246,7 +246,7 @@ function generatePDFHTML(
   const roleCards = [
     `<div style="margin-top:8px;border:2px solid #CC0000;border-radius:5px;padding:6px;background:#fff3f3;">
         <div style="font-size:7px;font-weight:700;color:#CC0000;letter-spacing:0.5px;margin-bottom:2px;">ROL SUGERIDO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${topRole || "No indicado"}</div>
+        <div style="font-size:8px;color:#333;line-height:1.3;">${topRole || "No indicado"}</div>
       </div>`,
   ].join("");
 
@@ -367,17 +367,17 @@ function generateMapPageHTML(
   const bulletItems = competencies.map(c => `
     <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:7px;">
       <span style="color:#CC0000;font-weight:bold;flex-shrink:0;font-size:10px;line-height:1.1;">•</span>
-      <span style="font-size:9px;color:#333;line-height:1.35;">${c}</span>
+      <span style="font-size:8px;color:#333;line-height:1.3;">${c}</span>
     </div>`).join("");
 
   const profileSection = `
-    <div style="background:#fafafa;border:1px solid #d9d9d9;border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+    <div style="background:#fafafa;border:1px solid #d9d9d9;border-radius:12px;padding:10px 12px;margin-bottom:10px;">
       <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:1.6px;margin-bottom:8px;">PERFIL PROFESIONAL</div>
-      <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:10px;text-transform:uppercase;line-height:1.2;">${profileTitle}</div>
+      <div style="font-size:14px;font-weight:800;color:#111;margin-bottom:10px;text-transform:uppercase;line-height:1.2;">${profileTitle}</div>
       ${bulletItems}
       <div style="margin-top:12px;border:2px solid #CC0000;border-radius:8px;padding:6px 8px;background:#fff7f7;">
         <div style="font-size:9px;font-weight:800;color:#CC0000;letter-spacing:1.2px;margin-bottom:4px;">ROL SUGERIDO</div>
-        <div style="font-size:9px;color:#333;line-height:1.35;">${topRole || "No indicado"}</div>
+        <div style="font-size:8px;color:#333;line-height:1.3;">${topRole || "No indicado"}</div>
       </div>
     </div>`;
 
@@ -402,20 +402,20 @@ function generateMapPageHTML(
   <section class="report-page landscape-page map-page">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:12px;border-bottom:3px solid #111;">
       <div>
-        <div style="font-size:20px;font-weight:900;color:#111;line-height:1;">MAPA DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
-        <div style="font-size:12px;color:#666;margin-top:6px;">${userName ? `${userName} — ` : ""}${modelLabel}</div>
+        <div style="font-size:18px;font-weight:900;color:#111;line-height:1;">MAPA DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
+        <div style="font-size:11px;color:#666;margin-top:5px;">${userName ? `${userName} — ` : ""}${modelLabel}</div>
       </div>
-      <div style="font-size:11px;color:#888;font-weight:700;">Basado en neurociencia aplicada</div>
+      <div style="font-size:10px;color:#888;font-weight:700;">Basado en neurociencia aplicada</div>
     </div>
 
     <div style="display:grid;grid-template-columns: 1.08fr 0.92fr;gap:18px;align-items:start;">
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
-        <div style="width:100%;display:flex;justify-content:center;transform:scale(0.86);transform-origin:top center;">${svgContent}</div>
+        <div style="width:100%;display:flex;justify-content:center;transform:scale(0.78);transform-origin:top center;">${svgContent}</div>
         ${summaryBanner}
       </div>
       <div>
         ${profileSection}
-        <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px 14px;">
+        <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:10px 12px;">
           ${talentListRows}
         </div>
       </div>
@@ -434,38 +434,36 @@ function generateTalentSectionHTML(
   const name = TALENT_NAMES[key] ?? rd?.reportTitle ?? rd?.quizTitle ?? key;
   const data = NEUROCOGNITIVE_DATA[key];
   const scoreValue = scoreToDisplay(rd);
-  const percentage = scoreToPercentage(rd);
   const batteryRow = generateBatteryRowForKey(key, rd, modelType, { compact: false, highlight: true });
   const ambitos = data.ambitos.map(a => `<li>${a}</li>`).join("");
   const bullets = (data.perfilPuntos ?? []).map(p => `<li>${p}</li>`).join("");
 
   return `
-    <section style="border:1px solid #e5e7eb;border-radius:14px;padding:16px 18px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.03);break-inside:avoid;">
-      <div style="display:grid;grid-template-columns: 96px 1fr 220px;gap:14px;align-items:start;">
+    <section style="border:1px solid #e5e7eb;border-radius:14px;padding:14px 16px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.03);break-inside:avoid;">
+      <div style="display:grid;grid-template-columns: 84px 1fr 198px;gap:12px;align-items:start;">
         <div>
-          <div style="font-size:28px;font-weight:800;color:${color};line-height:1;">${symbol}</div>
-          <div style="font-size:10px;font-weight:700;color:#777;letter-spacing:1.2px;margin-top:10px;text-transform:uppercase;">Puntuación</div>
-          <div style="font-size:40px;font-weight:900;color:${color};line-height:1;margin-top:2px;">${scoreValue}</div>
-          <div style="font-size:12px;color:#666;font-weight:700;margin-top:4px;">${percentage}%</div>
-        </div>
+          <div style="font-size:24px;font-weight:800;color:${color};line-height:1;">${symbol}</div>
+          <div style="font-size:9px;font-weight:700;color:#777;letter-spacing:1.1px;margin-top:8px;text-transform:uppercase;">Puntuación</div>
+          <div style="font-size:34px;font-weight:900;color:${color};line-height:1;margin-top:2px;">${scoreValue}</div>
+                  </div>
 
         <div>
-          <div style="font-size:22px;font-weight:900;color:#111;line-height:1.15;">${name}</div>
-          <div style="font-size:12px;font-weight:800;color:${color};letter-spacing:.8px;text-transform:uppercase;margin-top:8px;">${data.eje}</div>
+          <div style="font-size:20px;font-weight:900;color:#111;line-height:1.15;">${name}</div>
+          <div style="font-size:11px;font-weight:800;color:${color};letter-spacing:.8px;text-transform:uppercase;margin-top:8px;">${data.eje}</div>
           <div style="font-size:11px;font-weight:800;color:#111;margin-top:14px;">Resumen neurocognitivo</div>
-          <div style="font-size:11px;color:#5f6b7a;line-height:1.42;margin-top:5px;">${data.resumen}</div>
-          <ul style="margin:12px 0 0 18px;font-size:11px;color:#222;line-height:1.42;">${bullets}</ul>
+          <div style="font-size:10px;color:#5f6b7a;line-height:1.4;margin-top:5px;">${data.resumen}</div>
+          <ul style="margin:10px 0 0 16px;font-size:10px;color:#222;line-height:1.42;">${bullets}</ul>
           <div style="font-size:11px;font-weight:800;color:#111;margin-top:18px;">Ámbitos profesionales</div>
-          <ul style="margin:8px 0 0 18px;font-size:11px;color:#5f6b7a;line-height:1.42;">${ambitos}</ul>
+          <ul style="margin:7px 0 0 16px;font-size:10px;color:#5f6b7a;line-height:1.42;">${ambitos}</ul>
           <div style="font-size:11px;font-weight:800;color:#111;margin-top:18px;">Rol sugerido</div>
-          <div style="font-size:11px;color:#222;line-height:1.4;margin-top:5px;">${data.rol}</div>
+          <div style="font-size:10px;color:#222;line-height:1.38;margin-top:5px;">${data.rol}</div>
         </div>
 
         <div>
           <div style="font-size:10px;font-weight:800;color:#777;letter-spacing:1.1px;text-transform:uppercase;margin-bottom:6px;">Batería correspondiente</div>
           ${batteryRow}
           <div style="font-size:10px;font-weight:800;color:#777;letter-spacing:1.1px;text-transform:uppercase;margin-top:14px;">Orientación</div>
-          <div style="margin-top:8px;border-left:3px solid ${color};padding-left:8px;font-size:11px;color:#4b5563;line-height:1.42;">${data.detalle}</div>
+          <div style="margin-top:8px;border-left:3px solid ${color};padding-left:8px;font-size:10px;color:#4b5563;line-height:1.38;">${data.detalle}</div>
         </div>
       </div>
     </section>`;
@@ -489,26 +487,25 @@ function generateSoftSkillsPageHTML(
     .sort((a, b) => b.percentage - a.percentage);
 
   const rowsHtml = activeRows.length > 0
-    ? activeRows.map(({ key, rd, percentage }) => {
+    ? activeRows.map(({ key, rd }) => {
         const title = TALENT_NAMES[key] ?? rd?.reportTitle ?? rd?.quizTitle ?? key;
         const symbol = symMap[key] ?? "?";
         const skills = genericSoftMap[key] ?? [];
-        const checks = columns.map(col => `<td style="text-align:center;padding:10px 8px;font-size:14px;font-weight:800;color:${skills.includes(col) ? '#111' : '#cbd5e1'};">${skills.includes(col) ? 'X' : '—'}</td>`).join("");
+        const checks = columns.map(col => `<td style="text-align:center;padding:8px 8px;font-size:13px;font-weight:800;color:${skills.includes(col) ? '#111' : '#cbd5e1'};">${skills.includes(col) ? 'X' : '—'}</td>`).join("");
         return `<tr>
-          <td style="padding:10px 10px;font-size:14px;font-weight:800;color:#111;width:40px;text-align:center;">${symbol}</td>
-          <td style="padding:10px 12px;font-size:12px;font-weight:700;color:#222;">${title}</td>
-          <td style="padding:12px 10px;font-size:12px;font-weight:800;color:#dc2626;text-align:center;width:76px;">${percentage}%</td>
+          <td style="padding:8px 10px;font-size:13px;font-weight:800;color:#111;width:40px;text-align:center;">${symbol}</td>
+          <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#222;">${title}</td>
           ${checks}
         </tr>`;
       }).join("")
-    : `<tr><td colspan="7" style="padding:20px;font-size:14px;color:#666;text-align:center;">No hay baterías por encima del 67% para mostrar soft skills destacadas.</td></tr>`;
+    : `<tr><td colspan="6" style="padding:20px;font-size:14px;color:#666;text-align:center;">No hay baterías destacadas para mostrar soft skills.</td></tr>`;
 
   return `
     <section class="report-page landscape-page softskills-page">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;">
         <div>
-          <div style="font-size:22px;font-weight:900;color:#111;line-height:1;">SOFT SKILLS DESTACADAS</div>
-          <div style="font-size:12px;color:#666;margin-top:6px;">Solo se muestran las baterías con puntuación superior al 67%.</div>
+          <div style="font-size:20px;font-weight:900;color:#111;line-height:1;">SOFT SKILLS DESTACADAS</div>
+          <div style="font-size:11px;color:#666;margin-top:5px;">Solo se muestran las baterías destacadas.</div>
         </div>
         <div style="font-size:10px;font-weight:700;color:#888;">Matriz final del informe</div>
       </div>
@@ -519,7 +516,6 @@ function generateSoftSkillsPageHTML(
             <tr style="background:#f8fafc;">
               <th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;width:40px;"></th>
               <th style="padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:11px;letter-spacing:.8px;color:#6b7280;text-transform:uppercase;">Batería</th>
-              <th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:11px;letter-spacing:.8px;color:#6b7280;text-transform:uppercase;">%</th>
               ${columns.map(col => `<th style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:11px;letter-spacing:.8px;color:#6b7280;text-transform:uppercase;">${col}</th>`).join("")}
             </tr>
           </thead>
@@ -550,10 +546,10 @@ function generateInformeHTML(
       <section class="report-page landscape-page">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
           <div>
-            <div style="font-size:20px;font-weight:900;color:#111;line-height:1;">INFORME DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
-            <div style="font-size:12px;color:#666;margin-top:6px;">${userName}</div>
+            <div style="font-size:18px;font-weight:900;color:#111;line-height:1;">INFORME DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
+            <div style="font-size:11px;color:#666;margin-top:5px;">${userName}</div>
           </div>
-          <div style="font-size:10px;color:#888;font-weight:700;">Baterías ordenadas por puntuación</div>
+          <div style="font-size:9px;color:#888;font-weight:700;">Baterías ordenadas por puntuación</div>
         </div>
         ${sections}
       </section>`);
@@ -563,7 +559,7 @@ function generateInformeHTML(
 <style>
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:Arial,Helvetica,sans-serif; background:#fff; color:#111; }
-  .report-page { width:1000px; min-height:707px; padding:20px 24px; page-break-after:always; background:#fff; overflow:hidden; }
+  .report-page { width:980px; min-height:694px; padding:18px 22px; page-break-after:always; background:#fff; overflow:hidden; }
   .report-page:last-child { page-break-after:auto; }
   ul li { margin-bottom:4px; }
   table tbody tr:nth-child(even) { background:#fcfcfd; }
