@@ -71,11 +71,11 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   left: {
-    width: '55%',
+    width: '60%',
     paddingRight: 10,
   },
   right: {
-    width: '45%',
+    width: '40%',
     paddingLeft: 10,
   },
   card: {
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   mapCard: {
     padding: 18,
-    minHeight: 448,
+    minHeight: 476,
   },
   sectionTitle: {
     fontSize: 10,
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   mapWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 322,
+    minHeight: 360,
   },
   summaryBanner: {
     backgroundColor: '#0F172A',
@@ -354,7 +354,7 @@ function svgToDataUri(svg: string) {
 
 function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
   const src = svgToDataUri(buildCoverWheelSvg(modelo, scores))
-  return <Image src={src} style={{ width: 360, height: 360 }} />
+  return <Image src={src} style={{ width: 392, height: 392 }} />
 }
 
 function BatteryBar({ value }: { value: number }) {
