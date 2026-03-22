@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import React from 'react'
-import { InformePDF } from '../../../components/pdf/InformePDF'
+import { InformePDF } from '../../../src/components/pdf/InformePDF'
 
 export const runtime = 'nodejs'
 
