@@ -1,287 +1,376 @@
 import React from 'react'
-import { Document, Page, View, Text, Svg, Circle, Path, StyleSheet } from '@react-pdf/renderer'
-import { TALENT_COLORS, SYMBOLS_GENOTIPO, EJES, TALENT_NAMES, NEUROCOGNITIVE_DATA } from '../../lib/pdf-data'
+import { Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer'
+import {
+  TALENT_COLORS,
+  SYMBOLS_GENOTIPO,
+  SYMBOLS_NEUROTALENTO,
+  EJES,
+  TALENT_NAMES,
+  NEUROCOGNITIVE_DATA,
+} from '../../lib/pdf-data'
 
-const BG = '#0B0B1A'
-const BG2 = '#0F0F20'
-const BORDER = '#1E1E36'
-const MUTED = '#6B7280'
-const GRID = '#2A2A45'
-const RADAR_FILL = '#D1D5DB'
-const RADAR_STROKE = '#F3F4F6'
-const SYMBOL_COLOR = '#E5E7EB'
-const SCORE_COLOR = '#F9FAFB'
-const BAR_RED = '#DC2626'
-const BAR_DARK = '#111111'
+const PAGE_BG = '#F3F5F9'
+const CARD_BG = '#FFFFFF'
+const TEXT = '#152033'
+const MUTED = '#617086'
+const BORDER = '#DCE3ED'
+const RED = '#C81E1E'
+const ID_ORDER = ['gestion', 'estrategia', 'imaginacion', 'profundo', 'aplicado', 'empatico', 'analitico', 'acompanamiento'] as const
+
+type TalentKey = keyof typeof TALENT_NAMES
+
+const RANK_PRIORITY = ['estrategia', 'analitico', 'acompanamiento', 'gestion', 'empatico', 'imaginacion', 'profundo', 'aplicado'] as const
+const RANK_INDEX = RANK_PRIORITY.reduce((acc, key, index) => {
+  acc[key as TalentKey] = index
+  return acc
+}, {} as Record<TalentKey, number>)
 
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'row',
-    backgroundColor: BG,
-    width: 841.89,
-    height: 595.28,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    backgroundColor: PAGE_BG,
+    paddingTop: 22,
+    paddingBottom: 22,
+    paddingHorizontal: 24,
+    color: TEXT,
+    fontFamily: 'Helvetica',
   },
-  colLeft: {
-    width: '39%',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 14,
+  },
+  eyebrow: {
+    fontSize: 9,
+    color: MUTED,
+    letterSpacing: 1.5,
+    fontWeight: 700,
+    marginBottom: 6,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 800,
+    color: TEXT,
+  },
+  name: {
+    fontSize: 13,
+    color: MUTED,
+    marginTop: 6,
+  },
+  chip: {
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    fontSize: 9,
+    color: MUTED,
+  },
+  body: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  left: {
+    width: '55%',
+    paddingRight: 10,
+  },
+  right: {
+    width: '45%',
+    paddingLeft: 10,
+  },
+  card: {
+    backgroundColor: CARD_BG,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 18,
+  },
+  mapCard: {
+    padding: 18,
+    minHeight: 448,
+  },
+  sectionTitle: {
+    fontSize: 10,
+    color: MUTED,
+    fontWeight: 800,
+    letterSpacing: 1.2,
+    marginBottom: 12,
+  },
+  mapWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 10,
-    paddingBottom: 10,
-    paddingHorizontal: 10,
+    minHeight: 322,
   },
-  colRight: {
-    width: '61%',
-    backgroundColor: BG2,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
+  summaryBanner: {
+    backgroundColor: '#0F172A',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 10,
   },
-  mapaTitle: {
-    color: MUTED,
-    fontSize: 6.4,
-    letterSpacing: 2.4,
-    marginBottom: 8,
-    textTransform: 'uppercase',
+  summaryText: {
+    color: '#F8FAFC',
+    fontSize: 9,
+    lineHeight: 1.45,
+    textAlign: 'center',
   },
-  mapaSubtitle: {
-    color: '#4B5563',
-    fontSize: 5.5,
-    marginTop: 6,
-    letterSpacing: 0.8,
+  sideCard: {
+    padding: 18,
+    marginBottom: 12,
   },
-  headerNombre: {
-    color: '#FFFFFF',
-    fontSize: 14.5,
-    fontWeight: 'bold',
-    letterSpacing: 1.2,
-  },
-  headerModelo: {
-    color: '#6B7280',
-    fontSize: 6,
-    letterSpacing: 2.2,
-    marginTop: 2,
-  },
-  perfilBox: {
-    backgroundColor: '#13132A',
-    borderRadius: 8,
-    padding: 10,
-    borderLeftWidth: 3,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  perfilTitulo: {
-    color: '#FFFFFF',
-    fontSize: 8.2,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  perfilItem: {
-    color: '#C7CED8',
-    fontSize: 6.0,
-    marginBottom: 2,
-    lineHeight: 1.35,
-  },
-  rolesRow: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 6,
-  },
-  rolBox: {
-    backgroundColor: '#1A1A30',
-    borderRadius: 5,
-    padding: 6,
-    flex: 1,
-    minHeight: 30,
-  },
-  rolLabel: {
-    color: '#6B7280',
-    fontSize: 5.3,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
-  rolText: {
-    color: '#E5E7EB',
-    fontSize: 6.2,
-    marginTop: 2,
+  profileName: {
+    fontSize: 18,
+    color: TEXT,
+    fontWeight: 800,
     lineHeight: 1.2,
+    marginBottom: 8,
   },
-  ejesGrid: {
+  profileRole: {
+    fontSize: 11,
+    color: MUTED,
+    lineHeight: 1.35,
+    marginBottom: 12,
+  },
+  bulletRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 2,
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  bulletDot: {
+    width: 10,
+    fontSize: 10,
+    color: RED,
+    fontWeight: 800,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 9,
+    lineHeight: 1.4,
+    color: TEXT,
+  },
+  batteryCard: {
+    padding: 18,
+  },
+  axisTitle: {
+    fontSize: 8.5,
+    color: MUTED,
+    fontWeight: 800,
+    letterSpacing: 1,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+    paddingBottom: 5,
+  },
+  axisBlock: {
+    marginBottom: 10,
+  },
+  batteryRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  batterySymbol: {
+    width: 18,
+    fontSize: 14,
+    fontWeight: 700,
+    color: TEXT,
+    textAlign: 'center',
+    marginTop: 1,
+  },
+  batteryValue: {
+    width: 24,
+    fontSize: 10,
+    fontWeight: 800,
+    color: TEXT,
+    textAlign: 'right',
+    marginRight: 8,
     marginTop: 2,
   },
-  ejeBlock: {
-    width: '48.5%',
-    marginBottom: 4,
+  batteryLabel: {
+    width: 124,
+    fontSize: 9,
+    lineHeight: 1.3,
+    fontWeight: 700,
+    color: TEXT,
+    paddingRight: 8,
   },
-  ejeLabel: {
-    color: '#7B8192',
-    fontSize: 5.0,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    marginBottom: 2.5,
+  batteryBarCol: {
+    flex: 1,
+    marginTop: 1,
   },
-  talentRow: {
+  barLabels: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 3,
   },
-  talentSymbol: {
-    fontSize: 7.0,
-    width: 12,
-    textAlign: 'center',
-    color: SYMBOL_COLOR,
+  barLabelText: {
+    fontSize: 7,
+    color: MUTED,
   },
-  talentScore: {
-    color: SCORE_COLOR,
-    fontSize: 5.8,
-    fontWeight: 'bold',
-    width: 18,
-    marginLeft: 2,
+  barTrack: {
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: '#D5DAE3',
+    overflow: 'hidden',
   },
-  talentName: {
-    color: '#C7CED8',
-    fontSize: 4.8,
-    width: 112,
-    lineHeight: 1.15,
-    marginRight: 4,
-  },
-  barBg: {
-    width: 50,
-    height: 3,
-    backgroundColor: BORDER,
-    borderRadius: 2,
-  },
-  resumenBox: {
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
-    paddingTop: 6,
-    marginTop: 4,
-  },
-  resumenLabel: {
-    color: '#6B7280',
-    fontSize: 5.3,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  resumenText: {
-    color: '#D1D5DB',
-    fontSize: 6.0,
-    lineHeight: 1.3,
+  barFillBase: {
+    height: 7,
+    borderRadius: 999,
   },
 })
 
-function BarTalent({ score }: { score: number }) {
-  const totalWidth = 50
-  const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0
-  const w = Math.max(1, (safeScore / 100) * totalWidth)
-  const color = safeScore > 67 ? BAR_RED : BAR_DARK
-  return (
-    <View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: totalWidth, marginBottom: 1.5 }}>
-        <Text style={{ color: MUTED, fontSize: 4.6 }}>0</Text>
-        <Text style={{ color: MUTED, fontSize: 4.6 }}>60</Text>
-        <Text style={{ color: MUTED, fontSize: 4.6 }}>100</Text>
-      </View>
-      <View style={styles.barBg}>
-        <View style={{ width: w, height: 3, backgroundColor: color, borderRadius: 2 }} />
-      </View>
-    </View>
-  )
+function clamp(n: number, min = 0, max = 100): number {
+  return Math.max(min, Math.min(max, Math.round(n || 0)))
 }
 
-function MapaSVG({ scores }: { scores: Record<string, number> }) {
-  const cx = 118
-  const cy = 118
-  const r = 82
-  const keys = ['gestion', 'estrategia', 'imaginacion', 'profundo', 'aplicado', 'empatico', 'analitico', 'acompanamiento']
-  const step = (2 * Math.PI) / keys.length
-  const toRad = (i: number) => i * step - Math.PI / 2
-  const levels = [0.2, 0.4, 0.6, 0.8, 1]
+function polarToCartesian(cx: number, cy: number, angle: number, r: number) {
+  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) }
+}
 
-  const points = keys.map((key, i) => {
-    const raw = Number(scores?.[key] ?? 0)
-    const valuePct = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0
-    const value = valuePct / 100
-    const angle = toRad(i)
-    const rv = r * value
+function createArcPath(cx: number, cy: number, startAngle: number, endAngle: number, outerR: number, innerR: number) {
+  const start = polarToCartesian(cx, cy, startAngle, outerR)
+  const end = polarToCartesian(cx, cy, endAngle, outerR)
+  const innerEnd = polarToCartesian(cx, cy, endAngle, innerR)
+  const innerStart = polarToCartesian(cx, cy, startAngle, innerR)
+  const laf = endAngle - startAngle > Math.PI ? 1 : 0
+  return [
+    `M ${start.x} ${start.y}`,
+    `A ${outerR} ${outerR} 0 ${laf} 1 ${end.x} ${end.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerR} ${innerR} 0 ${laf} 0 ${innerStart.x} ${innerStart.y}`,
+    'Z',
+  ].join(' ')
+}
+
+function splitLabel(title: string) {
+  if (title.includes(' y ')) {
+    const p = title.split(' y ')
+    if (p.length === 2) return [p[0] + ' y', p[1]]
+  }
+  if (title.includes(' e ')) {
+    const p = title.split(' e ')
+    if (p.length === 2) return [p[0] + ' e', p[1]]
+  }
+  const words = title.split(' ')
+  const mid = Math.ceil(words.length / 2)
+  return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')]
+}
+
+function escapeSvgText(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function sortTalentKeysByScore(scores: Record<string, number>): TalentKey[] {
+  return [...ID_ORDER].sort((a, b) => {
+    const diff = clamp(scores[b] ?? 0) - clamp(scores[a] ?? 0)
+    if (diff !== 0) return diff
+    return RANK_INDEX[a] - RANK_INDEX[b]
+  }) as TalentKey[]
+}
+
+function buildCoverWheelSvg(modelo: 'genotipo' | 'neurotalento', scores: Record<string, number>) {
+  const size = 640
+  const center = size / 2
+  const radius = 206
+  const innerRadius = 72
+  const step = (Math.PI * 2) / ID_ORDER.length
+  const symbols = modelo === 'genotipo' ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO
+
+  const sections = ID_ORDER.map((key, index) => {
+    const color = TALENT_COLORS[key]
+    const value = clamp(scores[key] ?? 0)
+    const fillPct = value / 100
+    const fillRadius = innerRadius + (radius - innerRadius) * fillPct
+    const startAngle = index * step - Math.PI / 2
+    const endAngle = startAngle + step
+    const mid = (startAngle + endAngle) / 2
+    const pctPos = polarToCartesian(center, center, mid, (fillRadius + innerRadius) / 2)
+    const labelPos = polarToCartesian(center, center, mid, radius + 40)
+    const [line1, line2] = splitLabel(TALENT_NAMES[key])
+
     return {
       key,
-      value: Math.round(valuePct),
-      x: cx + rv * Math.cos(angle),
-      y: cy + rv * Math.sin(angle),
-      labelX: cx + (rv + 10) * Math.cos(angle),
-      labelY: cy + (rv + 10) * Math.sin(angle),
+      color,
+      value,
+      symbol: symbols[key] ?? '',
+      pctPos,
+      labelPos,
+      line1,
+      line2,
+      fillPath: createArcPath(center, center, startAngle, endAngle, fillRadius, innerRadius),
+      outlinePath: createArcPath(center, center, startAngle, endAngle, radius, innerRadius),
+      gradientId: `cover-g-${key}`,
     }
   })
 
-  const radarPath = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-    .join(' ') + ' Z'
+  const diagonals = [1, 3, 5, 7]
+    .map((idx) => {
+      const angle = idx * step - Math.PI / 2
+      const outer = polarToCartesian(center, center, angle, radius)
+      return `<line x1="${center}" y1="${center}" x2="${outer.x.toFixed(2)}" y2="${outer.y.toFixed(2)}" stroke="#666666" stroke-width="1" stroke-dasharray="4 4" />`
+    })
+    .join('')
 
+  const defs = sections
+    .map((s) => `
+      <radialGradient id="${s.gradientId}" cx="50%" cy="50%">
+        <stop offset="0%" stop-color="${s.color}" stop-opacity="${Math.min((s.value / 100) * 1.2, 1).toFixed(3)}" />
+        <stop offset="${s.value.toFixed(2)}%" stop-color="${s.color}" stop-opacity="0.6" />
+        <stop offset="100%" stop-color="${s.color}" stop-opacity="0.1" />
+      </radialGradient>`)
+    .join('')
+
+  const sectorMarkup = sections
+    .map((s) => `
+      <g>
+        <path d="${s.fillPath}" fill="url(#${s.gradientId})" stroke="${s.color}" stroke-width="1" />
+        <path d="${s.outlinePath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3" />
+        ${s.value > 15 ? `<text x="${s.pctPos.x.toFixed(2)}" y="${s.pctPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="#FFFFFF" stroke="rgba(0,0,0,0.24)" stroke-width="2" paint-order="stroke">${s.value}</text>` : ''}
+        <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 12).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="${s.color}">${escapeSvgText(String(s.symbol))}</text>
+        <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 4).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333333">${escapeSvgText(s.line1)}</text>
+        ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333333">${escapeSvgText(s.line2)}</text>` : ''}
+      </g>`)
+    .join('')
+
+  const centerText = modelo === 'genotipo' ? 'Talentos' : 'Neurotalento'
+
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <defs>${defs}</defs>
+      <line x1="${center}" y1="${center - radius}" x2="${center}" y2="${center + radius}" stroke="#000000" stroke-width="2" />
+      <line x1="${center - radius}" y1="${center}" x2="${center + radius}" y2="${center}" stroke="#000000" stroke-width="2" />
+      ${diagonals}
+      ${sectorMarkup}
+      <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+      <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="#555555">${centerText}</text>
+    </svg>`
+}
+
+function svgToDataUri(svg: string) {
+  return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`
+}
+
+function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
+  const src = svgToDataUri(buildCoverWheelSvg(modelo, scores))
+  return <Image src={src} style={{ width: 360, height: 360 }} />
+}
+
+function BatteryBar({ value }: { value: number }) {
+  const pct = clamp(value)
+  const fillColor = pct > 67 ? RED : '#111111'
   return (
-    <Svg width={236} height={236} viewBox="0 0 236 236">
-      {levels.map((level, idx) => {
-        const ringPath = keys
-          .map((_, i) => {
-            const angle = toRad(i)
-            const x = cx + (r * level) * Math.cos(angle)
-            const y = cy + (r * level) * Math.sin(angle)
-            return `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
-          })
-          .join(' ') + ' Z'
-        return <Path key={`ring-${idx}`} d={ringPath} fill="none" stroke={GRID} strokeWidth={0.8} />
-      })}
-
-      {keys.map((_, i) => {
-        const angle = toRad(i)
-        return (
-          <Path
-            key={`axis-${i}`}
-            d={`M ${cx} ${cy} L ${(cx + r * Math.cos(angle)).toFixed(2)} ${(cy + r * Math.sin(angle)).toFixed(2)}`}
-            stroke={GRID}
-            strokeWidth={0.8}
-          />
-        )
-      })}
-
-      <Path d={radarPath} fill={RADAR_FILL} fillOpacity={0.32} stroke={RADAR_STROKE} strokeWidth={1.2} />
-
-      {points.map((p) => (
-        <Circle key={`point-${p.key}`} cx={p.x} cy={p.y} r={2.2} fill={RADAR_STROKE} />
-      ))}
-
-      {[0, 60, 100].map((tick, idx) => (
-        <Text
-          key={`tick-${tick}`}
-          style={{ color: MUTED, fontSize: 5.8 }}
-          x={cx + 4}
-          y={cy - (r * [0, 0.6, 1][idx]) + (idx === 0 ? -2 : 2)}
-        >
-          {String(tick)}
-        </Text>
-      ))}
-
-      {points.map((p) => (
-        <Text
-          key={`score-${p.key}`}
-          style={{ color: '#E5E7EB', fontSize: 5.4, fontWeight: 'bold' }}
-          x={p.labelX - 4}
-          y={p.labelY + 2}
-        >
-          {String(p.value)}
-        </Text>
-      ))}
-
-      <Circle cx={cx} cy={cy} r={3} fill="#FFFFFF" fillOpacity={0.55} />
-    </Svg>
+    <View style={styles.batteryBarCol}>
+      <View style={styles.barLabels}>
+        <Text style={styles.barLabelText}>0</Text>
+        <Text style={styles.barLabelText}>60</Text>
+        <Text style={styles.barLabelText}>100</Text>
+      </View>
+      <View style={styles.barTrack}>
+        <View style={[styles.barFillBase, { width: `${pct}%`, backgroundColor: fillColor }]} />
+      </View>
+    </View>
   )
 }
 
@@ -295,72 +384,89 @@ export interface MapaPDFProps {
 }
 
 export function MapaPDF({ modelo, nombre, scores, textoResumen, rolEscogido, rolPensado }: MapaPDFProps) {
-  const symbols: Record<string, string> = { ...SYMBOLS_GENOTIPO, analitico: '⬠' }
-  const titulo = modelo === 'genotipo' ? 'MAPA DE GENIOTIPOS' : 'MAPA DE NEUROTALENTOS'
-  const modelLabel = modelo === 'genotipo' ? 'GENIOTIPO' : 'NEUROTALENTO'
-  const dominante = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'gestion'
-  const dominanteData = NEUROCOGNITIVE_DATA[dominante]
-  const dominanteColor = TALENT_COLORS[dominante]
+  const symbols = modelo === 'genotipo' ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO
+  const winnerKey = sortTalentKeysByScore(scores)[0] as TalentKey
+  const winnerData = NEUROCOGNITIVE_DATA[winnerKey]
+  const winnerRole = winnerData?.rol ?? 'No indicado'
+  const bullets = (winnerData?.perfilPuntos ?? []).slice(0, 4)
+  const mapTitle = modelo === 'genotipo' ? 'Mapa de talentos' : 'Mapa de neurotalentos'
+  const batteryGroups = EJES.map((eje) => ({
+    label: eje.label,
+    rows: eje.keys.map((key) => ({
+      key: key as TalentKey,
+      symbol: symbols[key] ?? '',
+      value: clamp(scores[key] ?? 0),
+      label: TALENT_NAMES[key],
+    })),
+  }))
 
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
-        <View style={styles.colLeft}>
-          <Text style={styles.mapaTitle}>{titulo}</Text>
-          <MapaSVG scores={scores} />
-          <Text style={styles.mapaSubtitle}>Basado en neurociencia aplicada</Text>
+      <Page size="A4" orientation="landscape" style={styles.page} wrap={false}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.eyebrow}>Centro Educativo San Cristóbal-Castellón</Text>
+            <Text style={styles.title}>{mapTitle}</Text>
+            <Text style={styles.name}>{nombre}</Text>
+          </View>
+          <Text style={styles.chip}>Basado en neurociencia aplicada</Text>
         </View>
 
-        <View style={styles.colRight}>
-          <View>
-            <Text style={styles.headerNombre}>{nombre.toUpperCase()}</Text>
-            <Text style={styles.headerModelo}>Modelo {modelLabel}</Text>
-          </View>
-
-          <View style={[styles.perfilBox, { borderLeftColor: dominanteColor }]}>
-            <Text style={[styles.perfilTitulo, { color: dominanteColor }]}>{TALENT_NAMES[dominante].toUpperCase()}</Text>
-            {dominanteData?.perfilPuntos?.map((p, i) => (
-              <Text key={i} style={styles.perfilItem}>· {p}</Text>
-            ))}
-
-            <View style={styles.rolesRow}>
-              <View style={styles.rolBox}>
-                <Text style={styles.rolLabel}>Rol sugerido</Text>
-                <Text style={styles.rolText}>{dominanteData?.rol || 'No indicado'}</Text>
+        <View style={styles.body}>
+          <View style={styles.left}>
+            <View style={[styles.card, styles.mapCard]}>
+              <Text style={styles.sectionTitle}>Mapa principal</Text>
+              <View style={styles.mapWrap}>
+                <WheelGraphic modelo={modelo} scores={scores} />
               </View>
-              <View style={styles.rolBox}>
-                <Text style={styles.rolLabel}>Rol escogido</Text>
-                <Text style={styles.rolText}>{(rolEscogido && rolEscogido.trim()) || 'No indicado'}</Text>
-              </View>
-              <View style={styles.rolBox}>
-                <Text style={styles.rolLabel}>Rol pensado</Text>
-                <Text style={styles.rolText}>{(rolPensado && rolPensado.trim()) || 'No indicado'}</Text>
+              <View style={styles.summaryBanner}>
+                <Text style={styles.summaryText}>{textoResumen?.trim() || 'Síntesis general del perfil y de las baterías dominantes identificadas en la evaluación.'}</Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.ejesGrid}>
-            {EJES.map((eje) => (
-              <View key={eje.label} style={styles.ejeBlock}>
-                <Text style={styles.ejeLabel}>{eje.label}</Text>
-                {eje.keys.map((key) => (
-                  <View key={key} style={styles.talentRow}>
-                    <Text style={styles.talentSymbol}>{symbols[key] ?? ''}</Text>
-                    <Text style={styles.talentScore}>{Math.round(scores[key] ?? 0)}</Text>
-                    <Text style={styles.talentName}>{TALENT_NAMES[key] ?? key}</Text>
-                    <BarTalent score={scores[key] ?? 0} />
-                  </View>
-                ))}
-              </View>
-            ))}
-          </View>
-
-          {textoResumen ? (
-            <View style={styles.resumenBox}>
-              <Text style={styles.resumenLabel}>Observaciones del evaluador</Text>
-              <Text style={styles.resumenText}>{textoResumen}</Text>
+          <View style={styles.right}>
+            <View style={[styles.card, styles.sideCard]}>
+              <Text style={styles.sectionTitle}>Perfil profesional</Text>
+              <Text style={styles.profileName}>{TALENT_NAMES[winnerKey]}</Text>
+              <Text style={styles.profileRole}>{winnerRole}</Text>
+              {bullets.map((item, index) => (
+                <View key={`${winnerKey}-${index}`} style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>•</Text>
+                  <Text style={styles.bulletText}>{item}</Text>
+                </View>
+              ))}
+              {rolEscogido ? (
+                <View style={[styles.bulletRow, { marginTop: 6 }]}>
+                  <Text style={styles.bulletDot}>•</Text>
+                  <Text style={styles.bulletText}>Campo identificado: {rolEscogido}</Text>
+                </View>
+              ) : null}
+              {rolPensado ? (
+                <View style={styles.bulletRow}>
+                  <Text style={styles.bulletDot}>•</Text>
+                  <Text style={styles.bulletText}>Idea profesional: {rolPensado}</Text>
+                </View>
+              ) : null}
             </View>
-          ) : null}
+
+            <View style={[styles.card, styles.batteryCard]}>
+              <Text style={styles.sectionTitle}>Baterías destacadas</Text>
+              {batteryGroups.map((group) => (
+                <View key={group.label} style={styles.axisBlock}>
+                  <Text style={styles.axisTitle}>{group.label}</Text>
+                  {group.rows.map((row) => (
+                    <View key={row.key} style={styles.batteryRow}>
+                      <Text style={[styles.batterySymbol, { color: TALENT_COLORS[row.key] }]}>{row.symbol}</Text>
+                      <Text style={styles.batteryValue}>{row.value}</Text>
+                      <Text style={styles.batteryLabel}>{row.label}</Text>
+                      <BatteryBar value={row.value} />
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
       </Page>
     </Document>

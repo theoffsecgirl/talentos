@@ -1,5 +1,5 @@
 import React from 'react'
-import { Document, Page, View, Text, StyleSheet, Svg, Path, Circle, Line, Text as SvgText } from '@react-pdf/renderer'
+import { Document, Page, View, Text, StyleSheet, Svg, Path, Circle, Image, Text as SvgText } from '@react-pdf/renderer'
 import {
   TALENT_COLORS,
   SYMBOLS_GENOTIPO,
@@ -627,101 +627,98 @@ function BatteryBar({ value }: { value: number }) {
   )
 }
 
-function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
-  const baseSize = 640
-  const size = 360
-  const scale = size / baseSize
+function escapeSvgText(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function buildCoverWheelSvg(modelo: 'genotipo' | 'neurotalento', scores: Record<string, number>) {
+  const size = 640
   const center = size / 2
-  const radius = 206 * scale
-  const innerRadius = 72 * scale
+  const radius = 206
+  const innerRadius = 72
   const step = (Math.PI * 2) / ID_ORDER.length
-  const rectPath = (x: number, y: number, w: number, h: number) => `M ${x} ${y} H ${x + w} V ${y + h} H ${x} Z`
+  const symbols = modelo === 'genotipo' ? SYMBOLS_GENOTIPO : SYMBOLS_NEUROTALENTO
 
   const sections = ID_ORDER.map((key, index) => {
     const color = TALENT_COLORS[key]
     const value = clamp(scores[key] ?? 0)
-    const fillRadius = innerRadius + (radius - innerRadius) * (value / 100)
+    const fillPct = value / 100
+    const fillRadius = innerRadius + (radius - innerRadius) * fillPct
     const startAngle = index * step - Math.PI / 2
     const endAngle = startAngle + step
     const mid = (startAngle + endAngle) / 2
     const pctPos = polarToCartesian(center, center, mid, (fillRadius + innerRadius) / 2)
-    const labelPos = polarToCartesian(center, center, mid, radius + 26 * scale)
+    const labelPos = polarToCartesian(center, center, mid, radius + 40)
     const [line1, line2] = splitLabel(TALENT_NAMES[key])
-
-    const fillSteps = [1, 0.84, 0.68, 0.52].map((factor, fillIndex) => ({
-      key: `${key}-${fillIndex}`,
-      opacity: [0.18, 0.28, 0.4, 0.54][fillIndex],
-      d: createArcPath(
-        center,
-        center,
-        startAngle,
-        endAngle,
-        innerRadius + (fillRadius - innerRadius) * factor,
-        innerRadius,
-      ),
-    }))
 
     return {
       key,
       color,
       value,
+      symbol: symbols[key] ?? '',
       pctPos,
       labelPos,
       line1,
       line2,
+      fillPath: createArcPath(center, center, startAngle, endAngle, fillRadius, innerRadius),
       outlinePath: createArcPath(center, center, startAngle, endAngle, radius, innerRadius),
-      fillSteps,
+      gradientId: `cover-g-${key}`,
     }
   })
 
-  return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#000000" strokeWidth={1.15} />
-      <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#000000" strokeWidth={1.15} />
-      {[1, 3, 5, 7].map((idx) => {
-        const angle = idx * step - Math.PI / 2
-        const outer = polarToCartesian(center, center, angle, radius)
-        return <Line key={idx} x1={center} y1={center} x2={outer.x} y2={outer.y} stroke="#6B7280" strokeWidth={0.7} />
-      })}
-      {sections.map((s) => (
-        <React.Fragment key={s.key}>
-          <Path d={s.outlinePath} fill="none" stroke={hex2rgba(s.color, 0.3)} strokeWidth={1.15} />
-          {s.fillSteps.map((layer) => (
-            <Path key={layer.key} d={layer.d} fill={hex2rgba(s.color, layer.opacity)} />
-          ))}
-          {s.value > 15 ? (
-            <SvgText x={s.pctPos.x} y={s.pctPos.y + 3} textAnchor="middle" style={{ fontSize: 9, fontWeight: 800, fill: "#FFFFFF" }}>
-              {String(s.value)}
-            </SvgText>
-          ) : null}
-        </React.Fragment>
-      ))}
+  const diagonals = [1, 3, 5, 7]
+    .map((idx) => {
+      const angle = idx * step - Math.PI / 2
+      const outer = polarToCartesian(center, center, angle, radius)
+      return `<line x1="${center}" y1="${center}" x2="${outer.x.toFixed(2)}" y2="${outer.y.toFixed(2)}" stroke="#666666" stroke-width="1" stroke-dasharray="4 4" />`
+    })
+    .join('')
 
-      <Path d={rectPath(center - 70 * scale, 8 * scale, 140 * scale, 24 * scale)} fill="#FFFFFF" />
-      <Path d={rectPath(0, center - 12 * scale, 112 * scale, 24 * scale)} fill="#FFFFFF" />
-      <Path d={rectPath(size - 112 * scale, center - 12 * scale, 112 * scale, 24 * scale)} fill="#FFFFFF" />
-      <Path d={rectPath(center - 84 * scale, size - 34 * scale, 168 * scale, 26 * scale)} fill="#FFFFFF" />
+  const defs = sections
+    .map((s) => `
+      <radialGradient id="${s.gradientId}" cx="50%" cy="50%">
+        <stop offset="0%" stop-color="${s.color}" stop-opacity="${Math.min((s.value / 100) * 1.2, 1).toFixed(3)}" />
+        <stop offset="${s.value.toFixed(2)}%" stop-color="${s.color}" stop-opacity="0.6" />
+        <stop offset="100%" stop-color="${s.color}" stop-opacity="0.1" />
+      </radialGradient>`)
+    .join('')
 
-      {sections.map((s) => (
-        <React.Fragment key={`${s.key}-label`}>
-          <PositionedSymbol talentKey={s.key} modelo={modelo} color={s.color} size={8} x={s.labelPos.x} y={s.labelPos.y - 8 * scale} />
-          <SvgText x={s.labelPos.x} y={s.labelPos.y + 2 * scale} textAnchor="middle" style={{ fontSize: 5.6, fontWeight: 700, fill: "#111111" }}>
-            {s.line1}
-          </SvgText>
-          {s.line2 ? (
-            <SvgText x={s.labelPos.x} y={s.labelPos.y + 14 * scale} textAnchor="middle" style={{ fontSize: 5.6, fontWeight: 700, fill: "#111111" }}>
-              {s.line2}
-            </SvgText>
-          ) : null}
-        </React.Fragment>
-      ))}
+  const sectorMarkup = sections
+    .map((s) => `
+      <g>
+        <path d="${s.fillPath}" fill="url(#${s.gradientId})" stroke="${s.color}" stroke-width="1" />
+        <path d="${s.outlinePath}" fill="none" stroke="${s.color}" stroke-width="2" opacity="0.3" />
+        ${s.value > 15 ? `<text x="${s.pctPos.x.toFixed(2)}" y="${s.pctPos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="#FFFFFF" stroke="rgba(0,0,0,0.24)" stroke-width="2" paint-order="stroke">${s.value}</text>` : ''}
+        <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y - 12).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="${s.color}">${escapeSvgText(String(s.symbol))}</text>
+        <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 4).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333333">${escapeSvgText(s.line1)}</text>
+        ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 13).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="5.3" font-weight="600" fill="#333333">${escapeSvgText(s.line2)}</text>` : ''}
+      </g>`)
+    .join('')
 
-      <Circle cx={center} cy={center} r={innerRadius} fill="#FFFFFF" stroke="#000000" strokeWidth={1.15} />
-      <SvgText x={center} y={center + 1} textAnchor="middle" style={{ fontSize: modelo === 'genotipo' ? 9 : 7.5, fontWeight: 700, fill: "#666666" }}>
-        {modelo === 'genotipo' ? 'Talentos' : 'Neurotalento'}
-      </SvgText>
-    </Svg>
-  )
+  const centerText = modelo === 'genotipo' ? 'Talentos' : 'Neurotalento'
+
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <defs>${defs}</defs>
+      <line x1="${center}" y1="${center - radius}" x2="${center}" y2="${center + radius}" stroke="#000000" stroke-width="2" />
+      <line x1="${center - radius}" y1="${center}" x2="${center + radius}" y2="${center}" stroke="#000000" stroke-width="2" />
+      ${diagonals}
+      ${sectorMarkup}
+      <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+      <text x="${center}" y="${center + 6}" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="#555555">${centerText}</text>
+    </svg>`
+}
+
+function svgToDataUri(svg: string) {
+  return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`
+}
+
+function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
+  const src = svgToDataUri(buildCoverWheelSvg(modelo, scores))
+  return <Image src={src} style={{ width: 360, height: 360 }} />
 }
 
 function CoverPage({ nombre, modelo, scores, textoResumen, fecha }: InformePDFProps & { fecha: string }) {
