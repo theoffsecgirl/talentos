@@ -274,13 +274,15 @@ function generateWheelSVG(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
 ): string {
-  const size = 600;
+  const size = 520;
+  const padding = 46;
+  const drawableSize = size - padding * 2;
+  const wheelScale = drawableSize / 600;
   const center = size / 2;
-  const radius = 236;
-  const innerRadius = 72;
+  const radius = 236 * wheelScale;
+  const innerRadius = 72 * wheelScale;
   const angleSize = 360 / TALENT_ORDER.length;
   const startAngle = -90;
-  const viewBoxPadding = 40;
 
   const sections = TALENT_ORDER.map((talentId, index) => {
     const rd = ranked.find((r) => r.id === talentId);
@@ -292,11 +294,11 @@ function generateWheelSVG(
     const a1 = a0 + angleSize;
     const mid = (a0 + a1) / 2;
     const fillRadius = innerRadius + (radius - innerRadius) * (percentage / 100);
-    const glowRadius = Math.max(28, 20 + (fillRadius - innerRadius) * 0.22);
-    const innerGlowRadius = Math.max(18, 12 + (fillRadius - innerRadius) * 0.16);
+    const glowRadius = Math.max(18 * wheelScale, 14 * wheelScale + (fillRadius - innerRadius) * 0.18);
+    const innerGlowRadius = Math.max(11 * wheelScale, 8 * wheelScale + (fillRadius - innerRadius) * 0.1);
     const valuePos = polarDeg(center, center, innerRadius + (fillRadius - innerRadius) * 0.62, mid);
     const glowPos = polarDeg(center, center, innerRadius + (fillRadius - innerRadius) * 0.64, mid);
-    const labelPos = polarDeg(center, center, radius + 34, mid);
+    const labelPos = polarDeg(center, center, radius + 30 * wheelScale, mid);
     const talent = TALENTS.find((t) => t.id === talentId);
     const fullTitle = talent?.reportTitle ?? "";
     const [line1, line2] = splitLabel(fullTitle);
@@ -313,19 +315,19 @@ function generateWheelSVG(
       outlinePath: createArcPath(center, center, degToRad(a0), degToRad(a1), radius, innerRadius),
       fillPaths: [
         {
-          key: `${talentId}-base`,
-          opacity: 0.06,
+          key: `${talentId}-wash`,
+          opacity: 0.03,
           d: createArcPath(center, center, degToRad(a0), degToRad(a1), fillRadius, innerRadius),
         },
         {
-          key: `${talentId}-mid`,
-          opacity: 0.08,
+          key: `${talentId}-halo`,
+          opacity: 0.022,
           d: createArcPath(
             center,
             center,
             degToRad(a0),
             degToRad(a1),
-            innerRadius + (fillRadius - innerRadius) * 0.82,
+            innerRadius + (fillRadius - innerRadius) * 0.72,
             innerRadius,
           ),
         },
@@ -341,7 +343,7 @@ function generateWheelSVG(
         .map((layer) => `<path d="${layer.d}" fill="${hexToRgba(s.color, layer.opacity)}"/>`)
         .join("");
       const pctText = s.percentage > 0
-        ? `<text x="${s.valuePos.x.toFixed(2)}" y="${s.valuePos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="800" fill="#FFFFFF" filter="url(#tw-text-shadow)">${s.percentage}</text>`
+        ? `<text x="${s.valuePos.x.toFixed(2)}" y="${s.valuePos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="800" fill="#FFFFFF" filter="url(#tw-text-shadow)">${s.percentage}</text>`
         : "";
       return `
       <g>
@@ -352,23 +354,23 @@ function generateWheelSVG(
         ${pctText}
       </g>
       <g>
-        ${symbolFragment(s.talentId, modelType, s.color, 14, s.labelPos.x, s.labelPos.y - 14)}
-        <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 2).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#111111">${s.line1}</text>
-        ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 16).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#111111">${s.line2}</text>` : ""}
+        ${symbolFragment(s.talentId, modelType, s.color, 9.6, s.labelPos.x, s.labelPos.y - 10 * wheelScale)}
+        <text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 2).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="7.4" font-weight="700" fill="#111111">${s.line1}</text>
+        ${s.line2 ? `<text x="${s.labelPos.x.toFixed(2)}" y="${(s.labelPos.y + 10 * wheelScale).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="7.4" font-weight="700" fill="#111111">${s.line2}</text>` : ""}
       </g>`;
     })
     .join("");
 
-  return `<svg width="${size}" height="${size}" viewBox="${-viewBoxPadding} ${-viewBoxPadding} ${size + viewBoxPadding * 2} ${size + viewBoxPadding * 2}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <filter id="tw-soft-glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="12"/></filter>
+      <filter id="tw-soft-glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="8"/></filter>
       <filter id="tw-text-shadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="rgba(0,0,0,0.45)"/></filter>
     </defs>
     <line x1="${center}" y1="${center - radius}" x2="${center}" y2="${center + radius}" stroke="#4B5563" stroke-width="1.6"/>
     <line x1="${center - radius}" y1="${center}" x2="${center + radius}" y2="${center}" stroke="#4B5563" stroke-width="1.6"/>
     ${sectionSvg}
     <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="#F4F4F5" stroke="#111111" stroke-width="2.2"/>
-    <text x="${center}" y="${center}" text-anchor="middle" dominant-baseline="middle" font-size="${modelType === "genotipo" ? 18 : 14}" font-weight="700" fill="#666666">${modelType === "genotipo" ? "Talentos" : "Neurotalento"}</text>
+    <text x="${center}" y="${center}" text-anchor="middle" dominant-baseline="middle" font-size="${modelType === "genotipo" ? 15 : 11.8}" font-weight="700" fill="#666666">${modelType === "genotipo" ? "Talentos" : "Neurotalento"}</text>
   </svg>`;
 }
 
@@ -461,12 +463,12 @@ function generatePDFHTML(
       </div>
       <div style="font-size:9px;color:#888;">Basado en neurociencia aplicada</div>
     </div>
-    <div style="display:flex;gap:24px;align-items:flex-start;">
-      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
-        ${svgContent}
+    <div style="display:grid;grid-template-columns:520px minmax(0,1fr);gap:18px;align-items:flex-start;">
+      <div style="width:520px;display:flex;flex-direction:column;align-items:center;">
+        <div style="width:520px;display:flex;justify-content:center;">${svgContent}</div>
         ${summaryBanner}
       </div>
-      <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+      <div style="min-width:0;display:flex;flex-direction:column;gap:10px;">
         ${profileSection}
         <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:10px;">${talentListRows}</div>
       </div>

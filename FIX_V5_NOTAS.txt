@@ -1,0 +1,1 @@
+Se corrigen rutas activas del informe PDF y el SVG del mapa sin viewBox negativo para evitar recortes.

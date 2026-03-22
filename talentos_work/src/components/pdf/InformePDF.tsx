@@ -632,15 +632,15 @@ function BatteryBar({ value }: { value: number }) {
 }
 
 function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
-  const baseSize = 600
-  const size = 360
-  const scale = size / baseSize
+  const size = 384
+  const padding = 34
+  const drawableSize = size - padding * 2
+  const scale = drawableSize / 600
   const center = size / 2
   const radius = 236 * scale
   const innerRadius = 72 * scale
   const stepDeg = 360 / ID_ORDER.length
   const startDeg = -90
-  const viewPadding = 24
 
   const sections = ID_ORDER.map((key, index) => {
     const color = TALENT_COLORS[key]
@@ -649,11 +649,11 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
     const a1 = a0 + stepDeg
     const mid = (a0 + a1) / 2
     const fillRadius = innerRadius + (radius - innerRadius) * (value / 100)
-    const valuePos = polarToCartesian(center, center, degToRad(mid), innerRadius + (fillRadius - innerRadius) * 0.62)
-    const glowPos = polarToCartesian(center, center, degToRad(mid), innerRadius + (fillRadius - innerRadius) * 0.64)
-    const glowRadius = Math.max(16 * scale, 12 * scale + (fillRadius - innerRadius) * 0.22)
-    const innerGlowRadius = Math.max(11 * scale, 8 * scale + (fillRadius - innerRadius) * 0.16)
-    const labelPos = polarToCartesian(center, center, degToRad(mid), radius + 34 * scale)
+    const valuePos = polarToCartesian(center, center, degToRad(mid), innerRadius + (fillRadius - innerRadius) * 0.6)
+    const glowPos = polarToCartesian(center, center, degToRad(mid), innerRadius + (fillRadius - innerRadius) * 0.63)
+    const glowRadius = Math.max(18 * scale, 14 * scale + (fillRadius - innerRadius) * 0.18)
+    const innerGlowRadius = Math.max(11 * scale, 8 * scale + (fillRadius - innerRadius) * 0.1)
+    const labelPos = polarToCartesian(center, center, degToRad(mid), radius + 28 * scale)
     const [line1, line2] = splitLabel(TALENT_NAMES[key])
 
     return {
@@ -670,28 +670,34 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
       outlinePath: createArcPath(center, center, degToRad(a0), degToRad(a1), radius, innerRadius),
       fillLayers: [
         {
-          key: `${key}-base`,
-          opacity: 0.06,
+          key: `${key}-wash`,
+          opacity: 0.03,
           d: createArcPath(center, center, degToRad(a0), degToRad(a1), fillRadius, innerRadius),
         },
         {
-          key: `${key}-mid`,
-          opacity: 0.08,
+          key: `${key}-halo`,
+          opacity: 0.022,
           d: createArcPath(
             center,
             center,
             degToRad(a0),
             degToRad(a1),
-            innerRadius + (fillRadius - innerRadius) * 0.82,
+            innerRadius + (fillRadius - innerRadius) * 0.7,
             innerRadius,
           ),
         },
+      ],
+      glowLayers: [
+        { key: `${key}-g1`, radius: glowRadius * 1.7, opacity: 0.07 },
+        { key: `${key}-g2`, radius: glowRadius * 1.28, opacity: 0.11 },
+        { key: `${key}-g3`, radius: glowRadius * 0.92, opacity: 0.16 },
+        { key: `${key}-g4`, radius: innerGlowRadius, opacity: 0.12 },
       ],
     }
   })
 
   return (
-    <Svg width={size} height={size} viewBox={`${-viewPadding} ${-viewPadding} ${size + viewPadding * 2} ${size + viewPadding * 2}`}>
+    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#4B5563" strokeWidth={1.05} />
       <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#4B5563" strokeWidth={1.05} />
 
@@ -701,8 +707,9 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
           {s.fillLayers.map((layer) => (
             <Path key={layer.key} d={layer.d} fill={hex2rgba(s.color, layer.opacity)} />
           ))}
-          <Circle cx={s.glowPos.x} cy={s.glowPos.y} r={s.glowRadius} fill={hex2rgba(s.color, 0.18)} />
-          <Circle cx={s.glowPos.x} cy={s.glowPos.y} r={s.innerGlowRadius} fill={hex2rgba(s.color, 0.12)} />
+          {s.glowLayers.map((layer) => (
+            <Circle key={layer.key} cx={s.glowPos.x} cy={s.glowPos.y} r={layer.radius} fill={hex2rgba(s.color, layer.opacity)} />
+          ))}
           {s.value > 0 ? (
             <SvgText x={s.valuePos.x} y={s.valuePos.y + 3} textAnchor="middle" style={{ fontSize: 9, fontWeight: 800, fill: '#FFFFFF' }}>
               {String(s.value)}
@@ -713,12 +720,12 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
 
       {sections.map((s) => (
         <React.Fragment key={`${s.key}-label`}>
-          <PositionedSymbol talentKey={s.key} modelo={modelo} color={s.color} size={8.4} x={s.labelPos.x} y={s.labelPos.y - 8.5 * scale} />
-          <SvgText x={s.labelPos.x} y={s.labelPos.y + 2 * scale} textAnchor="middle" style={{ fontSize: 5.6, fontWeight: 700, fill: '#111111' }}>
+          <PositionedSymbol talentKey={s.key} modelo={modelo} color={s.color} size={8.8} x={s.labelPos.x} y={s.labelPos.y - 9.5 * scale} />
+          <SvgText x={s.labelPos.x} y={s.labelPos.y + 2 * scale} textAnchor="middle" style={{ fontSize: 5.4, fontWeight: 700, fill: '#111111' }}>
             {s.line1}
           </SvgText>
           {s.line2 ? (
-            <SvgText x={s.labelPos.x} y={s.labelPos.y + 14 * scale} textAnchor="middle" style={{ fontSize: 5.6, fontWeight: 700, fill: '#111111' }}>
+            <SvgText x={s.labelPos.x} y={s.labelPos.y + 14 * scale} textAnchor="middle" style={{ fontSize: 5.4, fontWeight: 700, fill: '#111111' }}>
               {s.line2}
             </SvgText>
           ) : null}

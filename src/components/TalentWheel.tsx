@@ -345,10 +345,13 @@ export default function TalentWheel({
 
   const professionalProfile = useMemo(() => calculateProfessionalProfile(talents), [talents]);
 
-const size = 600;
-const center = size / 2;
-const radius = 236;
-const innerRadius = 72;
+const canvasSize = showFullLabels ? 700 : 650;
+const canvasPadding = showFullLabels ? 52 : 34;
+const drawableSize = canvasSize - canvasPadding * 2;
+const wheelScale = drawableSize / 600;
+const center = canvasSize / 2;
+const radius = 236 * wheelScale;
+const innerRadius = 72 * wheelScale;
 const angleSize = 360 / TALENT_ORDER.length;
 const startAngle = -90;
 
@@ -361,7 +364,7 @@ const sections = talents.map((talent, index) => {
   const innerGlowRadius = Math.max(18, 12 + (fillRadius - innerRadius) * 0.16);
   const valuePos = polar(center, center, innerRadius + (fillRadius - innerRadius) * 0.62, mid);
   const glowPos = polar(center, center, innerRadius + (fillRadius - innerRadius) * 0.64, mid);
-  const labelDistance = showFullLabels ? radius + 34 : radius + 24;
+  const labelDistance = showFullLabels ? radius + 30 * wheelScale : radius + 22 * wheelScale;
   const labelPos = polar(center, center, labelDistance, mid);
 
   return {
@@ -399,11 +402,10 @@ const sections = talents.map((talent, index) => {
 });
 
 const displayCenterText = centerText || (modelType === "genotipo" ? "Talentos" : "Neurotalento");
-const viewBoxPadding = showFullLabels ? 40 : 26;
 
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
-      <svg width={size} height={size} viewBox={`${-viewBoxPadding} ${-viewBoxPadding} ${size + viewBoxPadding * 2} ${size + viewBoxPadding * 2}`} className="max-w-full h-auto print:max-w-[500px]" overflow="visible">
+      <svg width={canvasSize} height={canvasSize} viewBox={`0 0 ${canvasSize} ${canvasSize}`} className="max-w-full h-auto print:max-w-[500px]" overflow="visible">
         <defs>
           <filter id="talent-wheel-soft-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="12" />
@@ -441,7 +443,7 @@ const viewBoxPadding = showFullLabels ? 40 : 26;
                 y={section.valuePos.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="16"
+                fontSize={String(16 * wheelScale)}
                 fontWeight="800"
                 fill="#FFFFFF"
                 filter="url(#talent-wheel-text-shadow)"
@@ -458,9 +460,9 @@ const viewBoxPadding = showFullLabels ? 40 : 26;
               talentId={section.id as TalentKey}
               modelType={modelType}
               color={section.color}
-              size={showFullLabels ? 14 : 12}
+              size={showFullLabels ? 14 * wheelScale : 12 * wheelScale}
               x={section.labelPos.x}
-              y={section.labelPos.y - (showFullLabels ? 14 : 0)}
+              y={section.labelPos.y - (showFullLabels ? 12 * wheelScale : 0)}
             />
             {showFullLabels ? (
               <g>
@@ -469,7 +471,7 @@ const viewBoxPadding = showFullLabels ? 40 : 26;
                   y={section.labelPos.y + 2}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize="11"
+                  fontSize={String(11 * wheelScale)}
                   fontWeight="700"
                   fill="#111111"
                 >
@@ -478,10 +480,10 @@ const viewBoxPadding = showFullLabels ? 40 : 26;
                 {section.titleLine2 ? (
                   <text
                     x={section.labelPos.x}
-                    y={section.labelPos.y + 16}
+                    y={section.labelPos.y + 14 * wheelScale}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="11"
+                    fontSize={String(11 * wheelScale)}
                     fontWeight="700"
                     fill="#111111"
                   >
@@ -499,7 +501,7 @@ const viewBoxPadding = showFullLabels ? 40 : 26;
           y={center}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={displayCenterText.length > 10 ? "14" : "18"}
+          fontSize={displayCenterText.length > 10 ? String(14 * wheelScale) : String(18 * wheelScale)}
           fontWeight="700"
           fill="#666666"
         >
