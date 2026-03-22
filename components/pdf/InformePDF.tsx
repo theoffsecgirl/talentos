@@ -431,6 +431,10 @@ function polarToCartesian(cx: number, cy: number, angle: number, r: number) {
   return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) }
 }
 
+function degToRad(deg: number) {
+  return (deg * Math.PI) / 180
+}
+
 function createArcPath(cx: number, cy: number, startAngle: number, endAngle: number, outerR: number, innerR: number) {
   const start = polarToCartesian(cx, cy, startAngle, outerR)
   const end = polarToCartesian(cx, cy, endAngle, outerR)
