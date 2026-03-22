@@ -652,7 +652,7 @@ function runHtml2Pdf(
     }
 
     const container = document.createElement("div");
-    container.style.cssText = `position:fixed;left:-99999px;top:0;width:${pageFormat[0]}px;background:#fff;`;
+    container.style.cssText = `position:fixed;left:0;top:0;width:${pageFormat[0]}px;opacity:0;pointer-events:none;z-index:-1;background:#fff;overflow:hidden;`;
     document.body.appendChild(container);
 
     const iframe = document.createElement("iframe");
@@ -669,6 +669,24 @@ function runHtml2Pdf(
     iframeDoc.open();
     iframeDoc.write(htmlContent);
     iframeDoc.close();
+
+    const iframeRoot = iframeDoc.documentElement;
+    const iframeBody = iframeDoc.body;
+    if (iframeRoot) {
+      iframeRoot.style.margin = '0';
+      iframeRoot.style.padding = '0';
+      iframeRoot.style.background = '#fff';
+      iframeRoot.style.width = `${pageFormat[0]}px`;
+      iframeRoot.style.overflow = 'hidden';
+    }
+    if (iframeBody) {
+      iframeBody.style.margin = '0';
+      iframeBody.style.padding = '0';
+      iframeBody.style.background = '#fff';
+      iframeBody.style.width = `${pageFormat[0]}px`;
+      iframeBody.style.overflow = 'hidden';
+    }
+    iframe.contentWindow?.scrollTo(0, 0);
 
     const render = () => {
       const target = iframeDoc.getElementById("pdf-root") as HTMLElement | null;

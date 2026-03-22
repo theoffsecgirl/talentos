@@ -1,0 +1,199 @@
+import { prisma } from "@/lib/prisma";
+import { TALENTS } from "@/lib/talents";
+import ExcelJS from "exceljs";
+import { Prisma } from "@prisma/client";
+
+export const runtime = "nodejs";
+
+function spGet(sp: URLSearchParams, key: string) {
+  return (sp.get(key) ?? "").trim();
+}
+
+// SQLite NO soporta mode: "insensitive" en contains.
+// Mantiene insensitive si migras a Postgres/MySQL.
+const isSQLite = (process.env.DATABASE_URL ?? "").startsWith("file:");
+const ciContains = (value: string) =>
+  isSQLite
+    ? ({ contains: value } as const)
+    : ({ contains: value, mode: Prisma.QueryMode.insensitive } as const);
+
+function winnerId(scoresJson: any): number | null {
+  const scores = Array.isArray(scoresJson) ? scoresJson : [];
+  if (scores.length === 0) return null;
+  const best = scores.slice().sort((a, b) => (b?.score ?? 0) - (a?.score ?? 0))[0];
+  return typeof best?.talentId === "number" ? best.talentId : null;
+}
+
+function top3(scoresJson: any): { talentId: number; score: number; max: number }[] {
+  const scores = Array.isArray(scoresJson) ? scoresJson : [];
+  return scores
+    .slice()
+    .sort((a, b) => (b?.score ?? 0) - (a?.score ?? 0))
+    .slice(0, 3)
+    .map((s: any) => ({
+      talentId: s.talentId,
+      score: s.score ?? 0,
+      max: s.max ?? 0,
+    }));
+}
+
+const ALL_ITEMS = TALENTS.flatMap((t) =>
+  t.items.map((it) => ({
+    itemId: it.id,
+    question: it.text,
+    talentId: t.id,
+    talentTitle: t.title,
+  }))
+).sort((a, b) => a.itemId.localeCompare(b.itemId, "es"));
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const q = spGet(url.searchParams, "q");
+  const genero = spGet(url.searchParams, "genero");
+  const centro = spGet(url.searchParams, "centro");
+  const curso = spGet(url.searchParams, "curso");
+  const modalidad = spGet(url.searchParams, "modalidad");
+  const idea = spGet(url.searchParams, "idea");
+
+  const AND: Prisma.SubmissionWhereInput[] = [];
+
+  if (q) {
+    AND.push({
+      OR: [
+        { nombre: ciContains(q) },
+        { apellido: ciContains(q) },
+        { user: { email: ciContains(q) } },
+        { ideaCarrera: ciContains(q) },
+      ],
+    });
+  }
+
+  if (genero) AND.push({ genero });
+
+  if (centro) AND.push({ centroEducativo: ciContains(centro) });
+
+  if (curso) AND.push({ curso: ciContains(curso) });
+
+  if (modalidad) AND.push({ modalidad: ciContains(modalidad) });
+
+  if (idea) {
+    AND.push({
+      OR: [
+        { ideaCarrera: ciContains(idea) },
+        { tienesIdeaCarrera: ciContains(idea) },
+      ],
+    });
+  }
+
+  const where: Prisma.SubmissionWhereInput = AND.length ? { AND } : {};
+
+  const rows = await prisma.submission.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 5000,
+    include: {
+      user: true,
+      assessments: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
+  });
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Talentos";
+  wb.created = new Date();
+
+  const ws = wb.addWorksheet("Submissions", {
+    views: [{ state: "frozen", ySplit: 1 }],
+  });
+
+  // Columnas base
+  const baseColumns: ExcelJS.Column[] = [
+    { header: "createdAt", key: "createdAt", width: 18 },
+    { header: "submissionId", key: "submissionId", width: 28 },
+    { header: "email", key: "email", width: 28 },
+    { header: "nombre", key: "nombre", width: 16 },
+    { header: "apellido", key: "apellido", width: 18 },
+    { header: "fechaNacimiento", key: "fechaNacimiento", width: 16 },
+    { header: "genero", key: "genero", width: 12 },
+    { header: "curso", key: "curso", width: 16 },
+    { header: "modalidad", key: "modalidad", width: 18 },
+    { header: "centroEducativo", key: "centroEducativo", width: 24 },
+    { header: "tienesIdeaCarrera", key: "tienesIdeaCarrera", width: 18 },
+    { header: "ideaCarrera", key: "ideaCarrera", width: 30 },
+    { header: "ganador_talentId", key: "ganador_talentId", width: 16 },
+    { header: "ganador_titulo", key: "ganador_titulo", width: 36 },
+    { header: "top3", key: "top3", width: 40 },
+  ];
+
+  // Columnas de respuestas: una por pregunta
+  const answerColumns: ExcelJS.Column[] = ALL_ITEMS.map((it) => ({
+    header: `${it.itemId} · ${it.question}`,
+    key: `q_${it.itemId}`,
+    width: 40,
+  }));
+
+  ws.columns = [...baseColumns, ...answerColumns];
+
+  // Header: estilo ligero
+  ws.getRow(1).font = { bold: true };
+  ws.getRow(1).alignment = { vertical: "middle", wrapText: true };
+  ws.getRow(1).height = 28;
+
+  for (const r of rows) {
+    const a = r.assessments[0];
+    const winId = winnerId(a?.scoresJson);
+    const winTitle = winId ? (TALENTS.find((t) => t.id === winId)?.title ?? `Talento ${winId}`) : "";
+
+    const top = a ? top3(a.scoresJson) : [];
+    const topStr = top
+      .map((t) => {
+        const title = TALENTS.find((x) => x.id === t.talentId)?.title ?? `Talento ${t.talentId}`;
+        return `${title} (${t.score}/${t.max})`;
+      })
+      .join(" | ");
+
+    const base: any = {
+      createdAt: r.createdAt.toISOString(),
+      submissionId: r.id,
+      email: r.user.email,
+      nombre: r.nombre,
+      apellido: r.apellido,
+      fechaNacimiento: r.fechaNacimiento.toISOString().slice(0, 10),
+      genero: r.genero,
+      curso: r.curso,
+      modalidad: r.modalidad,
+      centroEducativo: r.centroEducativo ?? "",
+      tienesIdeaCarrera: r.tienesIdeaCarrera,
+      ideaCarrera: r.ideaCarrera ?? "",
+      ganador_talentId: winId ?? "",
+      ganador_titulo: winTitle,
+      top3: topStr,
+    };
+
+    const ans = a?.answersJson && typeof a.answersJson === "object" ? (a.answersJson as any) : {};
+    for (const it of ALL_ITEMS) {
+      base[`q_${it.itemId}`] = ans[it.itemId] ?? "";
+    }
+
+    ws.addRow(base);
+  }
+
+  // Ajustes de legibilidad
+  ws.eachRow((row, rowNumber) => {
+    row.alignment = { vertical: "top", wrapText: true };
+    if (rowNumber > 1) row.height = 20;
+  });
+
+  const buf = (await wb.xlsx.writeBuffer()) as ArrayBuffer;
+  const filename = `talentos_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  return new Response(Buffer.from(buf), {
+    headers: {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
