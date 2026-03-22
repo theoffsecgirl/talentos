@@ -345,55 +345,65 @@ export default function TalentWheel({
 
   const professionalProfile = useMemo(() => calculateProfessionalProfile(talents), [talents]);
 
-  const size = 600;
-  const center = size / 2;
-  const radius = 236;
-  const innerRadius = 72;
-  const angleSize = 360 / TALENT_ORDER.length;
-  const startAngle = -90;
+const size = 600;
+const center = size / 2;
+const radius = 236;
+const innerRadius = 72;
+const angleSize = 360 / TALENT_ORDER.length;
+const startAngle = -90;
 
-  const sections = talents.map((talent, index) => {
-    const a0 = startAngle + index * angleSize;
-    const a1 = a0 + angleSize;
-    const mid = (a0 + a1) / 2;
-    const fillRadius = innerRadius + (radius - innerRadius) * (talent.percentage / 100);
-    const glowRadius = Math.max(28, 20 + (fillRadius - innerRadius) * 0.22);
-    const valuePos = polar(center, center, innerRadius + (fillRadius - innerRadius) * 0.62, mid);
-    const glowPos = polar(center, center, innerRadius + (fillRadius - innerRadius) * 0.64, mid);
-    const labelDistance = showFullLabels ? radius + 34 : radius + 24;
-    const labelPos = polar(center, center, labelDistance, mid);
+const sections = talents.map((talent, index) => {
+  const a0 = startAngle + index * angleSize;
+  const a1 = a0 + angleSize;
+  const mid = (a0 + a1) / 2;
+  const fillRadius = innerRadius + (radius - innerRadius) * (talent.percentage / 100);
+  const glowRadius = Math.max(28, 20 + (fillRadius - innerRadius) * 0.22);
+  const innerGlowRadius = Math.max(18, 12 + (fillRadius - innerRadius) * 0.16);
+  const valuePos = polar(center, center, innerRadius + (fillRadius - innerRadius) * 0.62, mid);
+  const glowPos = polar(center, center, innerRadius + (fillRadius - innerRadius) * 0.64, mid);
+  const labelDistance = showFullLabels ? radius + 34 : radius + 24;
+  const labelPos = polar(center, center, labelDistance, mid);
 
-    return {
-      ...talent,
-      a0,
-      a1,
-      mid,
-      fillRadius,
-      labelPos,
-      valuePos,
-      glowPos,
-      glowRadius,
-      outlinePath: ringSectorPath(center, center, radius, innerRadius, a0, a1),
-      fillPaths: [0.45, 0.68, 0.88, 1].map((factor, i) => ({
-        key: `${talent.id}-${i}`,
-        opacity: [0.08, 0.12, 0.18, 0.26][i],
+  return {
+    ...talent,
+    a0,
+    a1,
+    mid,
+    fillRadius,
+    labelPos,
+    valuePos,
+    glowPos,
+    glowRadius,
+    innerGlowRadius,
+    outlinePath: ringSectorPath(center, center, radius, innerRadius, a0, a1),
+    fillPaths: [
+      {
+        key: `${talent.id}-base`,
+        opacity: 0.06,
+        d: ringSectorPath(center, center, fillRadius, innerRadius, a0, a1),
+      },
+      {
+        key: `${talent.id}-mid`,
+        opacity: 0.08,
         d: ringSectorPath(
           center,
           center,
-          innerRadius + (fillRadius - innerRadius) * factor,
+          innerRadius + (fillRadius - innerRadius) * 0.82,
           innerRadius,
           a0,
           a1,
         ),
-      })),
-    };
-  });
+      },
+    ],
+  };
+});
 
-  const displayCenterText = centerText || (modelType === "genotipo" ? "Talentos" : "Neurotalento");
+const displayCenterText = centerText || (modelType === "genotipo" ? "Talentos" : "Neurotalento");
+const viewBoxPadding = showFullLabels ? 40 : 26;
 
   return (
     <div className="flex flex-col items-center gap-8 print:gap-4">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="max-w-full h-auto print:max-w-[500px]">
+      <svg width={size} height={size} viewBox={`${-viewBoxPadding} ${-viewBoxPadding} ${size + viewBoxPadding * 2} ${size + viewBoxPadding * 2}`} className="max-w-full h-auto print:max-w-[500px]" overflow="visible">
         <defs>
           <filter id="talent-wheel-soft-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="12" />
@@ -418,6 +428,12 @@ export default function TalentWheel({
               r={section.glowRadius}
               fill={hexToRgba(section.color, 0.28)}
               filter="url(#talent-wheel-soft-glow)"
+            />
+            <circle
+              cx={section.glowPos.x}
+              cy={section.glowPos.y}
+              r={section.innerGlowRadius}
+              fill={hexToRgba(section.color, 0.12)}
             />
             {section.percentage > 0 ? (
               <text

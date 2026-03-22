@@ -632,14 +632,15 @@ function BatteryBar({ value }: { value: number }) {
 }
 
 function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
-  const baseSize = 640
+  const baseSize = 600
   const size = 360
   const scale = size / baseSize
   const center = size / 2
-  const radius = 206 * scale
+  const radius = 236 * scale
   const innerRadius = 72 * scale
   const stepDeg = 360 / ID_ORDER.length
   const startDeg = -90
+  const viewPadding = 24
 
   const sections = ID_ORDER.map((key, index) => {
     const color = TALENT_COLORS[key]
@@ -650,21 +651,10 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
     const fillRadius = innerRadius + (radius - innerRadius) * (value / 100)
     const valuePos = polarToCartesian(center, center, degToRad(mid), innerRadius + (fillRadius - innerRadius) * 0.62)
     const glowPos = polarToCartesian(center, center, degToRad(mid), innerRadius + (fillRadius - innerRadius) * 0.64)
-    const labelPos = polarToCartesian(center, center, degToRad(mid), radius + 26 * scale)
+    const glowRadius = Math.max(16 * scale, 12 * scale + (fillRadius - innerRadius) * 0.22)
+    const innerGlowRadius = Math.max(11 * scale, 8 * scale + (fillRadius - innerRadius) * 0.16)
+    const labelPos = polarToCartesian(center, center, degToRad(mid), radius + 34 * scale)
     const [line1, line2] = splitLabel(TALENT_NAMES[key])
-
-    const fillSteps = [0.45, 0.68, 0.88, 1].map((factor, fillIndex) => ({
-      key: `${key}-${fillIndex}`,
-      opacity: [0.08, 0.12, 0.18, 0.26][fillIndex],
-      d: createArcPath(
-        center,
-        center,
-        degToRad(a0),
-        degToRad(a1),
-        innerRadius + (fillRadius - innerRadius) * factor,
-        innerRadius,
-      ),
-    }))
 
     return {
       key,
@@ -672,26 +662,47 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
       value,
       valuePos,
       glowPos,
+      glowRadius,
+      innerGlowRadius,
       labelPos,
       line1,
       line2,
       outlinePath: createArcPath(center, center, degToRad(a0), degToRad(a1), radius, innerRadius),
-      fillSteps,
+      fillLayers: [
+        {
+          key: `${key}-base`,
+          opacity: 0.06,
+          d: createArcPath(center, center, degToRad(a0), degToRad(a1), fillRadius, innerRadius),
+        },
+        {
+          key: `${key}-mid`,
+          opacity: 0.08,
+          d: createArcPath(
+            center,
+            center,
+            degToRad(a0),
+            degToRad(a1),
+            innerRadius + (fillRadius - innerRadius) * 0.82,
+            innerRadius,
+          ),
+        },
+      ],
     }
   })
 
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <Svg width={size} height={size} viewBox={`${-viewPadding} ${-viewPadding} ${size + viewPadding * 2} ${size + viewPadding * 2}`}>
       <Line x1={center} y1={center - radius} x2={center} y2={center + radius} stroke="#4B5563" strokeWidth={1.05} />
       <Line x1={center - radius} y1={center} x2={center + radius} y2={center} stroke="#4B5563" strokeWidth={1.05} />
 
       {sections.map((s) => (
         <React.Fragment key={s.key}>
           <Path d={s.outlinePath} fill="none" stroke={hex2rgba(s.color, 0.28)} strokeWidth={1.05} />
-          {s.fillSteps.map((layer) => (
+          {s.fillLayers.map((layer) => (
             <Path key={layer.key} d={layer.d} fill={hex2rgba(s.color, layer.opacity)} />
           ))}
-          <Circle cx={s.glowPos.x} cy={s.glowPos.y} r={16 * scale} fill={hex2rgba(s.color, 0.18)} />
+          <Circle cx={s.glowPos.x} cy={s.glowPos.y} r={s.glowRadius} fill={hex2rgba(s.color, 0.18)} />
+          <Circle cx={s.glowPos.x} cy={s.glowPos.y} r={s.innerGlowRadius} fill={hex2rgba(s.color, 0.12)} />
           {s.value > 0 ? (
             <SvgText x={s.valuePos.x} y={s.valuePos.y + 3} textAnchor="middle" style={{ fontSize: 9, fontWeight: 800, fill: '#FFFFFF' }}>
               {String(s.value)}
@@ -702,7 +713,7 @@ function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento';
 
       {sections.map((s) => (
         <React.Fragment key={`${s.key}-label`}>
-          <PositionedSymbol talentKey={s.key} modelo={modelo} color={s.color} size={8} x={s.labelPos.x} y={s.labelPos.y - 8 * scale} />
+          <PositionedSymbol talentKey={s.key} modelo={modelo} color={s.color} size={8.4} x={s.labelPos.x} y={s.labelPos.y - 8.5 * scale} />
           <SvgText x={s.labelPos.x} y={s.labelPos.y + 2 * scale} textAnchor="middle" style={{ fontSize: 5.6, fontWeight: 700, fill: '#111111' }}>
             {s.line1}
           </SvgText>

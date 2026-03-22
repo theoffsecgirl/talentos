@@ -280,6 +280,7 @@ function generateWheelSVG(
   const innerRadius = 72;
   const angleSize = 360 / TALENT_ORDER.length;
   const startAngle = -90;
+  const viewBoxPadding = 40;
 
   const sections = TALENT_ORDER.map((talentId, index) => {
     const rd = ranked.find((r) => r.id === talentId);
@@ -292,12 +293,14 @@ function generateWheelSVG(
     const mid = (a0 + a1) / 2;
     const fillRadius = innerRadius + (radius - innerRadius) * (percentage / 100);
     const glowRadius = Math.max(28, 20 + (fillRadius - innerRadius) * 0.22);
+    const innerGlowRadius = Math.max(18, 12 + (fillRadius - innerRadius) * 0.16);
     const valuePos = polarDeg(center, center, innerRadius + (fillRadius - innerRadius) * 0.62, mid);
     const glowPos = polarDeg(center, center, innerRadius + (fillRadius - innerRadius) * 0.64, mid);
     const labelPos = polarDeg(center, center, radius + 34, mid);
     const talent = TALENTS.find((t) => t.id === talentId);
     const fullTitle = talent?.reportTitle ?? "";
     const [line1, line2] = splitLabel(fullTitle);
+
     return {
       talentId,
       color,
@@ -306,19 +309,27 @@ function generateWheelSVG(
       valuePos,
       glowPos,
       glowRadius,
+      innerGlowRadius,
       outlinePath: createArcPath(center, center, degToRad(a0), degToRad(a1), radius, innerRadius),
-      fillPaths: [0.45, 0.68, 0.88, 1].map((factor, fillIndex) => ({
-        key: `${talentId}-${fillIndex}`,
-        opacity: [0.08, 0.12, 0.18, 0.26][fillIndex],
-        d: createArcPath(
-          center,
-          center,
-          degToRad(a0),
-          degToRad(a1),
-          innerRadius + (fillRadius - innerRadius) * factor,
-          innerRadius,
-        ),
-      })),
+      fillPaths: [
+        {
+          key: `${talentId}-base`,
+          opacity: 0.06,
+          d: createArcPath(center, center, degToRad(a0), degToRad(a1), fillRadius, innerRadius),
+        },
+        {
+          key: `${talentId}-mid`,
+          opacity: 0.08,
+          d: createArcPath(
+            center,
+            center,
+            degToRad(a0),
+            degToRad(a1),
+            innerRadius + (fillRadius - innerRadius) * 0.82,
+            innerRadius,
+          ),
+        },
+      ],
       line1,
       line2,
     };
@@ -337,6 +348,7 @@ function generateWheelSVG(
         <path d="${s.outlinePath}" fill="none" stroke="${hexToRgba(s.color, 0.28)}" stroke-width="1.6"/>
         ${layers}
         <circle cx="${s.glowPos.x.toFixed(2)}" cy="${s.glowPos.y.toFixed(2)}" r="${s.glowRadius.toFixed(2)}" fill="${hexToRgba(s.color, 0.28)}" filter="url(#tw-soft-glow)"/>
+        <circle cx="${s.glowPos.x.toFixed(2)}" cy="${s.glowPos.y.toFixed(2)}" r="${s.innerGlowRadius.toFixed(2)}" fill="${hexToRgba(s.color, 0.12)}"/>
         ${pctText}
       </g>
       <g>
@@ -347,9 +359,9 @@ function generateWheelSVG(
     })
     .join("");
 
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="${size}" height="${size}" viewBox="${-viewBoxPadding} ${-viewBoxPadding} ${size + viewBoxPadding * 2} ${size + viewBoxPadding * 2}" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <filter id="tw-soft-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12"/></filter>
+      <filter id="tw-soft-glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="12"/></filter>
       <filter id="tw-text-shadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="rgba(0,0,0,0.45)"/></filter>
     </defs>
     <line x1="${center}" y1="${center - radius}" x2="${center}" y2="${center + radius}" stroke="#4B5563" stroke-width="1.6"/>
@@ -496,7 +508,7 @@ function buildIntroPage(
   const winnerTalent = TALENTS.find((t) => t.id === winner?.id);
   const winnerRole = winnerTalent?.exampleRoles?.[0] ?? "No indicado";
   const wheel = generateWheelSVG(ranked, modelType)
-    .replace('width="560" height="560"', 'width="430" height="430"');
+    .replace(/width="\d+" height="\d+"/, 'width="430" height="430"');
 
   const batteryGroups = AXIS_GROUPS.map((group) => {
     const rows = group.talents
