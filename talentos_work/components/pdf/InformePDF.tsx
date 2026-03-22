@@ -627,7 +627,7 @@ function BatteryBar({ value }: { value: number }) {
   )
 }
 
-export function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
+function WheelGraphic({ modelo, scores }: { modelo: 'genotipo' | 'neurotalento'; scores: Record<string, number> }) {
   const baseSize = 640
   const size = 360
   const scale = size / baseSize
