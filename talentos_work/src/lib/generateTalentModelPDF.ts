@@ -747,7 +747,7 @@ function runHtml2Pdf(
   });
 }
 
-export function exportTalentModelPDF(
+export async function exportTalentModelPDF(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
@@ -755,9 +755,47 @@ export function exportTalentModelPDF(
   summaryText?: string,
   meta?: ExportProfileMeta,
 ): Promise<void> {
-  const html = generatePDFHTML(ranked, modelType, userName, summaryText, meta);
+  if (typeof window === "undefined") return;
+
+  const scores = Object.fromEntries(
+    ranked
+      .map((rd) => [ID_TO_KEY[rd.id], getPercent(rd)] as const)
+      .filter((entry): entry is readonly [string, number] => Boolean(entry[0])),
+  );
+
+  const res = await fetch("/api/generate-mapa-pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nombre: userName || "Resultado",
+      scores,
+      textoResumen: summaryText || "",
+      modelo: modelType,
+      rolEscogido: meta?.rolEscogido || "",
+      rolPensado: meta?.rolPensado || "",
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error("No se pudo generar el mapa PDF");
+  }
+
+  const blob = await res.blob();
   const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "talentos" : "neurotalentos"}.pdf`;
-  return runHtml2Pdf(html, fileName, [1000, 707], zip, { useA4: true, orientation: "landscape" });
+
+  if (zip) {
+    zip.file(fileName, blob);
+    return;
+  }
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 export async function exportInformePDF(
