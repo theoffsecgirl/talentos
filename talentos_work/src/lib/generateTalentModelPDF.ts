@@ -300,9 +300,9 @@ function generatePDFHTML(
     : "";
 
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
-  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;background:#fff;color:#111;}</style>
+  <style>*{box-sizing:border-box;margin:0;padding:0;}html,body{width:100%;overflow:hidden;}body{font-family:Arial,sans-serif;background:#fff;color:#111;}</style>
 </head><body>
-  <div id="pdf-root" style="width:1000px;padding:25px;">
+  <div id="pdf-root" style="width:1000px;padding:25px;box-sizing:border-box;margin:0 auto;background:#fff;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:8px;">
       <div>
         <div style="font-size:16px;font-weight:700;">MAPA DE ${modelType === "genotipo" ? "TALENTOS" : "NEUROTALENTOS"}</div>
@@ -729,7 +729,7 @@ function runHtml2Pdf(
   });
 }
 
-export async function exportTalentModelPDF(
+export function exportTalentModelPDF(
   ranked: RankedTalent[],
   modelType: "genotipo" | "neurotalento",
   userName: string,
@@ -737,47 +737,9 @@ export async function exportTalentModelPDF(
   summaryText?: string,
   meta?: ExportProfileMeta,
 ): Promise<void> {
-  if (typeof window === "undefined") return;
-
-  const scores = Object.fromEntries(
-    ranked
-      .map((rd) => [ID_TO_KEY[rd.id], getPercent(rd)] as const)
-      .filter((entry): entry is readonly [string, number] => Boolean(entry[0])),
-  );
-
-  const res = await fetch("/api/generate-mapa-pdf", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      nombre: userName || "Resultado",
-      scores,
-      textoResumen: summaryText || "",
-      modelo: modelType,
-      rolEscogido: meta?.rolEscogido || "",
-      rolPensado: meta?.rolPensado || "",
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error("No se pudo generar el mapa PDF");
-  }
-
-  const blob = await res.blob();
+  const html = generatePDFHTML(ranked, modelType, userName, summaryText, meta);
   const fileName = `${userName ? userName.toLowerCase().replace(/\s+/g, "-") + "-" : ""}${modelType === "genotipo" ? "talentos" : "neurotalentos"}.pdf`;
-
-  if (zip) {
-    zip.file(fileName, blob);
-    return;
-  }
-
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.URL.revokeObjectURL(url);
+  return runHtml2Pdf(html, fileName, [1000, 707], zip, { useA4: true, orientation: "landscape" });
 }
 
 export async function exportInformePDF(
